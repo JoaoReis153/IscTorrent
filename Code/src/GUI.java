@@ -24,7 +24,6 @@ public class GUI {
     private void addFrameContent() {
         frame.setLayout(new BorderLayout());
 
-        // Search panel at the top
         JPanel searchPanel = new JPanel();
         searchPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
@@ -38,11 +37,9 @@ public class GUI {
 
         frame.add(searchPanel, BorderLayout.NORTH);
 
-        // Main panel in the center
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new BorderLayout());
 
-        // Left area (file list display)
         JPanel leftArea = new JPanel();
         leftArea.setPreferredSize(new Dimension(300, 150));
         leftArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -55,7 +52,6 @@ public class GUI {
         leftArea.setLayout(new BorderLayout());
         leftArea.add(scrollPane, BorderLayout.CENTER);
 
-        // Right area (buttons)
         JPanel rightButtonsPanel = new JPanel();
         rightButtonsPanel.setLayout(new GridLayout(2, 1, 10, 10));
 
@@ -73,7 +69,6 @@ public class GUI {
 
         frame.add(bottomPanel, BorderLayout.CENTER);
 
-        // Action listener for the connect button
         connectButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -82,23 +77,18 @@ public class GUI {
             }
         });
 
-        // Action listener for the download button
         downloadButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // You can process the selected files here
-                // Example: listModel.getSelectedValuesList() to get selected files
                 java.util.List<String> selectedFiles = fileList.getSelectedValuesList();
-                // Handle the download logic here
-                // Leave this part for you to implement
+                //Download logic
             }
         });
 
-        // Sample files to display (you can add more dynamically)
+        //Examples to show
         addFilesToList(new String[]{"file1.txt", "file2.txt", "file3.jpg"});
     }
 
-    // Method to add files to the list
     private void addFilesToList(String[] files) {
         for (String file : files) {
             listModel.addElement(file);

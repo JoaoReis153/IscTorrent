@@ -1,0 +1,55 @@
+# Eclipse project files
+/.classpath
+/.project
+/.settings/
+
+# Java and Maven/Gradle build files
+/bin/
+/target/
+/out/
+
+# IDE-specific files
+*.iml
+*.ipr
+*.iws
+
+# Compiled class files
+*.class
+
+# Log and temp files
+*.log
+*.tmp
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Maven files
+.mvn/
+!**/src/main/**/!README.md
+!.mvn/wrapper/maven-wrapper.properties
+
+# Gradle files
+.gradle/
+build/
+.gradle/
+**/build/
+
+# IntelliJ IDEA files
+.idea/
+*.iml
+*.iws
+
+# Eclipse-specific launch files
+*.launch
+
+# Cache files for Eclipse
+/.cache/
+.apt_generated/
+ajcore.*
+
+# Other files
+*.jar
+*.war
+*.ear
+

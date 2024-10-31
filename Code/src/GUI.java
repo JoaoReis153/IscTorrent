@@ -4,11 +4,13 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import java.util.ArrayList;
 
 public class GUI {
     private JFrame frame;
     private JList<String> fileList;
     private DefaultListModel<String> listModel;
+    private ArrayList<String> allFiles; 
 
     public GUI(String address, int porta) {
         frame = new JFrame("Port NodeAddress [ address " + address + ":" + porta + " ]");
@@ -81,17 +83,37 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 java.util.List<String> selectedFiles = fileList.getSelectedValuesList();
-                //Download logic
+                // Download logic
             }
         });
 
-        //Examples to show
-        addFilesToList(new String[]{"file1.txt", "file2.txt", "file3.jpg"});
+        
+        searchButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String searchText = searchTextField.getText().toLowerCase();
+                filterFileList(searchText);
+            }
+        });
+
+
+        allFiles = new ArrayList<>();
+        addFilesToList(new String[]{"file1.txt", "file2.txt", "file3.jpg", "document.pdf", "presentation.ppt"});
     }
 
     private void addFilesToList(String[] files) {
         for (String file : files) {
+            allFiles.add(file);
             listModel.addElement(file);
+        }
+    }
+
+    private void filterFileList(String searchText) {
+        listModel.clear();
+        for (String file : allFiles) {
+            if (file.toLowerCase().contains(searchText)) {
+                listModel.addElement(file);
+            }
         }
     }
 

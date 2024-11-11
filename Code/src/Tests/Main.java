@@ -13,7 +13,8 @@ public class Main {
 		/*
 		 * GUI window = new GUI("192.168.1.1", 80 , "Code/dl1"); window.open();
 		 */
-		String workfolder = "/Users/joaoreis/Documents/GitHub/IscTorrent/code/dl1";
+		String workfolder = "./dl1";
+
 		File folder = new File(workfolder);
 
 		File[] files = folder.listFiles();

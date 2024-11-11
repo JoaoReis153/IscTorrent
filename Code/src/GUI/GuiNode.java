@@ -5,10 +5,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
 
-public class Node {
+public class GuiNode {
     private JFrame frame;
 
-    public Node() {
+    public GuiNode() {
         frame = new JFrame("Adicionar Nó");
         frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // Fechar apenas esta janela
 

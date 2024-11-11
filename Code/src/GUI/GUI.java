@@ -87,7 +87,7 @@ public class GUI {
         connectButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Node newNodeWindow = new Node();
+                GuiNode newNodeWindow = new GuiNode();
                 newNodeWindow.open();
             }
         });

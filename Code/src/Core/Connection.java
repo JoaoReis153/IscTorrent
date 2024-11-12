@@ -16,12 +16,15 @@ public class Connection {
 	Connection(InetAddress address, int port) throws IOException {
 		socket = new Socket(address, port);
 		this.port = port;
-		this.outputStream = new ObjectOutputStream(socket.getOutputStream());
+		this.outputStream = new ObjectOutputStream(socket.getOutputStream());		
 		this.inputStream = new ObjectInputStream(socket.getInputStream());
 	}
 	
-	Connection(Socket socket) {
+	Connection(Socket socket) throws IOException {
 		this.socket = socket;
+		this.port = socket.getPort();
+	    this.outputStream = new ObjectOutputStream(socket.getOutputStream());
+	    this.inputStream = new ObjectInputStream(socket.getInputStream());
 	}
 	
 	public int getPort() {
@@ -31,10 +34,6 @@ public class Connection {
 	
 	public Socket getSocket() {
 		return socket;
-	}
-
-	public void setSocket(Socket socket) {
-		this.socket = socket;
 	}
 
 	public ObjectInputStream getInputStream() {
@@ -54,4 +53,12 @@ public class Connection {
 		Connection that = (Connection) o;
 		return socket.equals(that.socket);
 	}
+
+	@Override
+	public String toString() {
+		return "Connection [port=" + port + ", socket=" + socket + ", inputStream=" + inputStream + ", outputStream="
+				+ outputStream + "]";
+	}
+	
+	
 }

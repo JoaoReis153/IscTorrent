@@ -12,7 +12,7 @@ public class Main {
 	public static void main(String[] args) {
 
 		// Parse the nodeId from the command-line argument
-		int test = 1;
+		int test = 2;
 		if (test == 1) {
 
 			// Create a Node object with the input nodeId
@@ -29,6 +29,8 @@ public class Main {
 			Node no1 = new Node(4);
 			Node no2 = new Node(5);
 			
+			
+
 			// Iniciar o servidor do no2 em uma nova thread
 			new Thread(() -> {
 				try {
@@ -38,8 +40,7 @@ public class Main {
 				}
 			}).start();
 
-			// Dar um pequeno atraso para garantir que o servidor de no2 esteja escutando
-			// antes da conexão
+
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
@@ -57,8 +58,10 @@ public class Main {
 			
 			
 			try {
-				Thread.sleep(500);
+				Thread.sleep(1000);
+				
 				no1.sendWordSearchMessageRequest("batata");
+				
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

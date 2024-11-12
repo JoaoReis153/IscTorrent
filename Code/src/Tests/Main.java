@@ -9,10 +9,10 @@ import Core.Node;
 import GUI.GUI;
 
 public class Main {
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 
 		// Parse the nodeId from the command-line argument
-		int test = 2;
+		int test = 1;
 		if (test == 1) {
 
 			// Create a Node object with the input nodeId
@@ -50,11 +50,7 @@ public class Main {
 
 			// Tentar conectar no1 ao no2
 			
-			try {
-				no1.connectToNode("127.0.0.1", 8085);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			no1.connectToNode("127.0.0.1", 8085);
 			
 			
 			try {
@@ -71,11 +67,6 @@ public class Main {
 
 		} else if (test == 3) {
 
-			// to see the content of file given in the ^(argument)
-			/*
-			 * GUI window = new GUI("192.168.1.1", 80 , "Code/dl1"); window.open();
-			 */
-			
 			  String workfolder = "./dl1";
 			  
 			  File folder = new File(workfolder);

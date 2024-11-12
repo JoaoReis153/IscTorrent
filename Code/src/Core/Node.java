@@ -30,13 +30,27 @@ public class Node {
 			try {
 				Object obj;
 				while ((obj = in.readObject()) != null) {
-					
+					System.out.println("Received: " + obj);
 					if (obj instanceof NewConnectionRequest) {
 						System.out.println("Received a connection request");
 						
 					} else if (obj instanceof WordSearchMessage) {
 						System.out.println("Received a WordSearchMessage object with content: (" + ((WordSearchMessage) obj).getKeyword() + ")");
+						 if (node.getFolder().exists() && node.getFolder().isDirectory()) {
+					            File[] files = node.getFolder().listFiles();
+					            if (files != null) {
+					                for (File file : files) {
+					                	String h1 = Utils.generateSHA256(file.getAbsolutePath());
+					                	FileSearchResult response = new FileSearchResult((WordSearchMessage) obj, file.getName(), h1, file.length(), node.getEnderecoIP() ,node.getPort());
+					                	this.out.writeObject(response);
+					                	this.out.flush();
+					                	System.out.println(file.getName());
+					                }
+				                }
+						 } 
 					} else if (obj instanceof FileSearchResult) {
+						System.out.println("Look at what I jst received: ");
+						System.out.println(obj);
 						
 					} else if (obj instanceof FileBlockRequestMessage) {
 						FileBlockRequestMessage block = (FileBlockRequestMessage) obj;
@@ -120,11 +134,17 @@ public class Node {
 		}
 	}
 
-	public void connectToNode(String nomeEndereco, int targetPort) throws IOException {
-	    InetAddress targetEndereco = InetAddress.getByName(nomeEndereco);
-	    Socket targetSocket = null;
-	    Connection connection = null;
-	    
+	public void connectToNode(String nomeEndereco, int targetPort) {
+		Socket targetSocket = null;
+		Connection connection = null;
+		InetAddress targetEndereco = null;
+		try {
+			targetEndereco = InetAddress.getByName(nomeEndereco);
+		
+		} catch ( IOException e ) {
+			System.out.println("Wasn't able to connect to the address");
+		}
+	  
 	    try {
 	        
 	        if (targetEndereco.equals(this.endereco) && targetPort == this.port) {
@@ -134,6 +154,7 @@ public class Node {
 
 	        
 	        connection = new Connection(targetEndereco, targetPort);
+	    	System.out.println("Got the address");
 	        System.out.println("Connection: " + connection);
 	        targetSocket = connection.getSocket();
 	        
@@ -157,6 +178,7 @@ public class Node {
 	        System.err.println("Issues connecting with node::NodeAddress [address=" + targetEndereco + " port=" + targetPort + "] - Null Socket or Connection");
 	    }
 	}
+	
 	public void sendWordSearchMessageRequest(String keyword) {
 		WordSearchMessage searchPackage = new WordSearchMessage(keyword, endereco, port);
 		try {

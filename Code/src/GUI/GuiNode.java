@@ -64,12 +64,7 @@ public class GuiNode {
                
                 JOptionPane.showMessageDialog(frame, "Endereço: " + address + "\nPorta: " + port);
                 
-                try {
-					node.connectToNode(address, port);
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+                node.connectToNode(address, port);
             }
         });
 

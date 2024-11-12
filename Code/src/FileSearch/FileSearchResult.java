@@ -7,11 +7,11 @@ public class FileSearchResult implements Serializable {
     private static final long serialVersionUID = 1L;
     private String fileName;
     private String hash;
-    private int fileSize;
+    private long fileSize;
     private String nodeAddress;
     private int port;
 
-    public FileSearchResult(WordSearchMessage searchMessage, String fileName, String hash, int fileSize, String nodeAddress, int port) {
+    public FileSearchResult(WordSearchMessage searchMessage, String fileName, String hash, long fileSize, String nodeAddress, int port) {
         this.searchMessage = searchMessage;
         this.fileName = fileName;
         this.hash = hash;
@@ -32,7 +32,7 @@ public class FileSearchResult implements Serializable {
         return hash;
     }
 
-    public int getFileSize() {
+    public long getFileSize() {
         return fileSize;
     }
 

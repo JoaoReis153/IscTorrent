@@ -82,6 +82,10 @@ public class Node {
 
 	// Construtor
 	public Node(int nodeId) {
+		if(nodeId < 0) {
+			System.err.println("ID do node inválido");
+			System.exit(1);
+		}
 		this.nodeId = nodeId;
 		this.port += nodeId;
 		String workfolder = "./dl" + nodeId;

@@ -42,7 +42,7 @@ public class Main {
 		if (test == 1) {
 
 			// Create a Node object with the input nodeId
-			Node no1 = new Node(1);
+			Node no1 = new Node(-1);
 			GUI gui1 = new GUI(no1);
 			gui1.open();
 

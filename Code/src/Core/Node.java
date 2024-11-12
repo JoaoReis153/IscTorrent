@@ -135,8 +135,7 @@ public class Node {
 				System.out.println("Não foi possível estabelecer a ligação");
 				return;
 			}
-			System.out.println(endereco);
-			System.out.println(targetPort);
+			
 			clientSocket = new Socket(endereco, targetPort);
 			System.out.println("Ligado ao " + endereco + " na porta " + targetPort);
 			in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -153,6 +152,11 @@ public class Node {
 		} else {
 			System.out.println("Houve um problema na conexão. Client Socket está a null.");
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "Node [endereco=" + endereco + ", port=" + port + "]";
 	}
 
 	public InetAddress getEndereco() {

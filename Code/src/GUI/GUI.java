@@ -11,6 +11,7 @@ import Core.Node;
 
 import java.util.ArrayList;
 import java.io.File;
+import java.io.IOException;
 
 public class GUI {
     private JFrame frame;
@@ -32,6 +33,14 @@ public class GUI {
 
     // Torna a janela visível
     public void open() {
+    	new Thread(() -> {
+			try {
+				node.startServing();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}).start();
+    	
         frame.setVisible(true);
     }
 

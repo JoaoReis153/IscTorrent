@@ -37,51 +37,52 @@ public class Main {
 		 * block.getLength()); } }
 		 */
 
-		if (args.length != 1) {
-			System.out.println("Usage: java Main <nodeId>");
-			System.exit(1);
-		}
-
 		// Parse the nodeId from the command-line argument
-		int nodeId = Integer.parseInt(args[0]);
+		int test = 1;
+		if (test == 1) {
 
-		// Create a Node object with the input nodeId
-		Node node = new Node(nodeId);
-		 
-		GUI gui = new GUI(node);
-		gui.open();
+			// Create a Node object with the input nodeId
+			Node no1 = new Node(1);
+			GUI gui1 = new GUI(no1);
+			gui1.open();
 
-		/*
-		Node no1 = new Node(1); 
-		Node no2 = new Node(2);
-		System.out.println("No1 end: " + no1.getEndereco() + " , " + no1.getPort());
-		System.out.println("No2 end: " + no2.getEndereco() + " , " + no2.getPort());
+			Node nooo = new Node(2);
+			GUI gui2 = new GUI(nooo);
+			gui2.open();
 
-		// Iniciar o servidor do no2 em uma nova thread
-		new Thread(() -> { 
-		    try {
-		        no2.startServing(); 
-		    } catch (IOException e) { 
-		        e.printStackTrace(); 
-		    }
-		}).start();
+		} else {
 
-		// Dar um pequeno atraso para garantir que o servidor de no2 esteja escutando antes da conexão
-		try { 
-		    Thread.sleep(500); 
-		} catch (InterruptedException e) { 
-		    // TODO Auto-generated catch block 
-		    e.printStackTrace(); 
+			Node no1 = new Node(4);
+			Node no2 = new Node(5);
+			System.out.println("No1 end: " + no1.getEndereco() + " , " + no1.getPort());
+			System.out.println("No2 end: " + no2.getEndereco() + " , " + no2.getPort());
+
+			// Iniciar o servidor do no2 em uma nova thread
+			new Thread(() -> {
+				try {
+					no2.startServing();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}).start();
+
+			// Dar um pequeno atraso para garantir que o servidor de no2 esteja escutando
+			// antes da conexão
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			// Tentar conectar no1 ao no2
+			try {
+				no1.connectToNode("127.0.0.1", 8085);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
 		}
 
-		// Tentar conectar no1 ao no2 
-		try { 
-		    no1.connectToNode("127.0.0.1", 8082); 
-		} catch (IOException e) { 
-		    e.printStackTrace(); 
-		}
-
-		 */
-	
 	}
 }

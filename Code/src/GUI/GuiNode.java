@@ -13,7 +13,6 @@ public class GuiNode {
     private JFrame frame;
     private Node node;
     public GuiNode(Node node) {
-    	System.out.println(node);
     	this.node = node;
         frame = new JFrame("Adicionar Nó");
         frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // Fechar apenas esta janela
@@ -64,6 +63,7 @@ public class GuiNode {
                 int port = Integer.parseInt(portText);
                
                 JOptionPane.showMessageDialog(frame, "Endereço: " + address + "\nPorta: " + port);
+                
                 try {
 					node.connectToNode(address, port);
 				} catch (IOException e1) {

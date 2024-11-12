@@ -6,6 +6,9 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
+import Core.Node;
+
 import java.util.ArrayList;
 import java.io.File;
 
@@ -14,12 +17,14 @@ public class GUI {
     private JList<String> fileList;
     private DefaultListModel<String> listModel;
     private ArrayList<String> allFiles;
-    private String workfolder; // pasta de trabalho quando se inicia o programa 
+    private File folder; // pasta de trabalho quando se inicia o programa
+    private Node node;
 
     // Construtor da classe GUI onde recebe o endereço , porta e a pasta de trabalho
-    public GUI(String address, int porta, String workfolder) {
-        this.workfolder = workfolder;
-        frame = new JFrame("Port NodeAddress [ address " + address + ":" + porta + " ]");
+    public GUI(Node node) {
+    	this.node = node;
+        this.folder = node.getFolder();
+        frame = new JFrame("Port NodeAddress [ address " + node.getEnderecoIP() + ":" + node.getPort() + " ]");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         addFrameContent();
         frame.pack();
@@ -87,7 +92,7 @@ public class GUI {
         connectButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                GuiNode newNodeWindow = new GuiNode();
+                GuiNode newNodeWindow = new GuiNode(node);
                 newNodeWindow.open();
             }
         });
@@ -111,13 +116,13 @@ public class GUI {
 
 
         allFiles = new ArrayList<>();
-        loadFilesFromWorkFolder();
+        //loadFilesFromWorkFolder();
         
     }
 
-    // Função para carregar os ficheiros da pasta de trabalho
+    /*
+     // Função para carregar os ficheiros da pasta de trabalho
     private void loadFilesFromWorkFolder() {
-        File folder = new File(workfolder);
         if (folder.exists() && folder.isDirectory()) {
             File[] files = folder.listFiles();
             if (files != null) {
@@ -130,10 +135,12 @@ public class GUI {
                 }
             }
         } else {
-            JOptionPane.showMessageDialog(frame, "Pasta de trabalho não encontrada: " + workfolder, "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "Pasta de trabalho não encontrada: " + folder.toString(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
+    */
 
+    
     private void filterFileList(String searchText) {
         listModel.clear();
         for (String file : allFiles) {
@@ -142,6 +149,7 @@ public class GUI {
             }
         }
     }
+    
 
 
 }

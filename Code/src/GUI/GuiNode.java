@@ -3,12 +3,18 @@ package GUI;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+
 import javax.swing.*;
+
+import Core.Node;
 
 public class GuiNode {
     private JFrame frame;
-
-    public GuiNode() {
+    private Node node;
+    public GuiNode(Node node) {
+    	System.out.println(node);
+    	this.node = node;
         frame = new JFrame("Adicionar Nó");
         frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // Fechar apenas esta janela
 
@@ -54,8 +60,16 @@ public class GuiNode {
             public void actionPerformed(ActionEvent e) {
                 // Aqui você pode adicionar a lógica para o que fazer com o endereço e porta
                 String address = addressField.getText();
-                String port = portField.getText();
+                String portText = portField.getText();
+                int port = Integer.parseInt(portText);
+               
                 JOptionPane.showMessageDialog(frame, "Endereço: " + address + "\nPorta: " + port);
+                try {
+					node.connectToNode(address, port);
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
             }
         });
 

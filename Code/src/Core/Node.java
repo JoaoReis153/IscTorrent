@@ -4,33 +4,25 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+import FileSearch.FileSearchResult;
+import FileSearch.WordSearchMessage;
+
 public class Node {
-
-	private class NewConnectionRequest {
-		private int port;
-
-		NewConnectionRequest(int port) {
-			this.port = port;
-		}
-
-		int getPort() {
-			return port;
-		}
-
-	}
 
 	public static class DealWithClient extends Thread {
 		private ObjectInputStream in;
 
-		private PrintWriter out;
+		private ObjectOutputStream out;
 
 		private Socket socket;
 
-		DealWithClient(Socket socket) throws IOException {
-			this.socket = socket;
-
-			in = new ObjectInputStream(socket.getInputStream()); // Change to ObjectInputStream
-			out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+		private Node node;
+		
+		DealWithClient(Connection connection, Node node) throws IOException {
+			this.socket = connection.getSocket();
+			this.in = connection.getInputStream();
+			this.out = connection.getOutputStream();
+			this.node = node;
 		}
 
 		@Override
@@ -38,23 +30,22 @@ public class Node {
 			try {
 				Object obj;
 				while ((obj = in.readObject()) != null) {
-					if (obj instanceof String) {
-						String str = (String) obj;
-						if (str.equals("FIM")) {
-							break;
-						}
-						System.out.println("Eco: " + str);
-						out.println(str);
-					}
-					// Handle other types of objects (e.g., FileBlockRequestMessage)
-					else if (obj instanceof FileBlockRequestMessage) {
+					
+					if (obj instanceof NewConnectionRequest) {
+						System.out.println("Received a connection request");
+						
+					} else if (obj instanceof WordSearchMessage) {
+						System.out.println("Received a WordSearchMessage object from content: (" + ((WordSearchMessage) obj).getKeyword() + ")");
+					} else if (obj instanceof FileSearchResult) {
+						
+					} else if (obj instanceof FileBlockRequestMessage) {
 						FileBlockRequestMessage block = (FileBlockRequestMessage) obj;
 						System.out.println("Received block: " + block.getHash());
-						// You can add logic to handle the FileBlockRequestMessage
+						
 					}
 				}
 			} catch (IOException | ClassNotFoundException e) {
-				System.out.println("Error handling client: " + e.getMessage());
+				System.out.println("Error handling client: " + e);
 			} finally {
 				try {
 					if (in != null)
@@ -70,19 +61,18 @@ public class Node {
 		}
 	}
 
-	private BufferedReader in;
-	private PrintWriter out;
 	private Socket clientSocket;
 	private final int nodeId;
 	private InetAddress endereco;
-	private Set<InetAddress> peers;
 	private final File folder;
 	private ServerSocket serverSocket;
+	private Set<Connection> peers = new HashSet<>(); 
+
 	private int port = 8080;
 
 	// Construtor
 	public Node(int nodeId) {
-		if(nodeId < 0) {
+		if (nodeId < 0) {
 			System.err.println("ID do node inválido");
 			System.exit(1);
 		}
@@ -107,8 +97,6 @@ public class Node {
 			System.exit(1);
 		}
 
-		this.peers = new HashSet<>();
-
 	}
 
 	public File getFolder() {
@@ -116,13 +104,15 @@ public class Node {
 	}
 
 	public void startServing() throws IOException {
+		System.out.println("Awaiting connection...");
 		this.serverSocket = new ServerSocket(port);
 		try {
 			while (true) {
 
 				Socket socket = serverSocket.accept();
-
-				new DealWithClient(socket).start();
+				Connection connection = new Connection(socket);
+				peers.add(connection);
+				new DealWithClient(connection, this).start();
 
 			}
 		} finally {
@@ -131,30 +121,55 @@ public class Node {
 	}
 
 	public void connectToNode(String nomeEndereco, int targetPort) throws IOException {
+		InetAddress targetEndereco = InetAddress.getByName(nomeEndereco);
+		Socket targetSocket = null;
 		try {
-			InetAddress endereco = InetAddress.getByName(nomeEndereco);
-			System.out.println("Endereco:" + endereco + " - Port: " + targetPort);
 
-			if (endereco.equals(this.endereco) && targetPort == this.port) {
-				System.out.println("Não foi possível estabelecer a ligação");
+			if (targetEndereco .equals(this.endereco) && targetPort == this.port) {
+				System.out.println("Issues connecting with node::NodeAddress [address=" + targetEndereco + " port=" + targetPort + "]");
 				return;
 			}
+
 			
-			clientSocket = new Socket(endereco, targetPort);
-			System.out.println("Ligado ao " + endereco + " na porta " + targetPort);
-			in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-			out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())), true);
+			Connection connection = new Connection(endereco, targetPort);
+			targetSocket = connection.getSocket();
+			ObjectOutputStream out = connection.getOutputStream();
+			NewConnectionRequest request = new NewConnectionRequest(connection, endereco, targetPort);
+			out.writeObject(request);
+			out.flush();
+			System.out.println("Added new node::NodeAddress [address=" + targetEndereco  + " port=" + targetPort + "]");
+
 		} catch (IOException e) {
-			System.out.println(
-					"Problema na conexão com o " + nomeEndereco + " na porta " + targetPort + ": " + e.getMessage());
-			clientSocket = null;
+			System.out.println("Issues connecting with node::NodeAddress [address=" + targetEndereco + " port=" + targetPort + "] - "
+					+ e.getMessage());
+			targetSocket  = null;
 		}
+
+		Connection connection = new Connection(endereco, targetPort);
 		
-		if (clientSocket != null) {
-			System.out.println("Client Socket: " + clientSocket);
-			peers.add(endereco);
+		if (targetSocket  != null) {
+			peers.add(connection);
 		} else {
-			System.out.println("Houve um problema na conexão. Client Socket está a null.");
+			System.out.println("Issues connecting with node::NodeAddress [address=" + targetEndereco + " port=" + targetPort + "] - Null Socket");
+		}
+	}
+	
+	public void sendWordSearchMessageRequest(String keyword) {
+		WordSearchMessage searchPackage = new WordSearchMessage(keyword, endereco, port);
+		try {
+			for(Connection peer : peers) {
+				
+				ObjectOutputStream objectOut = peer.getOutputStream();
+				
+				 if (objectOut != null) {
+		                System.out.println("Sent a search package");
+		                objectOut.writeObject(searchPackage);
+		                objectOut.flush();
+		            }
+			}
+
+		} catch (IOException e) {
+			System.out.println("Error sending object: " + e.getMessage());
 		}
 	}
 
@@ -182,3 +197,4 @@ public class Node {
 	}
 
 }
+

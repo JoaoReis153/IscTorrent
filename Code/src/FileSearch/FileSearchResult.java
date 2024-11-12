@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 public class FileSearchResult implements Serializable {
     private WordSearchMessage searchMessage;
+    private static final long serialVersionUID = 1L;
     private String fileName;
     private String hash;
     private int fileSize;

@@ -92,8 +92,7 @@ public class Connection {
 
 	@Override
 	public String toString() {
-		return "Connection [port=" + port + ", socket=" + socket + ", inputStream=" + inputStream + ", outputStream="
-				+ outputStream + "]";
+		return "Connection [targetPort=" + port + ", socket=" + socket + "]";
 	}
 
 }

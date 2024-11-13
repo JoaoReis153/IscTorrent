@@ -29,7 +29,7 @@ public class Node {
 		private Socket socket;
 		private Node node;
 		
-		DealWithClient(Connection connection, Node node) {
+		DealWithClient(Connection connection, Node node) throws IOException {
 			this.socket = connection.getSocket();
 			this.in = connection.getInputStream();
 			this.out = connection.getOutputStream();
@@ -118,10 +118,10 @@ public class Node {
 		return folder;
 	}
 
-	public void startServing() {
+	public void startServing() throws IOException {
 		System.out.println("Awaiting connection...");
-		
-		try (this.serverSocket = new ServerSocket(port)) {
+		this.serverSocket = new ServerSocket(port);
+		try {
 			while (true) {
 
 				Socket socket = serverSocket.accept();

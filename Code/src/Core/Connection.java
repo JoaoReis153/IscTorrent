@@ -34,7 +34,7 @@ public class Connection {
 		}
 	}
 
-	Connection(Socket socket) {
+	Connection(Socket socket) throws IOException {
 		this.socket = socket;
 		this.port = socket.getPort();
 		this.outputStream = new ObjectOutputStream(socket.getOutputStream());

@@ -156,7 +156,6 @@ public class Node {
 			return;
 		}
 
-		
 		// Tentativa de conexao
 	    try {
 	        
@@ -164,8 +163,6 @@ public class Node {
 	            System.out.println("Issues connecting with node::NodeAddress [address=" + targetEndereco + " port=" + targetPort + "] - Can't connect to itself");
 	            return;
 	        }
-
-
 	        
 	        connection = new Connection(targetEndereco, targetPort);
 

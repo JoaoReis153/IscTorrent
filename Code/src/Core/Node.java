@@ -23,7 +23,7 @@ public class Node {
 		private Node node;
 
 		
-		DealWithClient(Connection connection, Node node) throws IOException {
+		DealWithClient(Connection connection, Node node) {
 			this.socket = connection.getSocket();
 			this.in = connection.getInputStream();
 			this.out = connection.getOutputStream();
@@ -80,7 +80,7 @@ public class Node {
 		}
 	}
 
-	private Socket clientSocket;
+	
 	private final int nodeId;
 	private InetAddress endereco;
 	private final File folder;
@@ -123,10 +123,10 @@ public class Node {
 		return folder;
 	}
 
-	public void startServing() throws IOException {
+	public void startServing() {
 		System.out.println("Awaiting connection...");
-		this.serverSocket = new ServerSocket(port);
-		try {
+		
+		try (this.serverSocket = new ServerSocket(port)) {
 			while (true) {
 
 				Socket socket = serverSocket.accept();

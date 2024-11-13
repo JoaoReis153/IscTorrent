@@ -12,7 +12,7 @@ public class Main {
 	public static void main(String[] args) throws IOException {
 
 		// Parse the nodeId from the command-line argument
-		int test = 1;
+		int test = 4;
 		if (test == 1) {
 
 			// Create a Node object with the input nodeId
@@ -89,6 +89,12 @@ public class Main {
 				  } 
 			  }
 			 
+
+		} else if (test == 4) {
+			int argument = Integer.parseInt(args[0]);
+			Node no1 = new Node(argument);
+			GUI gui1 = new GUI(no1);
+			gui1.open();
 
 		}
 

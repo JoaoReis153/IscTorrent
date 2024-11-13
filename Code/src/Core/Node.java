@@ -26,7 +26,7 @@ public class Node {
 		private Socket socket;
 		private Node node;
 		
-		DealWithClient(Connection connection, Node node) throws IOException {
+		DealWithClient(Connection connection, Node node) {
 			this.socket = connection.getSocket();
 			this.in = connection.getInputStream();
 			this.out = connection.getOutputStream();
@@ -114,10 +114,9 @@ public class Node {
 		return folder;
 	}
 
-	public void startServing() throws IOException {
-		System.out.println("Awaiting connection...");
-		this.serverSocket = new ServerSocket(port);
-		try {
+	public void startServing() {
+
+		try (ServerSocket serverSocket = new ServerSocket(port)) {
 			while (true) {
 
 				Socket socket = serverSocket.accept();
@@ -126,9 +125,11 @@ public class Node {
 				new DealWithClient(connection, this).start();
 
 			}
-		} finally {
-			serverSocket.close();
+		} catch (IOException e) {
+			System.err.println("Failed to start server: " + e.getMessage());
+			System.exit(1);
 		}
+		System.out.println("Awaiting connection...");
 	}
 
 	public void connectToNode(String nomeEndereco, int targetPort) {

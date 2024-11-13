@@ -35,11 +35,7 @@ public class GUI {
     // Torna a janela visível
     public void open() {
     	new Thread(() -> {
-			try {
-				node.startServing();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			node.startServing();
 		}).start();
     	
         frame.setVisible(true);

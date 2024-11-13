@@ -119,6 +119,7 @@ public class Node {
 	public void startServing() {
 
 		try (ServerSocket serverSocket = new ServerSocket(port)) {
+			this.serverSocket = serverSocket;
 			while (true) {
 
 				Socket socket = serverSocket.accept();

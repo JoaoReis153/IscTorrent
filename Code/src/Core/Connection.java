@@ -33,11 +33,16 @@ public class Connection {
 		}
 	}
 
-	Connection(Socket socket) throws IOException {
+	Connection(Socket socket) {
 		this.socket = socket;
 		this.port = socket.getPort();
-		this.outputStream = new ObjectOutputStream(socket.getOutputStream());
-		this.inputStream = new ObjectInputStream(socket.getInputStream());
+		try {
+			
+			this.outputStream = new ObjectOutputStream(socket.getOutputStream());
+			this.inputStream = new ObjectInputStream(socket.getInputStream());
+		} catch (IOException e) {
+			System.err.println("Error creating the object streams for the connection");
+		}
 	}
 
 	public int getPort() {

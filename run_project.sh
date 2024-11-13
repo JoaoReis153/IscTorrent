@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Define paths for the project
 PROJECT_DIR="./code"
 SRC_DIR="$PROJECT_DIR/src"
@@ -27,4 +26,3 @@ fi
 # Step 2: Run the main class with the integer argument
 echo "Running the main class with argument $1..."
 java -cp "$BIN_DIR" "$MAIN_CLASS" "$1"
-

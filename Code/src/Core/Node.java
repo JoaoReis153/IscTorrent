@@ -12,13 +12,10 @@ import GUI.GUI;
 
 public class Node {
 
-	private Socket clientSocket;
-	private final int nodeId;
 	private InetAddress endereco;
 	private final File folder;
 	private ServerSocket serverSocket;
 	private Set<Connection> peers = new HashSet<>();
-	private Set<Integer> connectedPorts = new HashSet<>();
 	
 	private int port = 8080;
 
@@ -92,7 +89,6 @@ public class Node {
 			System.err.println("ID do node inválido");
 			System.exit(1);
 		}
-		this.nodeId = nodeId;
 		this.port += nodeId;
 		String workfolder = "Code/dl" + nodeId;
 		this.folder = new File(workfolder);
@@ -160,13 +156,6 @@ public class Node {
 			return;
 		}
 
-		// Validacao da porta de forma a nao conectar com o mesmo no
-		if (connectedPorts.contains(targetPort) || targetPort == port) {
-			System.out.println("Issues connecting with node::NodeAddress [address=" + nomeEndereco + " port=" + targetPort + "] is already connected");
-			return;
-		} else {
-			connectedPorts.add(targetPort);
-		}
 		
 		// Tentativa de conexao
 	    try {
@@ -179,8 +168,7 @@ public class Node {
 
 	        
 	        connection = new Connection(targetEndereco, targetPort);
-	    	System.out.println("Got the address");
-	        System.out.println("Connection: " + connection);
+
 	        targetSocket = connection.getSocket();
 	        
 	        
@@ -205,7 +193,6 @@ public class Node {
 	    // Adicionar a conexao
 	    if (targetSocket != null && connection != null) {
 	        peers.add(connection);
-			System.out.println("Peers: " + peers);
 	    } else {
 	        System.err.println("Issues connecting with node::NodeAddress [address=" + targetEndereco + " port=" + targetPort + "] - Null Socket or Connection");
 	    }

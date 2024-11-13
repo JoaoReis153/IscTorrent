@@ -168,7 +168,7 @@ public class Node {
 	            return;
 	        }
 	        
-	        connection = new Connection(targetEndereco, targetPort);
+	        connection = new Connection(targetEndereco, port, targetPort);
 
 	        targetSocket = connection.getSocket();
 	        

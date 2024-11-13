@@ -9,16 +9,18 @@ import java.net.SocketTimeoutException;
 
 public class Connection {
 
-	private int port;
+	private int targetport;
+	private int originport;
 	private Socket socket;
 	private ObjectInputStream inputStream;
 	private ObjectOutputStream outputStream;
 
-	Connection(InetAddress address, int port) {
-		this.port = port;
+	Connection(InetAddress address, int originport, int targetport) {
+		this.originport = originport;
+		this.targetport = targetport;
 		try {
 
-			socket = new Socket(address, port);
+			socket = new Socket(address, targetport);
 			
 			this.outputStream = new ObjectOutputStream(socket.getOutputStream());
 			
@@ -92,7 +94,7 @@ public class Connection {
 
 	@Override
 	public String toString() {
-		return "Connection [targetPort=" + port + ", socket=" + socket + "]";
+		return "Connection [Ports(from/to):" + originport + "::" + targetport + ", Address(From/To):" + socket.getLocalAddress().toString() + "::" + socket.getInetAddress().toString() + "]";
 	}
 
 }

@@ -33,11 +33,7 @@ public class Main {
 
 			// Iniciar o servidor do no2 em uma nova thread
 			new Thread(() -> {
-				try {
-					no2.startServing();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				no2.startServing();
 			}).start();
 
 

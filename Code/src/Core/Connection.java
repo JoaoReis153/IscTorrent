@@ -9,35 +9,35 @@ import java.net.SocketTimeoutException;
 
 public class Connection {
 
-	private int targetport;
-	private int originport;
+	private int targetPort;
+	private int originPort;
 	private Socket socket;
 	private ObjectInputStream inputStream;
 	private ObjectOutputStream outputStream;
 
-	Connection(InetAddress address, int originport, int targetport) {
-		this.originport = originport;
-		this.targetport = targetport;
+	Connection(InetAddress targetAddress, int originport, int targetport) {
+		this.originPort = originport;
+		this.targetPort = targetport;
 		try {
 
-			socket = new Socket(address, targetport);
+			socket = new Socket(targetAddress, targetport);
 			
 			this.outputStream = new ObjectOutputStream(socket.getOutputStream());
 			
 			this.inputStream = new ObjectInputStream(socket.getInputStream());
 			
 		} catch (SocketTimeoutException e) {
-			System.err.println("Connection timed out while connecting to " + address + "::" + port);
+			System.err.println("Connection timed out while connecting to " + targetAddress + "::" + targetPort);
 			close(); 
 		} catch (IOException e) {
-			System.err.println("I/O error occurred while connecting to " + address + "::" + port + " - " + e.getMessage());
+			System.err.println("I/O error occurred while connecting to " + targetAddress + "::" + targetPort + " - " + e.getMessage());
 			close();
 		}
 	}
 
-	Connection(Socket socket) {
+	Connection(Socket socket, int originPort) {
 		this.socket = socket;
-		this.port = socket.getPort();
+		this.originPort = originPort;
 		try {
 			
 			this.outputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -47,8 +47,12 @@ public class Connection {
 		}
 	}
 
-	public int getPort() {
-		return port;
+	public int getOriginPort() {
+		return originPort;
+	}
+	
+	public int getTargetPort() {
+		return targetPort;
 	}
 
 	public Socket getSocket() {
@@ -94,7 +98,7 @@ public class Connection {
 
 	@Override
 	public String toString() {
-		return "Connection [Ports(from/to):" + originport + "::" + targetport + ", Address(From/To):" + socket.getLocalAddress().toString() + "::" + socket.getInetAddress().toString() + "]";
+		return "Connection [Ports(from/to):" + originPort + "::" + targetPort + ", Address(From/To):" + socket.getLocalAddress().toString() + "::" + socket.getInetAddress().toString() + "]";
 	}
 
 }

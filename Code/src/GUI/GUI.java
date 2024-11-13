@@ -18,13 +18,11 @@ public class GUI {
     private JList<String> fileList;
     private DefaultListModel<String> listModel;
     private ArrayList<String> allFiles;
-    private File folder; // pasta de trabalho quando se inicia o programa
     private Node node;
 
     // Construtor da classe GUI onde recebe o endereço , porta e a pasta de trabalho
     public GUI(Node node) {
     	this.node = node;
-        this.folder = node.getFolder();
         frame = new JFrame("Port NodeAddress [ address " + node.getEnderecoIP() + ":" + node.getPort() + " ]");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         addFrameContent();
@@ -127,31 +125,8 @@ public class GUI {
 
 
         allFiles = new ArrayList<>();
-        //loadFilesFromWorkFolder();
-        
     }
 
-    /*
-     // Função para carregar os ficheiros da pasta de trabalho
-    private void loadFilesFromWorkFolder() {
-        if (folder.exists() && folder.isDirectory()) {
-            File[] files = folder.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    if (file.isFile()) { // Verifica se é um ficheiro (não uma pasta)
-                        String fileName = file.getName();
-                        allFiles.add(fileName);  // Adiciona à lista de todos os ficheiros
-                        listModel.addElement(fileName);  // Adiciona à lista exibida na GUI
-                    }
-                }
-            }
-        } else {
-            JOptionPane.showMessageDialog(frame, "Pasta de trabalho não encontrada: " + folder.toString(), "Erro", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-    */
-
-    
     private void filterFileList(String searchText) {
         listModel.clear();
         for (String file : allFiles) {

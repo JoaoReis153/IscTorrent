@@ -59,7 +59,7 @@ public class Node {
 			while (true) {
 
 				Socket socket = serverSocket.accept();
-				Connection connection = new Connection(socket);
+				Connection connection = new Connection(socket, port);
 				peers.add(connection);
 				new DealWithClient(connection, this).start();
 

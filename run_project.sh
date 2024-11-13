@@ -1,4 +1,5 @@
 #!/bin/bash
+sed -i -e 's/\r$//' run_project.sh
 # Define paths for the project
 PROJECT_DIR="./code"
 SRC_DIR="$PROJECT_DIR/src"

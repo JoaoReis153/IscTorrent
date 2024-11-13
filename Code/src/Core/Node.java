@@ -12,16 +12,22 @@ import GUI.GUI;
 
 public class Node {
 
+	private Socket clientSocket;
+	private final int nodeId;
+	private InetAddress endereco;
+	private final File folder;
+	private ServerSocket serverSocket;
+	private Set<Connection> peers = new HashSet<>();
+	private Set<Integer> connectedPorts = new HashSet<>();
+	
+	private int port = 8080;
+
 	public static class DealWithClient extends Thread {
 		
 		private ObjectInputStream in;
-
 		private ObjectOutputStream out;
-
 		private Socket socket;
-
 		private Node node;
-
 		
 		DealWithClient(Connection connection, Node node) throws IOException {
 			this.socket = connection.getSocket();
@@ -79,17 +85,6 @@ public class Node {
 			}
 		}
 	}
-
-	private Socket clientSocket;
-	private final int nodeId;
-	private InetAddress endereco;
-	private final File folder;
-	private ServerSocket serverSocket;
-	private Set<Connection> peers = new HashSet<>();
-	private Set<Integer> connectedPorts = new HashSet<>();
-
-
-	private int port = 8080;
 
 	// Construtor
 	public Node(int nodeId) {
@@ -159,18 +154,24 @@ public class Node {
 			return;
 		}
 
+		
+		if (this.port > 8080 && targetPort <= 8080) {
+			System.out.println("Issues connecting with node::NodeAddress [address=" + nomeEndereco + " port=" + targetPort + "] - Cannot connect to ports below or equal to 8080.");
+			return;
+		}
+		
+		if (this.port <= 8080 && targetPort <= this.port) {
+			System.out.println("Issues connecting with node::NodeAddress [address=" + nomeEndereco + " port=" + targetPort + "] - Can only connect to ports greater than " + this.port);
+			return;
+		}
+		
+
 		// Validacao da porta de forma a nao conectar com o mesmo no
-		if (connectedPorts.contains(targetPort)) {
+		if (connectedPorts.contains(targetPort) || targetPort == port) {
 			System.out.println("Issues connecting with node::NodeAddress [address=" + nomeEndereco + " port=" + targetPort + "] is already connected");
 			return;
 		} else {
 			connectedPorts.add(targetPort);
-		}
-
-		// Validacao da porta
-		if (targetPort < port) {
-			System.out.println("Issues connecting with node::NodeAddress [address=" + nomeEndereco + " port=" + targetPort + "] - Invalid port");
-			return;
 		}
 		
 		// Tentativa de conexao
@@ -181,6 +182,7 @@ public class Node {
 	            return;
 	        }
 
+
 	        
 	        connection = new Connection(targetEndereco, targetPort);
 	    	System.out.println("Got the address");
@@ -189,6 +191,12 @@ public class Node {
 	        
 	        
 	        ObjectOutputStream out = connection.getOutputStream();
+
+			if (out == null) {
+				System.out.println("Outputstream / Inputstream null [invalid port: " + targetPort + "]");
+				return;
+			}
+
 	        NewConnectionRequest request = new NewConnectionRequest(endereco, targetPort);
 	        out.writeObject(request);
 	        out.flush();

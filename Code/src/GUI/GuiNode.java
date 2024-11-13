@@ -10,15 +10,15 @@ import javax.swing.*;
 import Core.Node;
 
 public class GuiNode {
+
     private JFrame frame;
     private Node node;
+
     public GuiNode(Node node) {
     	this.node = node;
         frame = new JFrame("Adicionar Nó");
         frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // Fechar apenas esta janela
-
         addFrameContent();
-
         frame.pack(); // Ajusta o tamanho da janela
     }
 

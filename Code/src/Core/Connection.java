@@ -30,6 +30,7 @@ public class Connection {
 		} catch (IOException e) {
 			System.err.println("I/O error occurred while connecting to " + address + "::" + port + " - " + e.getMessage());
 			close();
+			return;
 		}
 	}
 
@@ -50,16 +51,14 @@ public class Connection {
 
 	public ObjectInputStream getInputStream() {
 		if(inputStream == null || outputStream == null) {
-			System.out.println("InputStream/Outputstream null");
-			throw new NullPointerException("Couldn't establish the connection");
+			return null;
 		}
 		return inputStream;
 	}
 
 	public ObjectOutputStream getOutputStream() {
 		if(inputStream == null || outputStream == null) {
-			System.out.println("InputStream/Outputstream null");
-			throw new NullPointerException("Couldn't establish the connection");
+			return null;
 		}
 		return outputStream;
 	}

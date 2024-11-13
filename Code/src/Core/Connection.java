@@ -50,16 +50,16 @@ public class Connection {
 	}
 
 	public ObjectInputStream getInputStream() {
-		if(inputStream == null || outputStream == null) {
-			return null;
-		}
+		if(inputStream == null) 
+			throw new NullPointerException("The input stream is null");
+		
 		return inputStream;
 	}
 
 	public ObjectOutputStream getOutputStream() {
-		if(inputStream == null || outputStream == null) {
-			return null;
-		}
+		if(outputStream == null) 
+			throw new NullPointerException("The output stream is null");
+		
 		return outputStream;
 	}
 

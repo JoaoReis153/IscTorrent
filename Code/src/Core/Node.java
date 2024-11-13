@@ -159,12 +159,6 @@ public class Node {
 			System.out.println("Issues connecting with node::NodeAddress [address=" + nomeEndereco + " port=" + targetPort + "] - Cannot connect to ports below or equal to 8080.");
 			return;
 		}
-		
-		if (this.port <= 8080 && targetPort <= this.port) {
-			System.out.println("Issues connecting with node::NodeAddress [address=" + nomeEndereco + " port=" + targetPort + "] - Can only connect to ports greater than " + this.port);
-			return;
-		}
-		
 
 		// Validacao da porta de forma a nao conectar com o mesmo no
 		if (connectedPorts.contains(targetPort) || targetPort == port) {

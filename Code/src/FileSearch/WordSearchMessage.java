@@ -3,7 +3,6 @@ package FileSearch;
 import java.io.Serializable;
 import java.net.InetAddress;
 
-import Core.Node;
 
 public class WordSearchMessage implements Serializable {
 	private static final long serialVersionUID = 1L;

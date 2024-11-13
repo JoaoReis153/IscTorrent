@@ -4,12 +4,16 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+import javax.swing.SwingUtilities;
+
 import FileSearch.FileSearchResult;
 import FileSearch.WordSearchMessage;
+import GUI.GUI;
 
 public class Node {
 
 	public static class DealWithClient extends Thread {
+		
 		private ObjectInputStream in;
 
 		private ObjectOutputStream out;
@@ -17,6 +21,7 @@ public class Node {
 		private Socket socket;
 
 		private Node node;
+
 		
 		DealWithClient(Connection connection, Node node) throws IOException {
 			this.socket = connection.getSocket();
@@ -30,7 +35,7 @@ public class Node {
 			try {
 				Object obj;
 				while ((obj = in.readObject()) != null) {
-					System.out.println("Received: " + obj);
+					//System.out.println("Received: " + obj);
 					if (obj instanceof NewConnectionRequest) {
 						System.out.println("Received a connection request");
 						
@@ -80,7 +85,9 @@ public class Node {
 	private InetAddress endereco;
 	private final File folder;
 	private ServerSocket serverSocket;
-	private Set<Connection> peers = new HashSet<>(); 
+	private Set<Connection> peers = new HashSet<>();
+	private Set<Integer> connectedPorts = new HashSet<>();
+
 
 	private int port = 8080;
 
@@ -92,14 +99,13 @@ public class Node {
 		}
 		this.nodeId = nodeId;
 		this.port += nodeId;
-		String workfolder = "./dl" + nodeId;
+		String workfolder = "Code/dl" + nodeId;
 		this.folder = new File(workfolder);
 
 		if (!this.folder.exists()) {
 			boolean created = this.folder.mkdirs();
 			if (!created) {
 				System.out.println("Não foi possível criar a pasta dl" + nodeId);
-
 				System.exit(1);
 			}
 		}
@@ -135,20 +141,43 @@ public class Node {
 	}
 
 	public void connectToNode(String nomeEndereco, int targetPort) {
+
 		Socket targetSocket = null;
 		Connection connection = null;
 		InetAddress targetEndereco = null;
+
+		// Validacao do endereco
 		try {
 			targetEndereco = InetAddress.getByName(nomeEndereco);
-		
 		} catch ( IOException e ) {
 			System.out.println("Wasn't able to connect to the address");
 		}
-	  
+
+		// Validacao do endereco
+		if (targetEndereco == null || !targetEndereco.equals(this.endereco)) {
+			System.out.println("Issues connecting with node::NodeAddress [address=" + nomeEndereco + " port=" + targetPort + "] - Invalid address");
+			return;
+		}
+
+		// Validacao da porta de forma a nao conectar com o mesmo no
+		if (connectedPorts.contains(targetPort)) {
+			System.out.println("Issues connecting with node::NodeAddress [address=" + nomeEndereco + " port=" + targetPort + "] is already connected");
+			return;
+		} else {
+			connectedPorts.add(targetPort);
+		}
+
+		// Validacao da porta
+		if (targetPort < port) {
+			System.out.println("Issues connecting with node::NodeAddress [address=" + nomeEndereco + " port=" + targetPort + "] - Invalid port");
+			return;
+		}
+		
+		// Tentativa de conexao
 	    try {
 	        
 	        if (targetEndereco.equals(this.endereco) && targetPort == this.port) {
-	            System.out.println("Issues connecting with node::NodeAddress [address=" + targetEndereco + " port=" + targetPort + "]");
+	            System.out.println("Issues connecting with node::NodeAddress [address=" + targetEndereco + " port=" + targetPort + "] - Can't connect to itself");
 	            return;
 	        }
 
@@ -171,14 +200,16 @@ public class Node {
 	        targetSocket = null;
 	    }
 
-	    
+	    // Adicionar a conexao
 	    if (targetSocket != null && connection != null) {
 	        peers.add(connection);
+			System.out.println("Peers: " + peers);
 	    } else {
 	        System.err.println("Issues connecting with node::NodeAddress [address=" + targetEndereco + " port=" + targetPort + "] - Null Socket or Connection");
 	    }
 	}
 	
+
 	public void sendWordSearchMessageRequest(String keyword) {
 		WordSearchMessage searchPackage = new WordSearchMessage(keyword, endereco, port);
 		try {

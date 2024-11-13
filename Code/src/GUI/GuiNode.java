@@ -33,6 +33,7 @@ public class GuiNode {
         // Rótulo e campo de texto para Endereço
         JLabel addressLabel = new JLabel("Endereço:");
         JTextField addressField = new JTextField(15); // Campo de texto para o endereço
+        addressField.setText(node.getEnderecoIP());
         frame.add(addressLabel);
         frame.add(addressField);
 

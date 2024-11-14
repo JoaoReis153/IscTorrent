@@ -124,7 +124,9 @@ public class GUI {
     }
 
     public void loadListModel(FileSearchResult[] list) {
-    	//listModel.clear();
+    	listModel.clear();
+    	System.out.println(list);
+    	if (list == null || list.length == 0) return;
     	for(FileSearchResult searchResult : list) {
     		listModel.addElement(searchResult.getFileName().toString());
     	}

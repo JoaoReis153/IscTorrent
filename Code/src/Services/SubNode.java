@@ -48,7 +48,7 @@ public class SubNode extends Thread {
 				} else if (obj instanceof FileSearchResult[]) {
 
 					FileSearchResult[] searchResultList = (FileSearchResult[]) obj;
-					System.out.println("Port: " + searchResultList[0].getPort() + " - received " + searchResultList.length + " FileSearchResult");
+	//				System.out.println("Port: " + searchResultList[0].getPort() + " - received " + searchResultList.length + " FileSearchResult");
 					gui.loadListModel(searchResultList);
 
 				} else if (obj instanceof FileBlockRequestMessage) {
@@ -77,8 +77,8 @@ public class SubNode extends Thread {
 		WordSearchMessage searchPackage = new WordSearchMessage(keyword);
 		if (out != null) {
 			try {
-				gui.listModel.removeAllElements();
 				System.out.println("Sent a WordSearchMessageRequest");
+				System.out.println("Seach package: " + searchPackage);
 				out.writeObject(searchPackage);
 				out.flush();
 			} catch (IOException e) {
@@ -91,25 +91,37 @@ public class SubNode extends Thread {
 	public void sendFileSearchResultList(WordSearchMessage obj) {
 		File[] files = node.getFolder().listFiles();
 		if (files != null) {
-			gui.listModel.clear();
+			String keyword = obj.getKeyword().toLowerCase();
+			int keywordCount = 0;
+			
+			for (File file : files) {
+				String fileName = file.getName().toLowerCase();
+				if(fileName.contains(keyword)) {
+					keywordCount++;
+				}
+			}
+			
+			if (keywordCount == 0) return;
+			
+			FileSearchResult[] f = new FileSearchResult[keywordCount];
 			int counter = 0;
-			FileSearchResult[] f = new FileSearchResult[files.length];
+			
 			for (File file : files) {
 				String h1 = Utils.generateSHA256(file.getAbsolutePath());
 				String fileName = file.getName().toLowerCase();
-				String keyword = obj.getKeyword().toLowerCase();
 				if(fileName.contains(keyword)) {									
 					FileSearchResult response = new FileSearchResult( obj, file.getName(), h1, file.length(), node.getEnderecoIP(), node.getPort());
 					f[counter++] = response;
 				}
 			}
+			
 			try {
 				this.out.writeObject(f);
 				this.out.flush();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				System.err.println("There was a problem sending the list of FileSearchResults");
-				e.printStackTrace();
+				//e.printStackTrace()
 			}
 		}
 	}
@@ -126,7 +138,7 @@ public class SubNode extends Thread {
 			out.flush();
 		} catch (IOException e) {
 			System.out.println("[ERROR::NewConnectionRequest]");
-			e.printStackTrace();
+			//e.printStackTrace()
 		}
 
 		System.out.println("Added new node::NodeAddress [address=" + endereco + " port=" + targetPort + "]");

@@ -96,7 +96,7 @@ public class Node {
 			System.out.println("Wasn't able to connect to the address");
 		}
 
-		if (targetPort <= 8080) {
+		if (targetPort <= 8080 || targetPort >= 65535) {
 			System.out.println("Issues connecting with node::NodeAddress [address=" + nomeEndereco + " port="
 					+ targetPort + "] - Cannot connect to ports below or equal to 8080.");
 			return;

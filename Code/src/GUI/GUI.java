@@ -4,15 +4,11 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import Core.Node;
 import FileSearch.FileSearchResult;
 
 import java.util.ArrayList;
-import java.io.File;
-import java.io.IOException;
 
 public class GUI {
     private JFrame frame;
@@ -119,16 +115,14 @@ public class GUI {
             }
         });
 
-
         allFiles = new ArrayList<>();
     }
 
     public void loadListModel(FileSearchResult[] list) {
     	listModel.clear();
-    	System.out.println(list);
     	if (list == null || list.length == 0) return;
     	for(FileSearchResult searchResult : list) {
-    		listModel.addElement(searchResult.getFileName().toString());
+    		listModel.addElement(searchResult.getFileName());
     	}
     }
    

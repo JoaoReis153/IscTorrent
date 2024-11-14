@@ -48,7 +48,7 @@ public class SubNode extends Thread {
 				} else if (obj instanceof FileSearchResult[]) {
 
 					FileSearchResult[] searchResultList = (FileSearchResult[]) obj;
-	//				System.out.println("Port: " + searchResultList[0].getPort() + " - received " + searchResultList.length + " FileSearchResult");
+
 					gui.loadListModel(searchResultList);
 
 				} else if (obj instanceof FileBlockRequestMessage) {
@@ -77,8 +77,7 @@ public class SubNode extends Thread {
 		WordSearchMessage searchPackage = new WordSearchMessage(keyword);
 		if (out != null) {
 			try {
-				System.out.println("Sent a WordSearchMessageRequest");
-				System.out.println("Seach package: " + searchPackage);
+				System.out.println("Sent a WordSearchMessageRequest with keyword: " + keyword);
 				out.writeObject(searchPackage);
 				out.flush();
 			} catch (IOException e) {

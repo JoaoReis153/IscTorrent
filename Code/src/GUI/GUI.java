@@ -8,6 +8,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import Core.Node;
+import FileSearch.FileSearchResult;
 
 import java.util.ArrayList;
 import java.io.File;
@@ -114,9 +115,7 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String searchText = searchTextField.getText().toLowerCase();
-                listModel.clear();
                 node.broadcastWordSearchMessageRequest(searchText);
-                //filterFileList(searchText);
             }
         });
 
@@ -124,15 +123,12 @@ public class GUI {
         allFiles = new ArrayList<>();
     }
 
-    public void filterFileList(String searchText) {
-        listModel.clear();
-        for (String file : allFiles) {
-            if (file.toLowerCase().contains(searchText)) {
-                listModel.addElement(file);
-            }
-        }
+    public void loadListModel(FileSearchResult[] list) {
+    	//listModel.clear();
+    	for(FileSearchResult searchResult : list) {
+    		listModel.addElement(searchResult.getFileName().toString());
+    	}
     }
-    
-
+   
 
 }

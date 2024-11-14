@@ -45,25 +45,26 @@ public class SubNode extends Thread {
 						File[] files = node.getFolder().listFiles();
 						if (files != null) {
 							gui.listModel.clear();
+							int counter = 0;
+							FileSearchResult[] f = new FileSearchResult[files.length];
 							for (File file : files) {
 								String h1 = Utils.generateSHA256(file.getAbsolutePath());
-								FileSearchResult response = new FileSearchResult((WordSearchMessage) obj,
-										file.getName(), h1, file.length(), node.getEnderecoIP(), node.getPort());
-								this.out.writeObject(response);
-								this.out.flush();
-								if ( file.getName().toLowerCase().contains(response.getSearchMessage().getKeyword().toLowerCase())) {
-									if (!gui.listModel.contains(file.getName())) {
-										gui.listModel.addElement(file.getName());
-									}
+								if(file.getName().toLowerCase().contains(((WordSearchMessage) obj).getKeyword().toLowerCase())) {									
+									FileSearchResult response = new FileSearchResult((WordSearchMessage) obj,
+											file.getName(), h1, file.length(), node.getEnderecoIP(), node.getPort());
+									f[counter++] = response;
 								}
-								
 							}
+							this.out.writeObject(f);
+							this.out.flush();
 						}
 					}
 					
-				} else if (obj instanceof FileSearchResult) {
-					FileSearchResult result = (FileSearchResult) obj;
-					System.out.println("Port: " + result.getPort() +"Received FileSearchResult");
+				} else if (obj instanceof FileSearchResult[]) {
+
+					FileSearchResult[] searchResultList = (FileSearchResult[]) obj;
+					System.out.println("Port: " + searchResultList[0].getPort() + " - received " + searchResultList.length + " FileSearchResult");
+					gui.loadListModel(searchResultList);
 
 				} else if (obj instanceof FileBlockRequestMessage) {
 					System.out.println("Received FileBlockRequestMessage");

@@ -75,8 +75,6 @@ public class Node {
 
 	public void broadcastWordSearchMessageRequest(String keyword) {
 
-		gui.listModel.clear();
-
 		for (SubNode peer : peers) {
 
 			peer.sendWordSearchMessageRequest(keyword);

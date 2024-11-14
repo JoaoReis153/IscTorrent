@@ -32,10 +32,12 @@ public class SubNode extends Thread {
 
 				if (obj instanceof NewConnectionRequest) {
 					System.out.println("Received a connection request");
-
+			
 				} else if (obj instanceof WordSearchMessage) {
 					System.out.println("Received a WordSearchMessage object with content: ("
 							+ ((WordSearchMessage) obj).getKeyword() + ")");
+					
+							
 					if (node.getFolder().exists() && node.getFolder().isDirectory()) {
 						File[] files = node.getFolder().listFiles();
 						if (files != null) {
@@ -45,13 +47,18 @@ public class SubNode extends Thread {
 										file.getName(), h1, file.length(), node.getEnderecoIP(), node.getPort());
 								this.out.writeObject(response);
 								this.out.flush();
-								System.out.println(file.getName());
+								if ( file.getName().contains(response.getSearchMessage().getKeyword())) {
+									System.out.println(file.getName());
+								}
+								
 							}
 						}
 					}
+					
 				} else if (obj instanceof FileSearchResult) {
-					System.out.println("Received FileSearchResult");
-					System.out.println(obj.toString());
+					FileSearchResult result = (FileSearchResult) obj;
+					System.out.println("Port: " + result.getPort() +"Received FileSearchResult");
+
 				} else if (obj instanceof FileBlockRequestMessage) {
 					System.out.println("Received FileBlockRequestMessage");
 					System.out.println(obj.toString());

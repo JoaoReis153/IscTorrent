@@ -11,12 +11,14 @@ import Services.ClientHandler;
 
 public class Node {
 
+	private final static int PORT = 8080;
+
 	private InetAddress endereco;
 	private final File folder;
-	private ServerSocket serverSocket;
+	private Socket serverSocket;
 	private Set<Connection> peers = new HashSet<>();
 	
-	private int port = 8080;
+	private int port;
 
 	// Construtor
 	public Node(int nodeId) {
@@ -26,7 +28,7 @@ public class Node {
 			System.err.println("ID do node inválido");
 			System.exit(1);
 		}
-		this.port += nodeId;
+		this.port = PORT + nodeId;
 
 		// Criar a pasta de trabalho se não existir
 		String workfolder = "Code/dl" + nodeId;
@@ -120,7 +122,6 @@ public class Node {
 	        
 	        connection = new Connection(targetEndereco, port, targetPort);
 	        targetSocket = connection.getSocket();
-			
 	        ObjectOutputStream out = connection.getOutputStream();
 
 			if (out == null) {

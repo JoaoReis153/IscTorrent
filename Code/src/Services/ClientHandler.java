@@ -34,8 +34,7 @@ public class ClientHandler extends Thread {
             while ((obj = in.readObject()) != null) {
                 //System.out.println("Received: " + obj);
                 if (obj instanceof NewConnectionRequest) {
-                    System.out.println("Received a connection request");
-                    
+                    System.out.println("Received a connection request from " + this.socket.getInetAddress() + "::" + this);
                 } else if (obj instanceof WordSearchMessage) {
                     System.out.println("Received a WordSearchMessage object with content: (" + ((WordSearchMessage) obj).getKeyword() + ")");
                      if (node.getFolder().exists() && node.getFolder().isDirectory()) {

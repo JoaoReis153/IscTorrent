@@ -15,23 +15,13 @@ public class Main {
 		int test = 4;
 		if (test == 1) {
 
-			// Create a Node object with the input nodeId
-			Node no1 = new Node(1);
-			GUI gui1 = new GUI(no1);
-			gui1.open();
 
-			Node nooo = new Node(2);
-			GUI gui2 = new GUI(nooo);
-			gui2.open();
 
 		} else if (test == 2) {
-			Node no1 = new Node(4);
-			Node no2 = new Node(5);
+			
 
 			// Iniciar o servidor do no2 em uma nova thread
-			new Thread(() -> {
-				no2.startServing();
-			}).start();
+	
 
 
 			try {
@@ -43,13 +33,13 @@ public class Main {
 
 			// Tentar conectar no1 ao no2
 			
-			no1.connectToNode("127.0.0.1", 8085);
+			
 			
 			
 			try {
 				Thread.sleep(1000);
 				
-				no1.broadcastWordSearchMessageRequest("batata");
+			
 				
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
@@ -85,8 +75,7 @@ public class Main {
 
 		} else if (test == 4) {
 			int argument = Integer.parseInt(args[0]);
-			Node no1 = new Node(argument);
-			GUI gui1 = new GUI(no1);
+			GUI gui1 = new GUI(argument);
 			gui1.open();
 
 		}

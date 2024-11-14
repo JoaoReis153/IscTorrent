@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import GUI.GUI;
 import Services.SubNode;
 
 public class Node {
@@ -11,11 +12,14 @@ public class Node {
 	private InetAddress endereco;
 	private final File folder;
 	private CopyOnWriteArrayList<SubNode> peers = new CopyOnWriteArrayList<>();
+	private GUI gui;
 
 	private int port = 8080;
 
 	// Construtor
-	public Node(int nodeId) {
+	public Node(int nodeId , GUI gui) {
+
+		this.gui = gui;
 
 		// Validacao do ID do node
 		if (nodeId < 0) {
@@ -57,7 +61,7 @@ public class Node {
 
 				Socket clientSocket = serverSocket.accept();
 				System.out.println("Started serving");
-				SubNode clientHandler = new SubNode(this, clientSocket);
+				SubNode clientHandler = new SubNode(this, clientSocket , gui);
 				clientHandler.start();
 				peers.add(clientHandler);
 
@@ -70,6 +74,8 @@ public class Node {
 	}
 
 	public void broadcastWordSearchMessageRequest(String keyword) {
+
+		gui.listModel.clear();
 
 		for (SubNode peer : peers) {
 
@@ -112,7 +118,7 @@ public class Node {
 			}
 
 			clientSocket = new Socket(targetEndereco, targetPort);
-			SubNode handler = new SubNode(this, clientSocket);
+			SubNode handler = new SubNode(this, clientSocket , gui);
 			handler.start();
 			peers.add(handler);
 

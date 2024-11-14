@@ -16,13 +16,13 @@ import java.io.IOException;
 public class GUI {
     private JFrame frame;
     private JList<String> fileList;
-    private DefaultListModel<String> listModel;
+    public DefaultListModel<String> listModel;
     private ArrayList<String> allFiles;
     private Node node;
 
     // Construtor da classe GUI onde recebe o endereço , porta e a pasta de trabalho
-    public GUI(Node node) {
-    	this.node = node;
+    public GUI(int nodeId) {
+    	this.node = new Node(nodeId , this);
         frame = new JFrame("Port NodeAddress [ address " + node.getEnderecoIP() + ":" + node.getPort() + " ]");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         addFrameContent();
@@ -114,8 +114,9 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String searchText = searchTextField.getText().toLowerCase();
+                listModel.clear();
                 node.broadcastWordSearchMessageRequest(searchText);
-                filterFileList(searchText);
+                //filterFileList(searchText);
             }
         });
 
@@ -123,7 +124,7 @@ public class GUI {
         allFiles = new ArrayList<>();
     }
 
-    private void filterFileList(String searchText) {
+    public void filterFileList(String searchText) {
         listModel.clear();
         for (String file : allFiles) {
             if (file.toLowerCase().contains(searchText)) {

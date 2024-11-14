@@ -7,6 +7,7 @@ import Core.Node;
 import Core.Utils;
 import FileSearch.FileSearchResult;
 import FileSearch.WordSearchMessage;
+import GUI.GUI;
 import Messaging.FileBlockRequestMessage;
 import Messaging.NewConnectionRequest;
 
@@ -16,10 +17,12 @@ public class SubNode extends Thread {
 	private ObjectInputStream in;
 	private Socket clientSocket;
 	private Node node;
+	private GUI gui;
 
-	public SubNode(Node node, Socket clientSocket) {
+	public SubNode(Node node, Socket clientSocket , GUI gui) {
 		this.clientSocket = clientSocket;
 		this.node = node;
+		this.gui = gui;
 	}
 
 	@Override
@@ -41,14 +44,17 @@ public class SubNode extends Thread {
 					if (node.getFolder().exists() && node.getFolder().isDirectory()) {
 						File[] files = node.getFolder().listFiles();
 						if (files != null) {
+							gui.listModel.clear();
 							for (File file : files) {
 								String h1 = Utils.generateSHA256(file.getAbsolutePath());
 								FileSearchResult response = new FileSearchResult((WordSearchMessage) obj,
 										file.getName(), h1, file.length(), node.getEnderecoIP(), node.getPort());
 								this.out.writeObject(response);
 								this.out.flush();
-								if ( file.getName().contains(response.getSearchMessage().getKeyword())) {
-									System.out.println(file.getName());
+								if ( file.getName().toLowerCase().contains(response.getSearchMessage().getKeyword().toLowerCase())) {
+									if (!gui.listModel.contains(file.getName())) {
+										gui.listModel.addElement(file.getName());
+									}
 								}
 								
 							}
@@ -85,6 +91,7 @@ public class SubNode extends Thread {
 		WordSearchMessage searchPackage = new WordSearchMessage(keyword);
 		if (out != null) {
 			try {
+				gui.listModel.removeAllElements();
 				System.out.println("Sent a WordSearchMessageRequest");
 				out.writeObject(searchPackage);
 				out.flush();

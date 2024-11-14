@@ -1,19 +1,24 @@
-package Core;
+package Services;
 
 import java.io.*;
 import java.net.*;
 
+import Core.Node;
+import Core.Utils;
 import FileSearch.FileSearchResult;
 import FileSearch.WordSearchMessage;
+import Messaging.Connection;
+import Messaging.FileBlockRequestMessage;
+import Messaging.NewConnectionRequest;
 
-public class DealWithClient extends Thread {
+public class ClientHandler extends Thread {
 		
     private ObjectInputStream in;
     private ObjectOutputStream out;
     private Socket socket;
     private Node node;
     
-    DealWithClient(Connection connection, Node node) {
+    public ClientHandler(Connection connection, Node node) {
         this.socket = connection.getSocket();
         this.in = connection.getInputStream();
         this.out = connection.getOutputStream();

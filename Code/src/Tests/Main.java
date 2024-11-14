@@ -4,15 +4,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import Core.FileBlockRequestMessage;
 import Core.Node;
 import GUI.GUI;
+import Messaging.FileBlockRequestMessage;
 
 public class Main {
 	public static void main(String[] args) throws IOException {
 
 		// Parse the nodeId from the command-line argument
-		int test = 4;
+		int test = 1;
 		if (test == 1) {
 
 			// Create a Node object with the input nodeId

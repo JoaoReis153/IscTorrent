@@ -1,4 +1,4 @@
-package Core;
+package Messaging;
 
 public class FileBlockAnswerMessage {
 

@@ -9,6 +9,9 @@ import javax.swing.SwingUtilities;
 import FileSearch.FileSearchResult;
 import FileSearch.WordSearchMessage;
 import GUI.GUI;
+import Messaging.Connection;
+import Messaging.NewConnectionRequest;
+import Services.ClientHandler;
 
 public class Node {
 
@@ -61,7 +64,7 @@ public class Node {
 				Socket socket = serverSocket.accept();
 				Connection connection = new Connection(socket, port);
 				peers.add(connection);
-				new DealWithClient(connection, this).start();
+				new ClientHandler(connection, this).start();
 
 			}
 		} catch (IOException e) {

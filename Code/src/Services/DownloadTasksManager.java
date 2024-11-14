@@ -1,4 +1,4 @@
-package Core;
+package Services;
 
 public class DownloadTasksManager {
 

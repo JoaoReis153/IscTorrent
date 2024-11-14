@@ -1,4 +1,4 @@
-package Core;
+package Messaging;
 
 
 import java.util.ArrayList;

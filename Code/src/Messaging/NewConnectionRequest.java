@@ -1,4 +1,4 @@
-package Core;
+package Messaging;
 
 import java.io.Serializable;
 import java.net.InetAddress;
@@ -8,7 +8,7 @@ public class NewConnectionRequest implements Serializable {
 	private InetAddress clientAddress;
 	private int clientPort;
 
-	NewConnectionRequest(InetAddress clientAddress, int clientPort) {
+	public NewConnectionRequest(InetAddress clientAddress, int clientPort) {
 		this.clientAddress = clientAddress;
 		this.clientPort = clientPort;
 	}

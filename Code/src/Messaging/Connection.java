@@ -1,4 +1,4 @@
-package Core;
+package Messaging;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -15,38 +15,38 @@ public class Connection {
 	private ObjectInputStream inputStream;
 	private ObjectOutputStream outputStream;
 
-	Connection(InetAddress targetAddress, int originport, int targetport) {
+	public Connection(InetAddress targetAddress, int originport, int targetport) {
 		this.originPort = originport;
 		this.targetPort = targetport;
-		try {
 
+		try {
 			socket = new Socket(targetAddress, targetport);
-			
 			this.outputStream = new ObjectOutputStream(socket.getOutputStream());
-			
 			this.inputStream = new ObjectInputStream(socket.getInputStream());
 			
 		} catch (SocketTimeoutException e) {
 			System.err.println("Connection timed out while connecting to " + targetAddress + "::" + targetPort);
 			close(); 
+
 		} catch (IOException e) {
 			System.err.println("I/O error occurred while connecting to " + targetAddress + "::" + targetPort + " - " + e.getMessage());
 			close();
 		}
 	}
 
-	Connection(Socket socket, int originPort) {
+	public Connection(Socket socket, int originPort) {
 		this.socket = socket;
 		this.originPort = originPort;
 		try {
-			
 			this.outputStream = new ObjectOutputStream(socket.getOutputStream());
 			this.inputStream = new ObjectInputStream(socket.getInputStream());
+			
 		} catch (IOException e) {
 			System.err.println("Error creating the object streams for the connection");
 		}
 	}
 
+	// getters
 	public int getOriginPort() {
 		return originPort;
 	}
@@ -72,6 +72,8 @@ public class Connection {
 		
 		return outputStream;
 	}
+
+
 
 	public void close() {
 		try {

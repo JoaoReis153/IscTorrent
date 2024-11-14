@@ -12,7 +12,7 @@ public class Main {
 	public static void main(String[] args) throws IOException {
 
 		// Parse the nodeId from the command-line argument
-		int test = 1;
+		int test = 4;
 		if (test == 1) {
 
 			// Create a Node object with the input nodeId
@@ -46,7 +46,7 @@ public class Main {
 
 			// Tentar conectar no1 ao no2
 			
-			no1.connectToNode("127.0.0.1", 8085);
+			//no1.connectToNode("127.0.0.1", 8085);
 			
 			
 			try {

@@ -4,11 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-import javax.swing.SwingUtilities;
-
-import FileSearch.FileSearchResult;
 import FileSearch.WordSearchMessage;
-import GUI.GUI;
 import Messaging.Connection;
 import Messaging.NewConnectionRequest;
 import Services.ClientHandler;
@@ -25,15 +21,16 @@ public class Node {
 	// Construtor
 	public Node(int nodeId) {
 		
+		// Validacao do ID do node
 		if (nodeId < 0) {
 			System.err.println("ID do node inválido");
 			System.exit(1);
 		}
-
 		this.port += nodeId;
+
+		// Criar a pasta de trabalho se não existir
 		String workfolder = "Code/dl" + nodeId;
 		this.folder = new File(workfolder);
-
 		if (!this.folder.exists()) {
 			boolean created = this.folder.mkdirs();
 			if (!created) {
@@ -42,6 +39,8 @@ public class Node {
 			}
 		}
 
+		
+		// Obter o endereco do dispositivo
 		try {
 			endereco = InetAddress.getLocalHost();
 		} catch (UnknownHostException e) {
@@ -55,10 +54,10 @@ public class Node {
 		return folder;
 	}
 
+	// Iniciar o servidor
 	public void startServing() {
 
 		try (ServerSocket serverSocket = new ServerSocket(port)) {
-			this.serverSocket = serverSocket;
 			while (true) {
 
 				Socket socket = serverSocket.accept();
@@ -106,12 +105,22 @@ public class Node {
 	            System.out.println("Issues connecting with node::NodeAddress [address=" + targetEndereco + " port=" + targetPort + "] - Can't connect to itself");
 	            return;
 	        }
+
+			// Verificar se ja esta conectado
+			if (peers.size() > 0) {
+				for (Connection peer : peers) {
+					if (peer.getSocket().getInetAddress().equals(targetEndereco) && peer.getSocket().getPort() == targetPort) {
+						System.out.println("Issues connecting with node::NodeAddress [address=" + targetEndereco + " port=" + targetPort + "] - Already connected to this node");
+						debugPeers();
+						return;
+					}
+				}
+
+			}
 	        
 	        connection = new Connection(targetEndereco, port, targetPort);
-
 	        targetSocket = connection.getSocket();
-	        
-	        
+			
 	        ObjectOutputStream out = connection.getOutputStream();
 
 			if (out == null) {
@@ -136,7 +145,9 @@ public class Node {
 	    } else {
 	        System.err.println("Issues connecting with node::NodeAddress [address=" + targetEndereco + " port=" + targetPort + "] - Null Socket or Connection");
 	    }
+		debugPeers();
 	}
+
 	
 
 	public void sendWordSearchMessageRequest(String keyword) {
@@ -183,6 +194,12 @@ public class Node {
 	
 	public Set<Connection> getPeers() {
 		return peers;
+	}
+
+	public void debugPeers() {
+		for (Connection peer : peers) {
+			System.out.println(peer);
+		}
 	}
 }
 

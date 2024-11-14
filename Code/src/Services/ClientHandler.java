@@ -24,6 +24,8 @@ public class ClientHandler extends Thread {
         this.out = connection.getOutputStream();
         this.node = node;
     }
+    
+    
 
     @Override
     public void run() {
@@ -61,6 +63,7 @@ public class ClientHandler extends Thread {
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Error handling client: " + e);
         } finally {
+            // Close resources
             try {
                 if (in != null)
                     in.close();

@@ -9,7 +9,7 @@ import GUI.GUI;
 import Messaging.FileBlockRequestMessage;
 
 public class Main {
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) {
 
 		// Parse the nodeId from the command-line argument
 		int test = 4;

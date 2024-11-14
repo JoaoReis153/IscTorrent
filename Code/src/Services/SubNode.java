@@ -42,22 +42,7 @@ public class SubNode extends Thread {
 					
 							
 					if (node.getFolder().exists() && node.getFolder().isDirectory()) {
-						File[] files = node.getFolder().listFiles();
-						if (files != null) {
-							gui.listModel.clear();
-							int counter = 0;
-							FileSearchResult[] f = new FileSearchResult[files.length];
-							for (File file : files) {
-								String h1 = Utils.generateSHA256(file.getAbsolutePath());
-								if(file.getName().toLowerCase().contains(((WordSearchMessage) obj).getKeyword().toLowerCase())) {									
-									FileSearchResult response = new FileSearchResult((WordSearchMessage) obj,
-											file.getName(), h1, file.length(), node.getEnderecoIP(), node.getPort());
-									f[counter++] = response;
-								}
-							}
-							this.out.writeObject(f);
-							this.out.flush();
-						}
+						sendFileSearchResultList((WordSearchMessage) obj);
 					}
 					
 				} else if (obj instanceof FileSearchResult[]) {
@@ -103,6 +88,32 @@ public class SubNode extends Thread {
 		}
 	}
 
+	public void sendFileSearchResultList(WordSearchMessage obj) {
+		File[] files = node.getFolder().listFiles();
+		if (files != null) {
+			gui.listModel.clear();
+			int counter = 0;
+			FileSearchResult[] f = new FileSearchResult[files.length];
+			for (File file : files) {
+				String h1 = Utils.generateSHA256(file.getAbsolutePath());
+				String fileName = file.getName().toLowerCase();
+				String keyword = obj.getKeyword().toLowerCase();
+				if(fileName.contains(keyword)) {									
+					FileSearchResult response = new FileSearchResult( obj, file.getName(), h1, file.length(), node.getEnderecoIP(), node.getPort());
+					f[counter++] = response;
+				}
+			}
+			try {
+				this.out.writeObject(f);
+				this.out.flush();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.err.println("There was a problem sending the list of FileSearchResults");
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	public void sendNewConnectionRequest(InetAddress endereco, int targetPort) {
 		if (out == null) {
 			System.out.println("Outputstream / Inputstream null [invalid port: " + targetPort + "]");

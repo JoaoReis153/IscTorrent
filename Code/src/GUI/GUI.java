@@ -111,6 +111,7 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String searchText = searchTextField.getText().toLowerCase();
+                listModel.clear();
                 node.broadcastWordSearchMessageRequest(searchText);
             }
         });
@@ -119,7 +120,6 @@ public class GUI {
     }
 
     public void loadListModel(FileSearchResult[] list) {
-    	listModel.clear();
     	if (list == null || list.length == 0) return;
     	for(FileSearchResult searchResult : list) {
     		listModel.addElement(searchResult.getFileName());

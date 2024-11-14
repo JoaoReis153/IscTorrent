@@ -114,7 +114,7 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String searchText = searchTextField.getText().toLowerCase();
-                node.sendWordSearchMessageRequest(searchText);
+                node.broadcastWordSearchMessageRequest(searchText);
                 filterFileList(searchText);
             }
         });

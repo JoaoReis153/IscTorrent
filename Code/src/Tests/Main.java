@@ -25,11 +25,8 @@ public class Main {
 			gui2.open();
 
 		} else if (test == 2) {
-
 			Node no1 = new Node(4);
 			Node no2 = new Node(5);
-			
-			
 
 			// Iniciar o servidor do no2 em uma nova thread
 			new Thread(() -> {
@@ -46,13 +43,13 @@ public class Main {
 
 			// Tentar conectar no1 ao no2
 			
-			//no1.connectToNode("127.0.0.1", 8085);
+			no1.connectToNode("127.0.0.1", 8085);
 			
 			
 			try {
 				Thread.sleep(1000);
 				
-				no1.sendWordSearchMessageRequest("batata");
+				no1.broadcastWordSearchMessageRequest("batata");
 				
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block

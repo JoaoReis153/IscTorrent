@@ -7,7 +7,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class Utils {
-	
+
 	public static String generateSHA256(String filePath) {
 		try {
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");

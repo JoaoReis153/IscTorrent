@@ -1,36 +1,22 @@
 package FileSearch;
 
 import java.io.Serializable;
-import java.net.InetAddress;
-
 
 public class WordSearchMessage implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String keyword;
-	private InetAddress endereco;
-	private int port;
 
-	public WordSearchMessage(String keyword, InetAddress endereco, int port) {
+	public WordSearchMessage(String keyword) {
 		this.keyword = keyword;
-		this.endereco = endereco;
-		this.port = port;
 	}
 
 	public String getKeyword() {
 		return keyword;
 	}
 
-	public InetAddress getEndereco() {
-		return endereco;
-	}
-
-	public int getPort() {
-		return port;
-	}
-
 	@Override
 	public String toString() {
-		return "WordSearchMessage [keyword=" + keyword + ", endereco=" + endereco + ", port=" + port + "]";
+		return "WordSearchMessage [keyword=" + keyword + "]";
 	}
 
 }

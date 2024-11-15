@@ -19,7 +19,8 @@ public class SubNode extends Thread {
 	private Node node;
 	private GUI gui;
 
-	public SubNode(Node node, Socket clientSocket , GUI gui) {
+	// Constructor
+	public SubNode(Node node, Socket clientSocket, GUI gui) {
 		this.clientSocket = clientSocket;
 		this.node = node;
 		this.gui = gui;
@@ -32,25 +33,24 @@ public class SubNode extends Thread {
 			in = new ObjectInputStream(clientSocket.getInputStream());
 			Object obj;
 			while ((obj = in.readObject()) != null) {
-
+				// Handle New Connection Request
 				if (obj instanceof NewConnectionRequest) {
 					System.out.println("Received a connection request");
-			
+
+				// Handle Word Search Message
 				} else if (obj instanceof WordSearchMessage) {
-					System.out.println("Received a WordSearchMessage object with content: ("
+					System.out.println("Received WordSearchMessage with content: ("
 							+ ((WordSearchMessage) obj).getKeyword() + ")");
-					
-							
 					if (node.getFolder().exists() && node.getFolder().isDirectory()) {
 						sendFileSearchResultList((WordSearchMessage) obj);
 					}
-					
+
+				// Handle File Search Result List
 				} else if (obj instanceof FileSearchResult[]) {
-
 					FileSearchResult[] searchResultList = (FileSearchResult[]) obj;
-
 					gui.loadListModel(searchResultList);
 
+				// Handle File Block Request
 				} else if (obj instanceof FileBlockRequestMessage) {
 					System.out.println("Received FileBlockRequestMessage");
 					System.out.println(obj.toString());
@@ -61,23 +61,21 @@ public class SubNode extends Thread {
 		} finally {
 			// Close resources
 			try {
-				if (in != null)
-					in.close();
-				if (out != null)
-					out.close();
-				if (clientSocket != null)
-					clientSocket.close();
+				if (in != null) in.close();
+				if (out != null) out.close();
+				if (clientSocket != null) clientSocket.close();
 			} catch (IOException e) {
 				System.out.println("Error closing resources: " + e.getMessage());
 			}
 		}
 	}
 
+	// Send Word Search Request to peer
 	public void sendWordSearchMessageRequest(String keyword) {
 		WordSearchMessage searchPackage = new WordSearchMessage(keyword);
 		if (out != null) {
 			try {
-				System.out.println("Sent a WordSearchMessageRequest with keyword: " + keyword);
+				System.out.println("Sent WordSearchMessageRequest with keyword: " + keyword);
 				out.writeObject(searchPackage);
 				out.flush();
 			} catch (IOException e) {
@@ -87,47 +85,48 @@ public class SubNode extends Thread {
 		}
 	}
 
+	// Send File Search Result List
 	public void sendFileSearchResultList(WordSearchMessage obj) {
 		File[] files = node.getFolder().listFiles();
 		if (files != null) {
 			String keyword = obj.getKeyword().toLowerCase();
 			int keywordCount = 0;
-			
+
+			// Count matching files
 			for (File file : files) {
-				String fileName = file.getName().toLowerCase();
-				if(fileName.contains(keyword)) {
+				if (file.getName().toLowerCase().contains(keyword)) {
 					keywordCount++;
 				}
 			}
-			
+
 			if (keywordCount == 0) return;
-			
-			FileSearchResult[] f = new FileSearchResult[keywordCount];
+
+			FileSearchResult[] results = new FileSearchResult[keywordCount];
 			int counter = 0;
-			
+
+			// Create FileSearchResult objects
 			for (File file : files) {
-				String h1 = Utils.generateSHA256(file.getAbsolutePath());
-				String fileName = file.getName().toLowerCase();
-				if(fileName.contains(keyword)) {									
-					FileSearchResult response = new FileSearchResult( obj, file.getName(), h1, file.length(), node.getEnderecoIP(), node.getPort());
-					f[counter++] = response;
+				String hash = Utils.generateSHA256(file.getAbsolutePath());
+				if (file.getName().toLowerCase().contains(keyword)) {
+					results[counter++] = new FileSearchResult(obj, file.getName(), hash, file.length(),
+							node.getEnderecoIP(), node.getPort());
 				}
 			}
-			
+
+			// Send results
 			try {
-				this.out.writeObject(f);
+				this.out.writeObject(results);
 				this.out.flush();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				System.err.println("There was a problem sending the list of FileSearchResults");
-				//e.printStackTrace()
+				System.err.println("Error sending FileSearchResults");
 			}
 		}
 	}
-	
+
+	// Send New Connection Request
 	public void sendNewConnectionRequest(InetAddress endereco, int targetPort) {
 		if (out == null) {
-			System.out.println("Outputstream / Inputstream null [invalid port: " + targetPort + "]");
+			System.out.println("OutputStream is null [invalid port: " + targetPort + "]");
 			return;
 		}
 
@@ -137,11 +136,6 @@ public class SubNode extends Thread {
 			out.flush();
 		} catch (IOException e) {
 			System.out.println("[ERROR::NewConnectionRequest]");
-			//e.printStackTrace()
 		}
 
-		System.out.println("Added new node::NodeAddress [address=" + endereco + " port=" + targetPort + "]");
-
-	}
-
-}
+		System.out.println("Added new node::NodeAddress [address=" + endereco + " port=" + target

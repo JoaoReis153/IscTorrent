@@ -16,55 +16,52 @@ public class Node {
 
 	private int port = 8080;
 
-	// Construtor
-	public Node(int nodeId , GUI gui) {
+	// Constructor
+	public Node(int nodeId, GUI gui) {
 
 		this.gui = gui;
 
-		// Validacao do ID do node
+		// Validate Node ID
 		if (nodeId < 0) {
-			System.err.println("ID do node inválido");
+			System.err.println("Invalid node ID");
 			System.exit(1);
 		}
 		this.port += nodeId;
 
-		// Criar a pasta de trabalho se não existir
+		// Create working directory if it doesn't exist
 		String workfolder = "Code/dl" + nodeId;
 		this.folder = new File(workfolder);
 		if (!this.folder.exists()) {
 			boolean created = this.folder.mkdirs();
 			if (!created) {
-				System.out.println("Não foi possível criar a pasta dl" + nodeId);
+				System.out.println("Failed to create directory: dl" + nodeId);
 				System.exit(1);
 			}
 		}
 
-		// Obter o endereco do dispositivo
+		// Get device address
 		try {
 			endereco = InetAddress.getLocalHost();
 		} catch (UnknownHostException e) {
-			System.out.println("Não foi possível obter o endereço deste dispositivo: \n" + e);
+			System.out.println("Unable to get the device's address: \n" + e);
 			System.exit(1);
 		}
-
 	}
 
+	// Getter for the working folder
 	public File getFolder() {
 		return folder;
 	}
 
-	// Iniciar o servidor
+	// Start server to accept connections
 	public void startServing() {
-
 		try (ServerSocket serverSocket = new ServerSocket(port)) {
 			while (true) {
-
 				Socket clientSocket = serverSocket.accept();
-				System.out.println("Started serving");
-				SubNode clientHandler = new SubNode(this, clientSocket , gui);
+				System.out.println("Connection established");
+				SubNode clientHandler = new SubNode(this, clientSocket, gui);
 				clientHandler.start();
 				peers.add(clientHandler);
-
 			}
 		} catch (IOException e) {
 			System.err.println("Failed to start server: " + e.getMessage());
@@ -73,50 +70,47 @@ public class Node {
 		System.out.println("Awaiting connection...");
 	}
 
+	// Broadcast a word search message to all peers
 	public void broadcastWordSearchMessageRequest(String keyword) {
-
 		for (SubNode peer : peers) {
-
 			peer.sendWordSearchMessageRequest(keyword);
-
 		}
 	}
 
+	// Connect to another node
 	public void connectToNode(String nomeEndereco, int targetPort) {
 		Socket clientSocket = null;
 		InetAddress targetEndereco = null;
 
-		// Validacao do endereco
+		// Validate address
 		try {
 			targetEndereco = InetAddress.getByName(nomeEndereco);
-
-			// Validacao do endereco
 			if (targetEndereco == null) {
-				System.out.println("Issues connecting with node::NodeAddress [address=" + nomeEndereco + " port="
+				System.out.println("Failed to connect to node::NodeAddress [address=" + nomeEndereco + " port="
 						+ targetPort + "] - Invalid address");
 				return;
 			}
 		} catch (IOException e) {
-			System.out.println("Wasn't able to connect to the address");
+			System.out.println("Unable to resolve address: " + nomeEndereco);
 		}
 
+		// Validate port
 		if (targetPort <= 8080 || targetPort >= 65535) {
-			System.out.println("Issues connecting with node::NodeAddress [address=" + nomeEndereco + " port="
-					+ targetPort + "] - Cannot connect to ports below or equal to 8080.");
+			System.out.println("Failed to connect to node::NodeAddress [address=" + nomeEndereco + " port="
+					+ targetPort + "] - Invalid port range");
 			return;
 		}
 
-		// Tentativa de conexao
+		// Attempt connection
 		try {
-
 			if (targetEndereco.equals(this.endereco) && targetPort == this.port) {
-				System.out.println("Issues connecting with node::NodeAddress [address=" + targetEndereco + " port="
-						+ targetPort + "] - Can't connect to itself");
+				System.out.println("Failed to connect to node::NodeAddress [address=" + targetEndereco + " port="
+						+ targetPort + "] - Cannot connect to itself");
 				return;
 			}
 
 			clientSocket = new Socket(targetEndereco, targetPort);
-			SubNode handler = new SubNode(this, clientSocket , gui);
+			SubNode handler = new SubNode(this, clientSocket, gui);
 			handler.start();
 			peers.add(handler);
 
@@ -125,28 +119,29 @@ public class Node {
 			handler.sendNewConnectionRequest(endereco, targetPort);
 
 		} catch (IOException | InterruptedException e) {
-			System.err.println("Issues connecting with node::NodeAddress [address=" + targetEndereco + " port="
+			System.err.println("Failed to connect to node::NodeAddress [address=" + targetEndereco + " port="
 					+ targetPort + "] - " + e);
-			clientSocket = null;
 		}
-
 	}
 
+	// String representation of the node
 	@Override
 	public String toString() {
 		return "Node [endereco=" + endereco + ", port=" + port + "]";
 	}
 
+	// Getter for node's address
 	public InetAddress getEndereco() {
 		return endereco;
 	}
 
+	// Getter for node's IP as a string
 	public String getEnderecoIP() {
 		String enderecoString = endereco.toString();
-		String result = enderecoString.substring(enderecoString.indexOf("/") + 1);
-		return result;
+		return enderecoString.substring(enderecoString.indexOf("/") + 1);
 	}
 
+	// Getter and setter for port
 	public int getPort() {
 		return port;
 	}
@@ -154,5 +149,4 @@ public class Node {
 	public void setPort(int port) {
 		this.port = port;
 	}
-
 }

@@ -74,22 +74,6 @@ public class Main {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        } else if (test == 6) {
-            // New Connection Request Test
-            GUI gui = new GUI(1);
-            Node node = new Node(1, gui);
-            
-            GUI gu = new GUI(2);
-            Node nod = new Node(2, gui);
-
-            try {
-                InetAddress address = InetAddress.getByName("localhost");
-                node.connectToNode("127.0.0.1", 8082);
-                SubNode subNode = new SubNode(node, new Socket(address, 8081) , gui);
-                subNode.sendNewConnectionRequest(address, 8081);
-            } catch (IOException e) {
-                System.out.println("There was an error in test 6");
-            }
         }
     }
 }

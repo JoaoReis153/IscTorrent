@@ -125,6 +125,10 @@ public class GUI {
     		listModel.addElement(searchResult.getFileName());
     	}
     }
+    
+    public Node getNode() {
+    	return node;
+    }
    
 
 }

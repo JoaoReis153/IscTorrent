@@ -42,23 +42,26 @@ public class SubNode extends Thread {
                     System.out.println("Received a connection request");
 
                     // Handle Word Search Message
-                } else if (obj instanceof WordSearchMessage) {
-                    System.out.println("Received WordSearchMessage with content: ("
-                            + ((WordSearchMessage) obj).getKeyword() + ")");
-                    if (node.getFolder().exists() && node.getFolder().isDirectory()) {
-                        sendFileSearchResultList((WordSearchMessage) obj);
-                    }
+                } else
+                    if (obj instanceof WordSearchMessage) {
+                        System.out.println("Received WordSearchMessage with content: ("
+                                + ((WordSearchMessage) obj).getKeyword() + ")");
+                        if (node.getFolder().exists() && node.getFolder().isDirectory()) {
+                            sendFileSearchResultList((WordSearchMessage) obj);
+                        }
 
-                    // Handle File Search Result List
-                } else if (obj instanceof FileSearchResult[]) {
-                    FileSearchResult[] searchResultList = (FileSearchResult[]) obj;
-                    gui.loadListModel(searchResultList);
+                        // Handle File Search Result List
+                    } else
+                        if (obj instanceof FileSearchResult[]) {
+                            FileSearchResult[] searchResultList = (FileSearchResult[]) obj;
+                            gui.loadListModel(searchResultList);
 
-                    // Handle File Block Request
-                } else if (obj instanceof FileBlockRequestMessage) {
-                    System.out.println("Received FileBlockRequestMessage");
-                    System.out.println(obj.toString());
-                }
+                            // Handle File Block Request
+                        } else
+                            if (obj instanceof FileBlockRequestMessage) {
+                                System.out.println("Received FileBlockRequestMessage");
+                                System.out.println(obj.toString());
+                            }
             }
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Error handling client: " + e);

@@ -14,7 +14,7 @@ import Services.SubNode;
 public class Main {
     public static void main(String[] args) {
 
-        int test = 6;  // Change this to select the test case to run
+        int test = 4;  // Change this to select the test case to run
 
         if (test == 1) {
             // Basic Node Initialization Test

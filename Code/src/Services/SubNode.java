@@ -68,12 +68,9 @@ public class SubNode extends Thread {
         } finally {
             // Close resources
             try {
-                if (in != null)
-                    in.close();
-                if (out != null)
-                    out.close();
-                if (clientSocket != null)
-                    clientSocket.close();
+                if (in != null) in.close();
+                if (out != null) out.close();
+                if (clientSocket != null) clientSocket.close();
             } catch (IOException e) {
                 System.out.println("Error closing resources: " + e.getMessage());
             }

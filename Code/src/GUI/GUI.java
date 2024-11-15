@@ -94,7 +94,7 @@ public class GUI {
         rightButtonsPanel.setLayout(new GridLayout(2, 1, 10, 10));
 
         JButton downloadButton = new JButton("Download");
-        JButton connectButton = new JButton("Connect to Node");
+        JButton connectButton = new JButton("Connect to");
 
         downloadButton.setPreferredSize(new Dimension(150, 75));
         connectButton.setPreferredSize(new Dimension(150, 75));

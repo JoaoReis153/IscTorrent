@@ -138,4 +138,6 @@ public class SubNode extends Thread {
 			System.out.println("[ERROR::NewConnectionRequest]");
 		}
 
-		System.out.println("Added new node::NodeAddress [address=" + endereco + " port=" + target
+		System.out.println("Added new node::NodeAddress [address=" + endereco + " port=" + targetPort + "]");
+	}
+}

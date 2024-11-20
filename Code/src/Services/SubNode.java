@@ -4,7 +4,6 @@ import Core.Node;
 import Core.Utils;
 import FileSearch.FileSearchResult;
 import FileSearch.WordSearchMessage;
-import GUI.GUI;
 import Messaging.FileBlockRequestMessage;
 import Messaging.NewConnectionRequest;
 import java.io.File;

@@ -1,12 +1,5 @@
 package Services;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.InetAddress;
-import java.net.Socket;
-
 import Core.Node;
 import Core.Utils;
 import FileSearch.FileSearchResult;
@@ -14,54 +7,62 @@ import FileSearch.WordSearchMessage;
 import GUI.GUI;
 import Messaging.FileBlockRequestMessage;
 import Messaging.NewConnectionRequest;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.Objects;
 
 public class SubNode extends Thread {
 
     private ObjectOutputStream out;
     private ObjectInputStream in;
-    private Socket clientSocket;
+    private Socket socket;
     private Node node;
-    private GUI gui;
+    private boolean userCreated;
 
     // Constructor
-    public SubNode(Node node, Socket clientSocket, GUI gui) {
-        this.clientSocket = clientSocket;
+    public SubNode(Node node, Socket socket, boolean userCreated) {
+        this.socket = socket;
         this.node = node;
-        this.gui = gui;
+        this.userCreated = userCreated;
     }
 
     @Override
     public void run() {
         try {
-            out = new ObjectOutputStream(clientSocket.getOutputStream());
-            in = new ObjectInputStream(clientSocket.getInputStream());
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
             Object obj;
             while ((obj = in.readObject()) != null) {
                 // Handle New Connection Request
                 if (obj instanceof NewConnectionRequest) {
                     System.out.println("Received a connection request");
-
                     // Handle Word Search Message
-                } else
-                    if (obj instanceof WordSearchMessage) {
-                        System.out.println("Received WordSearchMessage with content: ("
-                                + ((WordSearchMessage) obj).getKeyword() + ")");
-                        if (node.getFolder().exists() && node.getFolder().isDirectory()) {
-                            sendFileSearchResultList((WordSearchMessage) obj);
-                        }
-
-                        // Handle File Search Result List
-                    } else
-                        if (obj instanceof FileSearchResult[]) {
-                            FileSearchResult[] searchResultList = (FileSearchResult[]) obj;
-                            gui.loadListModel(searchResultList);
-
-                            // Handle File Block Request
-                        } else
-                            if (obj instanceof FileBlockRequestMessage) {
-                                System.out.println("Received FileBlockRequestMessage");
-                                System.out.println(obj.toString());
-                            }
+                } else if (obj instanceof WordSearchMessage) {
+                    System.out.println(
+                        "Received WordSearchMessage with content: (" +
+                        ((WordSearchMessage) obj).getKeyword() +
+                        ")"
+                    );
+                    if (
+                        node.getFolder().exists() &&
+                        node.getFolder().isDirectory()
+                    ) {
+                        sendFileSearchResultList((WordSearchMessage) obj);
+                    }
+                    // Handle File Search Result List
+                } else if (obj instanceof FileSearchResult[]) {
+                    FileSearchResult[] searchResultList =
+                        (FileSearchResult[]) obj;
+                    node.getGUI().loadListModel(searchResultList);
+                    // Handle File Block Request
+                } else if (obj instanceof FileBlockRequestMessage) {
+                    System.out.println("Received FileBlockRequestMessage");
+                    System.out.println(obj.toString());
+                }
             }
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Error handling client: " + e);
@@ -70,9 +71,11 @@ public class SubNode extends Thread {
             try {
                 if (in != null) in.close();
                 if (out != null) out.close();
-                if (clientSocket != null) clientSocket.close();
+                if (socket != null) socket.close();
             } catch (IOException e) {
-                System.out.println("Error closing resources: " + e.getMessage());
+                System.out.println(
+                    "Error closing resources: " + e.getMessage()
+                );
             }
         }
     }
@@ -82,7 +85,9 @@ public class SubNode extends Thread {
         WordSearchMessage searchPackage = new WordSearchMessage(keyword);
         if (out != null) {
             try {
-                System.out.println("Sent WordSearchMessageRequest with keyword: " + keyword);
+                System.out.println(
+                    "Sent WordSearchMessageRequest with keyword: " + keyword
+                );
                 out.writeObject(searchPackage);
                 out.flush();
             } catch (IOException e) {
@@ -106,8 +111,7 @@ public class SubNode extends Thread {
                 }
             }
 
-            if (keywordCount == 0)
-                return;
+            if (keywordCount == 0) return;
 
             FileSearchResult[] results = new FileSearchResult[keywordCount];
             int counter = 0;
@@ -116,8 +120,14 @@ public class SubNode extends Thread {
             for (File file : files) {
                 String hash = Utils.generateSHA256(file.getAbsolutePath());
                 if (file.getName().toLowerCase().contains(keyword)) {
-                    results[counter++] = new FileSearchResult(obj, file.getName(), hash, file.length(),
-                            node.getEnderecoIP(), node.getPort());
+                    results[counter++] = new FileSearchResult(
+                        obj,
+                        file.getName(),
+                        hash,
+                        file.length(),
+                        node.getEnderecoIP(),
+                        node.getPort()
+                    );
                 }
             }
 
@@ -134,11 +144,16 @@ public class SubNode extends Thread {
     // Send New Connection Request
     public void sendNewConnectionRequest(InetAddress endereco, int targetPort) {
         if (out == null) {
-            System.out.println("OutputStream is null [invalid port: " + targetPort + "]");
+            System.out.println(
+                "OutputStream is null [invalid port: " + targetPort + "]"
+            );
             return;
         }
 
-        NewConnectionRequest request = new NewConnectionRequest(endereco, targetPort);
+        NewConnectionRequest request = new NewConnectionRequest(
+            endereco,
+            targetPort
+        );
         try {
             out.writeObject(request);
             out.flush();
@@ -146,6 +161,37 @@ public class SubNode extends Thread {
             System.out.println("Error sending NewConnectionRequest");
         }
 
-        System.out.println("Added new node: NodeAddress [address=" + endereco + " port=" + targetPort + "]");
+        System.out.println(
+            "Added new node: NodeAddress [address=" +
+            endereco +
+            " port=" +
+            targetPort +
+            "]"
+        );
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        SubNode subNode = (SubNode) obj;
+        return (
+            userCreated &&
+            this.socket.getPort() == subNode.socket.getPort() &&
+            socket.getInetAddress().equals(subNode.getSocket().getInetAddress())
+        );
+    }
+
+    public Socket getSocket() {
+        return socket;
+    }
+
+    @Override
+    public int hashCode() {
+        if (userCreated) return Objects.hash(
+            socket.getInetAddress(),
+            socket.getPort()
+        );
+        return super.hashCode();
     }
 }

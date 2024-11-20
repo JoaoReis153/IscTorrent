@@ -10,6 +10,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -25,9 +26,8 @@ import javax.swing.WindowConstants;
 public class GUI {
 
     private JFrame frame;
-    private JList<String> fileList;
-    public DefaultListModel<String> listModel;
-    private ArrayList<String> allFiles;
+    private JList<FileSearchResult> fileList;
+    public DefaultListModel<FileSearchResult> listModel;
     private Node node;
 
     // Constructor of the GUI class where it receives the address, port, and work
@@ -130,7 +130,7 @@ public class GUI {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    java.util.List<String> selectedFiles =
+                    List<FileSearchResult> selectedFiles =
                         fileList.getSelectedValuesList();
                     // Download logic
                     System.out.println(
@@ -154,8 +154,6 @@ public class GUI {
                 }
             }
         );
-
-        allFiles = new ArrayList<>();
     }
 
     public void loadListModel(FileSearchResult[] list) {
@@ -164,7 +162,7 @@ public class GUI {
             return;
         }
         for (FileSearchResult searchResult : list) {
-            listModel.addElement(searchResult.getFileName());
+            listModel.addElement(searchResult);
         }
         System.out.println("Loaded search results into the file list.");
     }

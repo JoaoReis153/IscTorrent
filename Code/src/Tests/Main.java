@@ -1,98 +1,44 @@
 package Tests;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-
-import Core.Node;
 import GUI.GUI;
-import Messaging.FileBlockRequestMessage;
 
 public class Main {
-	public static void main(String[] args) throws IOException {
 
-		// Parse the nodeId from the command-line argument
-		int test = 4;
-		if (test == 1) {
+    public static void main(String[] args) {
+        int test = 0;
 
-			// Create a Node object with the input nodeId
-			Node no1 = new Node(1);
-			GUI gui1 = new GUI(no1);
-			gui1.open();
+        if (test == 0) {
+            if (args.length == 0) {
+                System.out.println(
+                    "Usage: Please provide at least one ID as arguments."
+                );
+                return;
+            }
 
-			Node nooo = new Node(2);
-			GUI gui2 = new GUI(nooo);
-			gui2.open();
+            System.out.println("Number of arguments: " + args.length);
 
-		} else if (test == 2) {
+            for (String arg : args) {
+                try {
+                    int id = Integer.parseInt(arg);
 
-			Node no1 = new Node(4);
-			Node no2 = new Node(5);
-			
-			
+                    GUI gui = new GUI(id);
+                    gui.open();
 
-			// Iniciar o servidor do no2 em uma nova thread
-			new Thread(() -> {
-				no2.startServing();
-			}).start();
-
-
-			try {
-				Thread.sleep(500);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			// Tentar conectar no1 ao no2
-			
-			//no1.connectToNode("127.0.0.1", 8085);
-			
-			
-			try {
-				Thread.sleep(1000);
-				
-				no1.sendWordSearchMessageRequest("batata");
-				
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			
-
-		} else if (test == 3) {
-
-			  String workfolder = "./dl1";
-			  
-			  File folder = new File(workfolder);
-			  
-			  File[] files = folder.listFiles(); 
-			  for (File file : files) { 
-				  String fileName = file.getName(); 
-				  System.out.println("----------" + fileName + " (size:" + file.length() + ")----------");
-			  
-			  // a divisao é dividida em blocos de 10240 bytes (enunciado) e depois o ultimo 
-			  // bloco pelo restante 
-			  // testar com ficheiros de tamanho diferente porque com continhas ja vai lá :] 
-			  long fileSize = file.length(); 
-			  int blockSize = 10240;
-			  
-			  List<FileBlockRequestMessage> blockList = FileBlockRequestMessage.createBlockList(fileName, fileSize, blockSize);
-			  
-			  for (FileBlockRequestMessage block : blockList) { 
-				  System.out.println("Hash: " + block.getHash() + ", Offset: " + block.getOffset() + ", Length: " + block.getLength()); 
-				  } 
-			  }
-			 
-
-		} else if (test == 4) {
-			int argument = Integer.parseInt(args[0]);
-			Node no1 = new Node(argument);
-			GUI gui1 = new GUI(no1);
-			gui1.open();
-
-		}
-
-	}
+                    System.out.println("GUI opened for ID: " + id);
+                } catch (NumberFormatException e) {
+                    System.err.println(
+                        "Invalid ID: " +
+                        arg +
+                        ". Please provide numeric values."
+                    );
+                } catch (Exception e) {
+                    System.err.println(
+                        "An error occurred while initializing the GUI for ID: " +
+                        arg
+                    );
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }

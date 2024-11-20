@@ -3,8 +3,6 @@ package GUI;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-
 import javax.swing.*;
 
 import Core.Node;
@@ -15,62 +13,63 @@ public class GuiNode {
     private Node node;
 
     public GuiNode(Node node) {
-    	this.node = node;
-        frame = new JFrame("Adicionar Nó");
-        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // Fechar apenas esta janela
+        this.node = node;
+        frame = new JFrame("Add Node");
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // Close only this window
         addFrameContent();
-        frame.pack(); // Ajusta o tamanho da janela
+        frame.pack(); // Adjust the window size
     }
 
     public void open() {
-        frame.setVisible(true); // Torna a janela visível
+        frame.setVisible(true); // Make the window visible
     }
 
     private void addFrameContent() {
-        // Usando FlowLayout para organizar os componentes em uma linha
-        frame.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10)); // Alinhamento à esquerda com espaçamento
+        // Using FlowLayout to organize components in a line
+        frame.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10)); // Left-aligned with spacing
 
-        // Rótulo e campo de texto para Endereço
-        JLabel addressLabel = new JLabel("Endereço:");
-        JTextField addressField = new JTextField(15); // Campo de texto para o endereço
+        // Label and text field for Address
+        JLabel addressLabel = new JLabel("Address:");
+        JTextField addressField = new JTextField(15); // Text field for address
         addressField.setText(node.getEnderecoIP());
         frame.add(addressLabel);
         frame.add(addressField);
 
-        // Rótulo e campo de texto para Porta
-        JLabel portLabel = new JLabel("Porta:");
-        JTextField portField = new JTextField(5); // Campo de texto para a porta
+        // Label and text field for Port
+        JLabel portLabel = new JLabel("Port:");
+        JTextField portField = new JTextField(5); // Text field for port
         frame.add(portLabel);
         frame.add(portField);
 
-        // Botões Cancelar e OK
-        JButton cancelButton = new JButton("Cancelar");
+        // Cancel and OK buttons
+        JButton cancelButton = new JButton("Cancel");
         JButton okButton = new JButton("OK");
 
-        // Adicionando funcionalidade aos botões
+        // Adding functionality to the buttons
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                frame.dispose(); // Fecha a janela quando Cancelar é clicado
+                frame.dispose(); // Close the window when Cancel is clicked
             }
         });
 
         okButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Aqui você pode adicionar a lógica para o que fazer com o endereço e porta
+                // Logic to handle the address and port
                 String address = addressField.getText();
                 String portText = portField.getText();
-                int port = Integer.parseInt(portText);
-               
-                JOptionPane.showMessageDialog(frame, "Endereço: " + address + "\nPorta: " + port);
-                
-                node.connectToNode(address, port);
+                try {
+                    int port = Integer.parseInt(portText);
+                    JOptionPane.showMessageDialog(frame, "Address: " + address + "\nPort: " + port);
+                    node.connectToNode(address, port);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(frame, "Invalid port!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
         frame.add(cancelButton);
         frame.add(okButton);
     }
-
 }

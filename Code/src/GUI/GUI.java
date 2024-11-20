@@ -1,55 +1,75 @@
 package GUI;
 
-import java.awt.*;
+import Core.Node;
+import FileSearch.FileSearchResult;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-
-import Core.Node;
-
 import java.util.ArrayList;
-import java.io.File;
-import java.io.IOException;
+import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.WindowConstants;
 
 public class GUI {
+
     private JFrame frame;
     private JList<String> fileList;
-    private DefaultListModel<String> listModel;
+    public DefaultListModel<String> listModel;
     private ArrayList<String> allFiles;
     private Node node;
 
-    // Construtor da classe GUI onde recebe o endereço , porta e a pasta de trabalho
-    public GUI(Node node) {
-    	this.node = node;
-        frame = new JFrame("Port NodeAddress [ address " + node.getEnderecoIP() + ":" + node.getPort() + " ]");
+    // Constructor of the GUI class where it receives the address, port, and work
+    // folder
+    public GUI(int nodeId) {
+        this.node = new Node(nodeId, this);
+        frame = new JFrame(
+            "Port NodeAddress [ address " +
+            node.getEnderecoIP() +
+            ":" +
+            node.getPort() +
+            " ]"
+        );
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         addFrameContent();
         frame.pack();
 
+        System.out.println("GUI initialized for Node with ID: " + nodeId);
     }
 
-    // Torna a janela visível
+    // Makes the window visible
     public void open() {
-    	new Thread(() -> {
-			node.startServing();
-		}).start();
-    	
+        new Thread(() -> {
+            node.startServing();
+        }).start();
+
         frame.setVisible(true);
+
+        System.out.println("GUI is now visible.");
     }
 
-    // Adiciona o conteúdo da janela
+    // Adds the content to the window
     private void addFrameContent() {
         frame.setLayout(new BorderLayout());
 
-        // Painel de pesquisa
+        // Search panel
         JPanel searchPanel = new JPanel();
-        searchPanel.setLayout(new FlowLayout(FlowLayout.LEFT)); // Alinhamento à esquerda
+        searchPanel.setLayout(new FlowLayout(FlowLayout.LEFT)); // Align to the left
 
-        JLabel searchLabel = new JLabel("Texto a procurar:");
+        JLabel searchLabel = new JLabel("Text to search:");
         JTextField searchTextField = new JTextField(20);
-        JButton searchButton = new JButton("Procurar");
+        JButton searchButton = new JButton("Search");
 
         searchPanel.add(searchLabel);
         searchPanel.add(searchTextField);
@@ -57,29 +77,31 @@ public class GUI {
 
         frame.add(searchPanel, BorderLayout.NORTH);
 
-        // Painel inferior
+        // Bottom panel
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new BorderLayout());
 
-        // Área esquerda
+        // Left area
         JPanel leftArea = new JPanel();
         leftArea.setPreferredSize(new Dimension(300, 150));
         leftArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         listModel = new DefaultListModel<>();
         fileList = new JList<>(listModel);
-        fileList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        fileList.setSelectionMode(
+            ListSelectionModel.MULTIPLE_INTERVAL_SELECTION
+        );
 
         JScrollPane scrollPane = new JScrollPane(fileList);
         leftArea.setLayout(new BorderLayout());
         leftArea.add(scrollPane, BorderLayout.CENTER);
 
-        // Área direita
+        // Right area with buttons
         JPanel rightButtonsPanel = new JPanel();
         rightButtonsPanel.setLayout(new GridLayout(2, 1, 10, 10));
 
-        JButton downloadButton = new JButton("Descarregar");
-        JButton connectButton = new JButton("Ligar a Nó");
+        JButton downloadButton = new JButton("Download");
+        JButton connectButton = new JButton("Connect to");
 
         downloadButton.setPreferredSize(new Dimension(150, 75));
         connectButton.setPreferredSize(new Dimension(150, 75));
@@ -92,46 +114,62 @@ public class GUI {
 
         frame.add(bottomPanel, BorderLayout.CENTER);
 
-        // Eventos dos botões
-        connectButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                GuiNode newNodeWindow = new GuiNode(node);
-                newNodeWindow.open();
+        // Button event listeners
+        connectButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    GuiNode newNodeWindow = new GuiNode(node);
+                    newNodeWindow.open();
+                    System.out.println("New Node connection window opened.");
+                }
             }
-        });
+        );
 
-        downloadButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                java.util.List<String> selectedFiles = fileList.getSelectedValuesList();
-                // Download logic
+        downloadButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    java.util.List<String> selectedFiles =
+                        fileList.getSelectedValuesList();
+                    // Download logic
+                    System.out.println(
+                        "Download initiated for selected files: " +
+                        selectedFiles
+                    );
+                }
             }
-        });
+        );
 
-        
-        searchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String searchText = searchTextField.getText().toLowerCase();
-                node.sendWordSearchMessageRequest(searchText);
-                filterFileList(searchText);
+        searchButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String searchText = searchTextField.getText().toLowerCase();
+                    listModel.clear();
+                    node.broadcastWordSearchMessageRequest(searchText);
+                    System.out.println(
+                        "Search request sent for keyword: " + searchText
+                    );
+                }
             }
-        });
-
+        );
 
         allFiles = new ArrayList<>();
     }
 
-    private void filterFileList(String searchText) {
-        listModel.clear();
-        for (String file : allFiles) {
-            if (file.toLowerCase().contains(searchText)) {
-                listModel.addElement(file);
-            }
+    public void loadListModel(FileSearchResult[] list) {
+        if (list == null || list.length == 0) {
+            System.out.println("No search results found to load.");
+            return;
         }
+        for (FileSearchResult searchResult : list) {
+            listModel.addElement(searchResult.getFileName());
+        }
+        System.out.println("Loaded search results into the file list.");
     }
-    
 
-
+    public Node getNode() {
+        return node;
+    }
 }

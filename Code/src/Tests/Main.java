@@ -1,20 +1,19 @@
 package Tests;
 
+import Core.Node;
+import GUI.GUI;
+import Messaging.FileBlockRequestMessage;
+import Services.SubNode;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.List;
 
-import Core.Node;
-import GUI.GUI;
-import Messaging.FileBlockRequestMessage;
-import Services.SubNode;
-
 public class Main {
-    public static void main(String[] args) {
 
-        int test = 4;  // Change this to select the test case to run
+    public static void main(String[] args) {
+        int test = 4; // Change this to select the test case to run
 
         if (test == 1) {
             // Basic Node Initialization Test
@@ -47,15 +46,32 @@ public class Main {
                     long fileSize = file.length();
                     int blockSize = 10240;
 
-                    List<FileBlockRequestMessage> blockList = FileBlockRequestMessage.createBlockList(file.getName(), fileSize, blockSize);
+                    List<FileBlockRequestMessage> blockList =
+                        FileBlockRequestMessage.createBlockList(
+                            file.getName(),
+                            fileSize,
+                            blockSize
+                        );
                     for (FileBlockRequestMessage block : blockList) {
-                        System.out.println("Hash: " + block.getHash() + ", Offset: " + block.getOffset() + ", Length: " + block.getLength());
+                        System.out.println(
+                            "Hash: " +
+                            block.getHash() +
+                            ", Offset: " +
+                            block.getOffset() +
+                            ", Length: " +
+                            block.getLength()
+                        );
                     }
                 }
             }
         } else if (test == 4) {
             // GUI Initialization Test
-            int argument = Integer.parseInt(args[0]);
+            String a = args[0];
+            if (a.length() == 0) {
+                System.out.println("Please provide a node id as an argument.");
+                return;
+            }
+            int argument = Integer.parseInt(a);
             GUI gui = new GUI(argument);
             gui.open();
         } else if (test == 5) {

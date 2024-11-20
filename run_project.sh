@@ -32,4 +32,4 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-java -cp "$BIN_DIR" "$MAIN_CLASS" "$1"
+java -cp "$BIN_DIR" "$MAIN_CLASS" "$@"

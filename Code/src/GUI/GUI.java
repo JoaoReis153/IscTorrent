@@ -1,6 +1,7 @@
 package GUI;
 
 import Core.Node;
+import Core.Utils;
 import FileSearch.FileSearchResult;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -9,8 +10,10 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -21,14 +24,17 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 public class GUI {
 
     private JFrame frame;
     private JList<FileSearchResult> fileList;
-    public DefaultListModel<FileSearchResult> listModel;
+    private DefaultListModel<FileSearchResult> listModel;
+    private ArrayList<FileSearchResult> allFiles;
     private Node node;
+    private boolean SHOW = true;
 
     // Constructor of the GUI class where it receives the address, port, and work
     // folder
@@ -44,8 +50,7 @@ public class GUI {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         addFrameContent();
         frame.pack();
-
-        System.out.println("GUI initialized for Node with ID: " + nodeId);
+        open();
     }
 
     // Makes the window visible
@@ -53,10 +58,7 @@ public class GUI {
         new Thread(() -> {
             node.startServing();
         }).start();
-
-        frame.setVisible(true);
-
-        System.out.println("GUI is now visible.");
+        frame.setVisible(SHOW);
     }
 
     // Adds the content to the window
@@ -86,6 +88,7 @@ public class GUI {
         leftArea.setPreferredSize(new Dimension(300, 150));
         leftArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
+        allFiles = new ArrayList<>();
         listModel = new DefaultListModel<>();
         fileList = new JList<>(listModel);
         fileList.setSelectionMode(
@@ -101,7 +104,7 @@ public class GUI {
         rightButtonsPanel.setLayout(new GridLayout(2, 1, 10, 10));
 
         JButton downloadButton = new JButton("Download");
-        JButton connectButton = new JButton("Connect to");
+        JButton connectButton = new JButton("Connect to Node");
 
         downloadButton.setPreferredSize(new Dimension(150, 75));
         connectButton.setPreferredSize(new Dimension(150, 75));
@@ -119,9 +122,8 @@ public class GUI {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    GuiNode newNodeWindow = new GuiNode(node);
+                    GUINode newNodeWindow = new GUINode(GUI.this);
                     newNodeWindow.open();
-                    System.out.println("New Node connection window opened.");
                 }
             }
         );
@@ -130,12 +132,10 @@ public class GUI {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    List<FileSearchResult> selectedFiles =
+                    List<FileSearchResult> selectedOptions =
                         fileList.getSelectedValuesList();
-                    // Download logic
                     System.out.println(
-                        "Download initiated for selected files: " +
-                        selectedFiles
+                        "Downloading " + selectedOptions.size() + " files"
                     );
                 }
             }
@@ -145,8 +145,9 @@ public class GUI {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    String searchText = searchTextField.getText().toLowerCase();
                     listModel.clear();
+                    allFiles.clear();
+                    String searchText = searchTextField.getText().toLowerCase();
                     node.broadcastWordSearchMessageRequest(searchText);
                     System.out.println(
                         "Search request sent for keyword: " + searchText
@@ -157,17 +158,44 @@ public class GUI {
     }
 
     public void loadListModel(FileSearchResult[] list) {
-        if (list == null || list.length == 0) {
-            System.out.println("No search results found to load.");
-            return;
+        if (list == null || list.length == 0) return;
+        File[] files = node.getFolder().listFiles();
+        if (files != null) {
+            for (File file : files) {
+                String hash = Utils.generateSHA256(file.getAbsolutePath());
+
+                allFiles.add(
+                    new FileSearchResult(
+                        null,
+                        file.getName(),
+                        hash,
+                        file.length(),
+                        node.getEnderecoIP(),
+                        node.getPort()
+                    )
+                );
+            }
         }
-        for (FileSearchResult searchResult : list) {
-            listModel.addElement(searchResult);
-        }
-        System.out.println("Loaded search results into the file list.");
+        SwingUtilities.invokeLater(() -> {
+            int added = 0;
+            for (FileSearchResult searchResult : list) {
+                if (!allFiles.contains(searchResult)) {
+                    added++;
+                    listModel.addElement(searchResult);
+                }
+                allFiles.add(searchResult);
+            }
+            System.out.println(
+                "Loaded " + added + " search results into the file list."
+            );
+        });
     }
 
     public Node getNode() {
         return node;
+    }
+
+    public boolean getSHOW() {
+        return SHOW;
     }
 }

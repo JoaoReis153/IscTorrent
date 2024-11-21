@@ -82,7 +82,7 @@ public class SubNode extends Thread {
     // Send Word Search Request to peer
     public void sendWordSearchMessageRequest(String keyword) {
         WordSearchMessage searchPackage = new WordSearchMessage(keyword);
-        if (out != null) {
+        if (out != null && !socket.isClosed()) {
             try {
                 System.out.println(
                     "Sent WordSearchMessageRequest with keyword: " + keyword

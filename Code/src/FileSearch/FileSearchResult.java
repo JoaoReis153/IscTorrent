@@ -1,8 +1,11 @@
 package FileSearch;
 
 import java.io.Serializable;
+import java.util.Objects;
 
-public class FileSearchResult implements Serializable {
+public class FileSearchResult
+    implements Serializable, Comparable<FileSearchResult> {
+
     private WordSearchMessage searchMessage;
     private static final long serialVersionUID = 1L;
     private String fileName;
@@ -11,7 +14,14 @@ public class FileSearchResult implements Serializable {
     private String nodeAddress;
     private int port;
 
-    public FileSearchResult(WordSearchMessage searchMessage, String fileName, String hash, long fileSize, String nodeAddress, int port) {
+    public FileSearchResult(
+        WordSearchMessage searchMessage,
+        String fileName,
+        String hash,
+        long fileSize,
+        String nodeAddress,
+        int port
+    ) {
         this.searchMessage = searchMessage;
         this.fileName = fileName;
         this.hash = hash;
@@ -46,13 +56,27 @@ public class FileSearchResult implements Serializable {
 
     @Override
     public String toString() {
-        return "FileSearchResult{" +
-                "searchMessage=" + searchMessage +
-                ", fileName='" + fileName + '\'' +
-                ", hash='" + hash + '\'' +
-                ", fileSize=" + fileSize +
-                ", nodeAddress='" + nodeAddress + '\'' +
-                ", port=" + port +
-                '}';
+        return fileName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FileSearchResult that = (FileSearchResult) o;
+        return hash.equals(that.hash);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(hash);
+    }
+
+    @Override
+    public int compareTo(FileSearchResult o) {
+        if (o == null) {
+            throw new NullPointerException("Cannot compare with null.");
+        }
+        return this.fileName.compareToIgnoreCase(o.fileName);
     }
 }

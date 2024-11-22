@@ -1,7 +1,6 @@
 package GUI;
 
 import Core.Node;
-import Core.Utils;
 import FileSearch.FileSearchResult;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -10,10 +9,8 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -31,10 +28,9 @@ public class GUI {
 
     private JFrame frame;
     private JList<FileSearchResult> fileList;
-    private DefaultListModel<FileSearchResult> listModel;
+    public DefaultListModel<FileSearchResult> listModel;
     private ArrayList<FileSearchResult> allFiles;
     private Node node;
-    private static boolean SHOW = false;
 
     // Constructor of the GUI class where it receives the address, port, and work
     // folder
@@ -50,7 +46,6 @@ public class GUI {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         addFrameContent();
         frame.pack();
-        open();
     }
 
     // Makes the window visible
@@ -58,7 +53,9 @@ public class GUI {
         new Thread(() -> {
             node.startServing();
         }).start();
-        frame.setVisible(SHOW);
+
+        frame.setVisible(true);
+        System.out.println("GUI is now visible.");
     }
 
     // Adds the content to the window
@@ -122,8 +119,9 @@ public class GUI {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    GUINode newNodeWindow = new GUINode(GUI.this);
+                    GuiNode newNodeWindow = new GuiNode(node);
                     newNodeWindow.open();
+                    System.out.println("New Node connection window opened.");
                 }
             }
         );
@@ -164,40 +162,9 @@ public class GUI {
         );
     }
 
-    public void simulateSelectedOptions(List<FileSearchResult> options) {
-        for (FileSearchResult option : options) {
-            List<FileSearchResult> searchResultOfDifferentNodes = new ArrayList<
-                FileSearchResult
-            >();
-            for (FileSearchResult searchResult : allFiles) {
-                if (option.equals(searchResult)) {
-                    searchResultOfDifferentNodes.add(searchResult);
-                }
-            }
-            node.downloadFile(searchResultOfDifferentNodes);
-        }
-    }
-
     public synchronized void loadListModel(FileSearchResult[] list) {
         if (list == null || list.length == 0) return;
-        File[] files = node.getFolder().listFiles();
-        if (files != null) {
-            // Create FileSearchResult objects
-            for (File file : files) {
-                String hash = Utils.generateSHA256(file.getAbsolutePath());
 
-                allFiles.add(
-                    new FileSearchResult(
-                        null,
-                        file.getName(),
-                        hash,
-                        file.length(),
-                        node.getEnderecoIP(),
-                        node.getPort()
-                    )
-                );
-            }
-        }
         SwingUtilities.invokeLater(() -> {
             int added = 0;
             for (FileSearchResult searchResult : list) {
@@ -213,28 +180,7 @@ public class GUI {
         });
     }
 
-    public ArrayList<FileSearchResult> getListModel() {
-        ArrayList<FileSearchResult> list = new ArrayList<>();
-        for (int i = 0; i < listModel.size(); i++) {
-            list.add(listModel.getElementAt(i));
-        }
-        return list;
-    }
-
-    public void showDownloadStats(String hash, long duration) {
-        GUIDownloadStats downloadStats = new GUIDownloadStats(
-            GUI.this,
-            hash,
-            duration
-        );
-        downloadStats.open();
-    }
-
     public Node getNode() {
         return node;
-    }
-
-    public static boolean getSHOW() {
-        return SHOW;
     }
 }

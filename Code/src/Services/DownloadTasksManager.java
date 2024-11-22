@@ -2,12 +2,13 @@ package Services;
 
 import Core.Node;
 import FileSearch.FileSearchResult;
-import Messaging.FileBlockAnswerMessage;
+import Messaging.FileBlockRequestMessage;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -15,21 +16,12 @@ public class DownloadTasksManager {
 
     private List<DownloadAssistant> assistants = new LinkedList<>();
     private final int DEFAULT_NUMBER_THREADS = 5;
-    private Map<
-        String,
-        HashMap<String, ArrayList<FileBlockAnswerMessage>>
-    > downloadMap;
-    private List<List<FileSearchResult>> downloadRequests;
+    private List<List<FileSearchResult>> downloadRequests = new LinkedList<>();
     private Node node;
     private ThreadPoolExecutor threadPool;
 
     public DownloadTasksManager(Node node, int numThreads) {
         this.node = node;
-        this.downloadMap = new HashMap<
-            String,
-            HashMap<String, ArrayList<FileBlockAnswerMessage>>
-        >();
-        this.downloadRequests = new LinkedList<>();
         this.threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(
             numThreads
         );
@@ -38,47 +30,10 @@ public class DownloadTasksManager {
         );
     }
 
-    public synchronized Map<
-        String,
-        ArrayList<FileBlockAnswerMessage>
-    > getDownloadProcess(String hash) {
-        HashMap<String, ArrayList<FileBlockAnswerMessage>> answers =
-            downloadMap.get(hash);
-        if (answers == null) return new HashMap<
-            String,
-            ArrayList<FileBlockAnswerMessage>
-        >();
-        return answers;
-    }
-
-    public synchronized void addDownloadProcess(
-        String hash,
-        String address,
-        int port,
-        FileBlockAnswerMessage answer
-    ) {
-        HashMap<String, ArrayList<FileBlockAnswerMessage>> fileMap =
-            downloadMap.get(hash);
-        if (fileMap == null) {
-            fileMap = new HashMap<String, ArrayList<FileBlockAnswerMessage>>();
-            downloadMap.put(hash, fileMap);
-        }
-
-        String key = address + "::" + port;
-        ArrayList<FileBlockAnswerMessage> answers = fileMap.get(key);
-        if (answers == null) {
-            answers = new ArrayList<FileBlockAnswerMessage>();
-            fileMap.put(key, answers);
-        }
-        answers.add(answer);
-    }
-
-    public synchronized void addDownloadRequest(
+    public synchronized void downloadFile(
         List<FileSearchResult> searchResults
     ) {
-        System.out.println("Adding Download Requests: " + searchResults.size());
         downloadRequests.add(searchResults);
-        System.out.println("Download Requests: " + downloadRequests.size());
     }
 
     public List<DownloadAssistant> getAssistants() {

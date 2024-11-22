@@ -1,20 +1,19 @@
 package GUI;
 
-import Core.Node;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
 
-public class GUINode {
+import Core.Node;
+
+public class GuiNode {
 
     private JFrame frame;
     private Node node;
-    private GUI gui;
 
-    public GUINode(GUI gui) {
-        this.gui = gui;
-        this.node = gui.getNode();
+    public GuiNode(Node node) {
+        this.node = node;
         frame = new JFrame("Add Node");
         frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // Close only this window
         addFrameContent();
@@ -22,7 +21,7 @@ public class GUINode {
     }
 
     public void open() {
-        frame.setVisible(this.gui.getSHOW());
+        frame.setVisible(true); // Make the window visible
     }
 
     private void addFrameContent() {
@@ -47,40 +46,28 @@ public class GUINode {
         JButton okButton = new JButton("OK");
 
         // Adding functionality to the buttons
-        cancelButton.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    frame.dispose(); // Close the window when Cancel is clicked
-                }
+        cancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose(); // Close the window when Cancel is clicked
             }
-        );
+        });
 
-        okButton.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    // Logic to handle the address and port
-                    String address = addressField.getText();
-                    String portText = portField.getText();
-                    try {
-                        int port = Integer.parseInt(portText);
-                        JOptionPane.showMessageDialog(
-                            frame,
-                            "Address: " + address + "\nPort: " + port
-                        );
-                        node.connectToNode(address, port);
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(
-                            frame,
-                            "Invalid port!",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE
-                        );
-                    }
+        okButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Logic to handle the address and port
+                String address = addressField.getText();
+                String portText = portField.getText();
+                try {
+                    int port = Integer.parseInt(portText);
+                    JOptionPane.showMessageDialog(frame, "Address: " + address + "\nPort: " + port);
+                    node.connectToNode(address, port);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(frame, "Invalid port!", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
-        );
+        });
 
         frame.add(cancelButton);
         frame.add(okButton);

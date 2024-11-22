@@ -27,6 +27,10 @@ public class FileBlockRequestMessage {
     public int getLength() {
         return length;
     }
+    
+    public static List<FileBlockRequestMessage> createBlockList(String hash, long fileSize) {
+    	return createBlockList(hash, fileSize, 10240);
+    }
 
     public static List<FileBlockRequestMessage> createBlockList(String hash, long fileSize, int blockSize) {
         List<FileBlockRequestMessage> blockList = new ArrayList<>();

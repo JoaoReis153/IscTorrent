@@ -1,31 +1,38 @@
 package Core;
 
-import GUI.GUI;
-import Services.DownloadTasksManager;
-import Services.SubNode;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import FileSearch.FileSearchResult;
+import GUI.GUI;
+import Messaging.FileBlockRequestMessage;
+import Services.DownloadTasksManager;
+import Services.SubNode;
 
 public class Node {
 
     private InetAddress endereco;
     private final File folder;
     private Set<SubNode> peers = new HashSet<>();
-    private DownloadTasksManager downloadTasksManager;
+    private DownloadTasksManager manager;
     private GUI gui;
 
     private int port = 8080;
 
     // Constructor
     public Node(int nodeId, GUI gui) {
+    	this.manager = new DownloadTasksManager();
         this.gui = gui;
-        this.downloadTasksManager = new DownloadTasksManager();
+
         // Validate Node ID
         if (nodeId < 0) {
             System.err.println("Invalid node ID");
@@ -64,8 +71,9 @@ public class Node {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Connection established");
-                SubNode clientHandler = new SubNode(this, clientSocket, true);
+                SubNode clientHandler = new SubNode(this, clientSocket, gui, true);
                 clientHandler.start();
+                
                 peers.add(clientHandler);
             }
         } catch (IOException e) {
@@ -81,19 +89,22 @@ public class Node {
             peer.sendWordSearchMessageRequest(keyword);
         }
     }
+    
+    public void downloadFile(List<FileSearchResult> result) {
+    	for(FileSearchResult f : result) System.out.println(f);
+    	List<FileBlockRequestMessage> blockList = FileBlockRequestMessage.createBlockList(result.getFirst().getHash(), result.getFirst().getFileSize());
+
+    }
 
     // Connect to another node
     public void connectToNode(String nomeEndereco, int targetPort) {
         Socket clientSocket = null;
         InetAddress targetEndereco = null;
-
         // Validate address
         try {
             targetEndereco = InetAddress.getByName(nomeEndereco);
             if (targetEndereco == null) {
-                System.out.println(
-                    "Failed to connect to node: Invalid address"
-                );
+                System.out.println("Failed to connect to node: Invalid address");
                 return;
             }
         } catch (IOException e) {
@@ -102,32 +113,49 @@ public class Node {
 
         // Validate port
         if (targetPort <= 8080 || targetPort >= 65535) {
-            System.out.println("Failed to connect to node: Invalid port range");
+            System.out.println("Failed to connect: Invalid port range");
             return;
         }
 
         // Attempt connection
-        try {
-            if (
-                targetEndereco.equals(this.endereco) && targetPort == this.port
-            ) {
-                System.out.println(
-                    "Failed to connect to node: Cannot connect to itself"
-                );
+            if (targetEndereco.equals(this.endereco) && targetPort == this.port) {
+                System.out.println("Failed to connect: Cannot connect to itself");
                 return;
             }
 
+            
+            for (SubNode peer : peers) {
+                if (peer.getSocket().getInetAddress().equals(targetEndereco) && peer.getSocket().getPort() == targetPort) {
+                    System.out.println("Failed to connect: That connection already exists");
+                    return;
+                }
+                
+                if (peer.getOriginalBeforeOSchangePort() == targetPort) {
+                	System.out.println("Failed to connect: That connection alread exists");
+                	return;
+                }
+            }
+            
+        try {
             clientSocket = new Socket(targetEndereco, targetPort);
-            SubNode handler = new SubNode(this, clientSocket, true);
+            SubNode handler = new SubNode(this, clientSocket, gui, true);
             handler.start();
+            
             peers.add(handler);
 
             Thread.sleep(100);
 
-            handler.sendNewConnectionRequest(endereco, targetPort);
+            handler.sendNewConnectionRequest(endereco, port);
+
         } catch (IOException | InterruptedException e) {
             System.err.println("Failed to connect to node: " + e);
         }
+    }
+    
+    public void listSubNodes() {
+    	for(SubNode peer : peers) {
+    		System.out.println(peer);
+    	}
     }
 
     // String representation of the node
@@ -150,10 +178,6 @@ public class Node {
     // Getter and setter for port
     public int getPort() {
         return port;
-    }
-
-    public GUI getGUI() {
-        return gui;
     }
 
     public void setPort(int port) {

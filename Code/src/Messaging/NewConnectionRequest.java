@@ -21,4 +21,11 @@ public class NewConnectionRequest implements Serializable {
 		return clientPort;
 	}
 
+	@Override
+	public String toString() {
+		return "NewConnectionRequest [clientAddress=" + clientAddress + ", clientPort=" + clientPort + "]";
+	}
+	
+	
+
 }

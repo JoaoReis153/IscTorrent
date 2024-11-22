@@ -121,18 +121,18 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 List<FileSearchResult> selectedOptions = fileList.getSelectedValuesList();
-                for (FileSearchResult searchResult : selectedOptions) {
+                for (FileSearchResult option : selectedOptions) {
                 	List<FileSearchResult> searchResultOfDifferentNodes = new ArrayList<FileSearchResult>() ;
-                	 for (int i = 0; i < listModel.size(); i++) {
-                         FileSearchResult potentialMatch = listModel.getElementAt(i);
-                         if (searchResult.equals(potentialMatch)) {
-                             searchResultOfDifferentNodes.add(potentialMatch);
+                	 for (FileSearchResult searchResult : allFiles ) {
+                         if (option.equals(searchResult)) {
+                             searchResultOfDifferentNodes.add(searchResult);
                          }
                      }
                 	 node.downloadFile(searchResultOfDifferentNodes);                	
+                	 
+                	 System.out.println("Download initiated for selected files: " + selectedOptions + " (" + searchResultOfDifferentNodes.size() + ")");
                 }
                 
-                System.out.println("Download initiated for selected files: " + selectedOptions);
             }
         });
 

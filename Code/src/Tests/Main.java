@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.List;
 
 import Core.Node;
@@ -14,7 +15,7 @@ import Services.SubNode;
 public class Main {
     public static void main(String[] args) {
 
-        int test = 4;  // Change this to select the test case to run
+        int test = 6;  // Change this to select the test case to run
 
         if (test == 1) {
             // Basic Node Initialization Test
@@ -89,10 +90,13 @@ public class Main {
         		System.out.println("--------------------------------------");
                 Thread.sleep(500);
                 secondNode.connectToNode("192.168.1.85", 8081);
+                
+                fourthNode.connectToNode(InetAddress.getLocalHost().getHostAddress(), 8081);
+                fourthNode.connectToNode(InetAddress.getLocalHost().getHostAddress(), 8082);
+			
         		
         		
-        		
-            } catch (InterruptedException e) {
+            } catch (InterruptedException | UnknownHostException e) {
                 e.printStackTrace();
             }
         }

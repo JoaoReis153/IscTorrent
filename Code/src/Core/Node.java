@@ -3,6 +3,7 @@ package Core;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.NoRouteToHostException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -147,8 +148,10 @@ public class Node {
 
             handler.sendNewConnectionRequest(endereco, port);
 
+        } catch (NoRouteToHostException e) {
+        	System.err.println("Failed to connect: Target is unreachable");
         } catch (IOException | InterruptedException e) {
-            System.err.println("Failed to connect to node: " + e);
+            System.err.println("Failed to connect: " + e);
         }
     }
     

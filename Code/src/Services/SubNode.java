@@ -1,20 +1,25 @@
 package Services;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.util.Objects;
-
 import Core.Node;
 import Core.Utils;
 import FileSearch.FileSearchResult;
 import FileSearch.WordSearchMessage;
 import GUI.GUI;
+import Messaging.FileBlockAnswerMessage;
 import Messaging.FileBlockRequestMessage;
 import Messaging.NewConnectionRequest;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 
 public class SubNode extends Thread {
 
@@ -23,15 +28,22 @@ public class SubNode extends Thread {
     private int originalBeforeOSchangePort;
     private Socket socket;
     private Node node;
-    private GUI gui;
+    private DownloadTasksManager downloadManager;
     private boolean userCreated;
     private boolean running = true;
+    private CountDownLatch blockAnswerLatch;
 
     // Constructor
-    public SubNode(Node node, Socket socket, GUI gui, boolean userCreated) {
-        this.socket = socket;
+    public SubNode(
+        Node node,
+        DownloadTasksManager downloadManager,
+        Socket socket,
+        GUI gui,
+        boolean userCreated
+    ) {
         this.node = node;
-        this.gui = gui;
+        this.downloadManager = downloadManager;
+        this.socket = socket;
         this.userCreated = userCreated;
     }
 
@@ -44,58 +56,135 @@ public class SubNode extends Thread {
             while (running && (obj = in.readObject()) != null) {
                 // Handle New Connection Request
                 if (obj instanceof NewConnectionRequest) {
-                    System.out.println("Received a connection request");
-                    this.originalBeforeOSchangePort = ((NewConnectionRequest) obj).getClientPort();
+                    this.originalBeforeOSchangePort =
+                        ((NewConnectionRequest) obj).getClientPort();
+                    System.out.println(
+                        "Added new node::NodeAddress [address=" +
+                        socket.getInetAddress().getHostAddress() +
+                        " port=" +
+                        originalBeforeOSchangePort +
+                        "]"
+                    );
                     // Handle Word Search Message
-                } else
-                    if (obj instanceof WordSearchMessage) {
-                        System.out.println("Received WordSearchMessage with content: ("
-                                + ((WordSearchMessage) obj).getKeyword() + ")");
-                        if (node.getFolder().exists() && node.getFolder().isDirectory()) {
-                            sendFileSearchResultList((WordSearchMessage) obj);
-                        }
+                } else if (obj instanceof WordSearchMessage) {
+                    System.out.println(
+                        "Received WordSearchMessage with content: (" +
+                        ((WordSearchMessage) obj).getKeyword() +
+                        ")"
+                    );
+                    if (
+                        node.getFolder().exists() &&
+                        node.getFolder().isDirectory()
+                    ) {
+                        sendFileSearchResultList((WordSearchMessage) obj);
+                    }
+                    // Handle File Search Result List
+                } else if (obj instanceof FileSearchResult[]) {
+                    FileSearchResult[] searchResultList =
+                        (FileSearchResult[]) obj;
+                    if (node.getGUI() == null) {
+                        System.out.println("There was a problem with the GUI");
+                        System.exit(1);
+                    }
+                    node.getGUI().loadListModel(searchResultList);
+                    // Handle File Block Request
+                } else if (obj instanceof FileBlockRequestMessage) {
+                    System.out.println(
+                        "Received FileBlockRequestMessage: " + obj
+                    );
 
-                        // Handle File Search Result List
-                    } else
-                        if (obj instanceof FileSearchResult[]) {
-                            FileSearchResult[] searchResultList = (FileSearchResult[]) obj;
-                            if(gui == null) {
-                            	System.out.println("There was a problem with the GUI");
-                            	System.exit(1);
-                            }
-                            gui.loadListModel(searchResultList);
+                    FileBlockRequestMessage request =
+                        (FileBlockRequestMessage) obj;
 
-                            // Handle File Block Request
-                        } else
-                            if (obj instanceof FileBlockRequestMessage) {
-                                System.out.println("Received FileBlockRequestMessage");
-                                System.out.println(obj.toString());
-                            }
+                    try {
+                        int a = node.hasFileWithHash(request.getHash())
+                            ? request.getLength()
+                            : 0;
+                        System.out.println("Has file with has ? " + a);
+                        FileBlockAnswerMessage answer =
+                            new FileBlockAnswerMessage(
+                                node.getId(),
+                                request.getHash(),
+                                request.getOffset(),
+                                node.hasFileWithHash(request.getHash())
+                                    ? request.getLength()
+                                    : 0
+                            );
+
+                        out.writeObject(answer);
+                        out.flush();
+                    } catch (Exception e) {
+                        System.err.println(
+                            "Error creating FileBlockAnswerMessage: " +
+                            e.getMessage()
+                        );
+                        e.printStackTrace();
+                    }
+                } else if (obj instanceof FileBlockAnswerMessage) {
+                    System.out.println(
+                        "Received FileBlockAnswerMessage: " + obj
+                    );
+                    FileBlockAnswerMessage answer =
+                        (FileBlockAnswerMessage) obj;
+                    downloadManager.addDownloadProcess(
+                        answer.getHash(),
+                        socket.getInetAddress().getHostAddress(),
+                        originalBeforeOSchangePort,
+                        answer
+                    );
+                    if (blockAnswerLatch != null) blockAnswerLatch.countDown();
+                }
             }
         } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Error handling client: " + e.getMessage());
+            System.out.println(e);
+            System.err.println("Error handling client: " + e.getMessage());
         } finally {
-        	closeResources();
+            closeResources();
         }
     }
-    
+
     public void close() {
-    	running = false;
-    	closeResources();
-    	System.out.println("Thread closed for SubNode at " + socket.getInetAddress() + ":" + socket.getPort());
+        running = false;
+        closeResources();
+        System.out.println(
+            "Thread closed for SubNode at " +
+            socket.getInetAddress() +
+            ":" +
+            socket.getPort()
+        );
     }
-    
+
     private void closeResources() {
-    	 try {
-             if (in != null)
-                 in.close();
-             if (out != null)
-                 out.close();
-             if (socket != null)
-                 socket.close();
-         } catch (IOException e) {
-             System.out.println("Error closing resources: " + e.getMessage());
-         }
+        try {
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (IOException e) {
+            System.out.println("Error closing resources: " + e.getMessage());
+        }
+    }
+
+    public void sendFileBlockRequestMessageRequest(
+        FileBlockRequestMessage block
+    ) {
+        if (out != null && !socket.isClosed()) {
+            try {
+                System.out.println("Sent FileBlockRequestMessage: " + block);
+                out.writeObject(block);
+                out.flush();
+            } catch (IOException e) {
+                System.out.println("Error sending FileBlockRequestMessage");
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println(
+                "OutputStream is null [invalid port: " + socket.getPort() + "]"
+            );
+        }
+    }
+
+    public void setBlockAnswerLatch(CountDownLatch latch) {
+        this.blockAnswerLatch = latch;
     }
 
     // Send Word Search Request to peer
@@ -103,7 +192,9 @@ public class SubNode extends Thread {
         WordSearchMessage searchPackage = new WordSearchMessage(keyword);
         if (out != null && !socket.isClosed()) {
             try {
-                System.out.println("Sent WordSearchMessageRequest with keyword: " + keyword);
+                System.out.println(
+                    "Sent WordSearchMessageRequest with keyword: " + keyword
+                );
                 out.writeObject(searchPackage);
                 out.flush();
             } catch (IOException e) {
@@ -120,25 +211,39 @@ public class SubNode extends Thread {
             String keyword = obj.getKeyword().toLowerCase();
             int keywordCount = 0;
 
+            // Ler o .gitignore, caso exista
+            List<String> filesToIgnore = getIgnoredFileNames();
+
             // Count matching files
             for (File file : files) {
-                if (file.getName().toLowerCase().contains(keyword)) {
+                if (
+                    file.getName().toLowerCase().contains(keyword) &&
+                    !filesToIgnore.contains(file.getName())
+                ) {
                     keywordCount++;
                 }
             }
 
-            if (keywordCount == 0)
-                return;
+            if (keywordCount == 0) return;
 
             FileSearchResult[] results = new FileSearchResult[keywordCount];
             int counter = 0;
 
             // Create FileSearchResult objects
             for (File file : files) {
-                String hash = Utils.generateSHA256(file.getAbsolutePath());
-                if (file.getName().toLowerCase().contains(keyword)) {
-                    results[counter++] = new FileSearchResult(obj, file.getName(), hash, file.length(),
-                            node.getEnderecoIP(), node.getPort());
+                if (
+                    file.getName().toLowerCase().contains(keyword) &&
+                    !filesToIgnore.contains(file.getName())
+                ) {
+                    String hash = Utils.generateSHA256(file.getAbsolutePath());
+                    results[counter++] = new FileSearchResult(
+                        obj,
+                        file.getName(),
+                        hash,
+                        file.length(),
+                        node.getEnderecoIP(),
+                        node.getPort()
+                    );
                 }
             }
 
@@ -153,13 +258,18 @@ public class SubNode extends Thread {
     }
 
     // Send New Connection Request
-    public void sendNewConnectionRequest(InetAddress endereco, int targetPort) {
+    public void sendNewConnectionRequest(InetAddress endereco, int thisPort) {
         if (out == null) {
-            System.out.println("OutputStream is null [invalid port: " + targetPort + "]");
+            System.out.println(
+                "OutputStream is null [invalid port: " + thisPort + "]"
+            );
             return;
         }
 
-        NewConnectionRequest request = new NewConnectionRequest(endereco, targetPort);
+        NewConnectionRequest request = new NewConnectionRequest(
+            endereco,
+            thisPort
+        );
         try {
             out.writeObject(request);
             out.flush();
@@ -167,37 +277,91 @@ public class SubNode extends Thread {
             System.out.println("Error sending NewConnectionRequest");
         }
 
-        System.out.println("Added new node: NodeAddress [address=" + endereco + " port=" + targetPort + "]");
+        System.out.println(
+            "Added new node::NodeAddress [address=" +
+            endereco.getHostAddress() +
+            " port=" +
+            socket.getPort() +
+            "]"
+        );
     }
-    
-    
+
     public int getOriginalBeforeOSchangePort() {
-    	return originalBeforeOSchangePort;
+        return originalBeforeOSchangePort;
     }
-    
 
-	@Override
-	public String toString() {
-		return "SubNode [originalBeforeOSchangePort=" + originalBeforeOSchangePort
-				+ ", socket=" + socket + ", node=" + node + ", gui=" + gui + ", userCreated=" + userCreated
-				+ ", running=" + running + "]";
-	}
+    @Override
+    public String toString() {
+        return (
+            "SubNode [originalBeforeOSchangePort=" +
+            originalBeforeOSchangePort +
+            ", socket=" +
+            socket +
+            ", node=" +
+            node +
+            ", gui=" +
+            node.getGUI() +
+            ", userCreated=" +
+            userCreated +
+            ", running=" +
+            running +
+            "]"
+        );
+    }
 
-	@Override
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         SubNode subNode = (SubNode) obj;
-        return userCreated && this.socket.getPort() == subNode.socket.getPort() && socket.getInetAddress().equals(subNode.getSocket().getInetAddress());
+        return (
+            userCreated &&
+            this.socket.getPort() == subNode.socket.getPort() &&
+            socket.getInetAddress().equals(subNode.getSocket().getInetAddress())
+        );
     }
-    
+
     public Socket getSocket() {
-    	return socket;
+        return socket;
     }
-    
+
     @Override
     public int hashCode() {
-    	if(userCreated) return Objects.hash(socket.getInetAddress(), socket.getPort());
-    	return super.hashCode();
-    }	
+        if (userCreated) return Objects.hash(
+            socket.getInetAddress(),
+            socket.getPort()
+        );
+        return super.hashCode();
+    }
+
+    // Método para obter nomes de arquivos do .gitignore
+    private List<String> getIgnoredFileNames() {
+        List<String> ignoredFiles = new ArrayList<>();
+        File gitignore = new File(
+            this.node.getFolder().getParentFile().getParentFile(),
+            ".gitignore"
+        );
+
+        if (gitignore.exists() && gitignore.isFile()) {
+            try (
+                BufferedReader br = new BufferedReader(
+                    new FileReader(gitignore)
+                )
+            ) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    line = line.trim();
+                    if (!line.isEmpty() && !line.startsWith("#")) {
+                        ignoredFiles.add(line);
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println(
+                    "Error reading .gitignore: " + e.getMessage()
+                );
+            }
+        }
+
+        return ignoredFiles;
+    }
 }

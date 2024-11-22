@@ -1,5 +1,8 @@
 package GUI;
 
+import Core.Node;
+import Core.Utils;
+import FileSearch.FileSearchResult;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -7,9 +10,10 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -23,34 +27,38 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
-import Core.Node;
-import FileSearch.FileSearchResult;
-
 public class GUI {
+
     private JFrame frame;
     private JList<FileSearchResult> fileList;
-    public DefaultListModel<FileSearchResult> listModel;
+    private DefaultListModel<FileSearchResult> listModel;
     private ArrayList<FileSearchResult> allFiles;
     private Node node;
+    private static boolean SHOW = false;
 
     // Constructor of the GUI class where it receives the address, port, and work
     // folder
     public GUI(int nodeId) {
         this.node = new Node(nodeId, this);
-        frame = new JFrame("Port NodeAddress [ address " + node.getEnderecoIP() + ":" + node.getPort() + " ]");
+        frame = new JFrame(
+            "Port NodeAddress [ address " +
+            node.getEnderecoIP() +
+            ":" +
+            node.getPort() +
+            " ]"
+        );
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         addFrameContent();
-        frame.pack();        
+        frame.pack();
+        open();
     }
 
     // Makes the window visible
     public void open() {
-    	new Thread(() -> {
-    		node.startServing();
-    	}).start();
-
-        frame.setVisible(true);
-        System.out.println("GUI is now visible.");
+        new Thread(() -> {
+            node.startServing();
+        }).start();
+        frame.setVisible(SHOW);
     }
 
     // Adds the content to the window
@@ -83,7 +91,9 @@ public class GUI {
         allFiles = new ArrayList<>();
         listModel = new DefaultListModel<>();
         fileList = new JList<>(listModel);
-        fileList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        fileList.setSelectionMode(
+            ListSelectionModel.MULTIPLE_INTERVAL_SELECTION
+        );
 
         JScrollPane scrollPane = new JScrollPane(fileList);
         leftArea.setLayout(new BorderLayout());
@@ -108,69 +118,123 @@ public class GUI {
         frame.add(bottomPanel, BorderLayout.CENTER);
 
         // Button event listeners
-        connectButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                GuiNode newNodeWindow = new GuiNode(node);
-                newNodeWindow.open();
-                System.out.println("New Node connection window opened.");
-            }
-        });
-
-        downloadButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                List<FileSearchResult> selectedOptions = fileList.getSelectedValuesList();
-                for (FileSearchResult option : selectedOptions) {
-                	List<FileSearchResult> searchResultOfDifferentNodes = new ArrayList<FileSearchResult>() ;
-                	 for (FileSearchResult searchResult : allFiles ) {
-                         if (option.equals(searchResult)) {
-                             searchResultOfDifferentNodes.add(searchResult);
-                         }
-                     }
-                	 node.downloadFile(searchResultOfDifferentNodes);                	
-                	 
-                	 System.out.println("Download initiated for selected files: " + selectedOptions + " (" + searchResultOfDifferentNodes.size() + ")");
+        connectButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    GUINode newNodeWindow = new GUINode(GUI.this);
+                    newNodeWindow.open();
                 }
-                
             }
-        });
+        );
 
-        searchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            	listModel.clear();
-            	allFiles.clear();
-                String searchText = searchTextField.getText().toLowerCase();
-                node.broadcastWordSearchMessageRequest(searchText);
-                System.out.println("Search request sent for keyword: " + searchText);
+        downloadButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    List<FileSearchResult> selectedOptions =
+                        fileList.getSelectedValuesList();
+                    for (FileSearchResult option : selectedOptions) {
+                        List<FileSearchResult> searchResultOfDifferentNodes =
+                            new ArrayList<FileSearchResult>();
+                        for (FileSearchResult searchResult : allFiles) {
+                            if (option.equals(searchResult)) {
+                                searchResultOfDifferentNodes.add(searchResult);
+                            }
+                        }
+                        node.downloadFile(searchResultOfDifferentNodes);
+                    }
+                }
             }
-        });
+        );
 
-   
-
-
+        searchButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    listModel.clear();
+                    allFiles.clear();
+                    String searchText = searchTextField.getText().toLowerCase();
+                    node.broadcastWordSearchMessageRequest(searchText);
+                    System.out.println(
+                        "Search request sent for keyword: " + searchText
+                    );
+                }
+            }
+        );
     }
 
-    public synchronized  void loadListModel(FileSearchResult[] list) {
-        if (list == null || list.length == 0) return;
-        
-        SwingUtilities.invokeLater(() -> {
-        int added = 0;
-        for (FileSearchResult searchResult : list) {
-        	if(!allFiles.contains(searchResult)) {
-        		added++;
-        		System.out.println(searchResult + " " + searchResult.getHash());
-        		listModel.addElement(searchResult);
-        	}
-        	allFiles.add(searchResult);
+    public void simulateSelectedOptions(List<FileSearchResult> options) {
+        for (FileSearchResult option : options) {
+            List<FileSearchResult> searchResultOfDifferentNodes = new ArrayList<
+                FileSearchResult
+            >();
+            for (FileSearchResult searchResult : allFiles) {
+                if (option.equals(searchResult)) {
+                    searchResultOfDifferentNodes.add(searchResult);
+                }
+            }
+            node.downloadFile(searchResultOfDifferentNodes);
         }
-        System.out.println("FileSearchResult size: " + list.length);
-        System.out.println("Loaded " + added + " search results into the file list.");
+    }
+
+    public synchronized void loadListModel(FileSearchResult[] list) {
+        if (list == null || list.length == 0) return;
+        File[] files = node.getFolder().listFiles();
+        if (files != null) {
+            // Create FileSearchResult objects
+            for (File file : files) {
+                String hash = Utils.generateSHA256(file.getAbsolutePath());
+
+                allFiles.add(
+                    new FileSearchResult(
+                        null,
+                        file.getName(),
+                        hash,
+                        file.length(),
+                        node.getEnderecoIP(),
+                        node.getPort()
+                    )
+                );
+            }
+        }
+        SwingUtilities.invokeLater(() -> {
+            int added = 0;
+            for (FileSearchResult searchResult : list) {
+                if (!allFiles.contains(searchResult)) {
+                    added++;
+                    listModel.addElement(searchResult);
+                }
+                allFiles.add(searchResult);
+            }
+            System.out.println(
+                "Loaded " + added + " search results into the file list."
+            );
         });
+    }
+
+    public ArrayList<FileSearchResult> getListModel() {
+        ArrayList<FileSearchResult> list = new ArrayList<>();
+        for (int i = 0; i < listModel.size(); i++) {
+            list.add(listModel.getElementAt(i));
+        }
+        return list;
+    }
+
+    public void showDownloadStats(String hash, long duration) {
+        GUIDownloadStats downloadStats = new GUIDownloadStats(
+            GUI.this,
+            hash,
+            duration
+        );
+        downloadStats.open();
     }
 
     public Node getNode() {
         return node;
+    }
+
+    public static boolean getSHOW() {
+        return SHOW;
     }
 }

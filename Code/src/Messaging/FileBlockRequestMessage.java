@@ -1,12 +1,13 @@
 package Messaging;
 
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileBlockRequestMessage {
-
-    private String hash;
+public class FileBlockRequestMessage implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
+	private String hash;
     private long offset;
     private int length;
 
@@ -27,12 +28,19 @@ public class FileBlockRequestMessage {
     public int getLength() {
         return length;
     }
-    
-    public static List<FileBlockRequestMessage> createBlockList(String hash, long fileSize) {
-    	return createBlockList(hash, fileSize, 10240);
+
+    public static List<FileBlockRequestMessage> createBlockList(
+        String hash,
+        long fileSize
+    ) {
+        return createBlockList(hash, fileSize, 10240);
     }
 
-    public static List<FileBlockRequestMessage> createBlockList(String hash, long fileSize, int blockSize) {
+    public static List<FileBlockRequestMessage> createBlockList(
+        String hash,
+        long fileSize,
+        int blockSize
+    ) {
         List<FileBlockRequestMessage> blockList = new ArrayList<>();
         long offset = 0;
 
@@ -44,5 +52,16 @@ public class FileBlockRequestMessage {
 
         return blockList;
     }
-}
 
+    public String toString() {
+        return (
+            "FileBlockRequestMessage [hash=" +
+            hash.substring(hash.length() - 10, hash.length()) +
+            ", offset=" +
+            offset +
+            ", length=" +
+            length +
+            "]"
+        );
+    }
+}

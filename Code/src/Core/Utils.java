@@ -39,6 +39,10 @@ public class Utils {
     }
 
     public static Boolean isValidPort(int port) {
-        return port >= 8080 && port <= 49151;
+        return port > 8080 && port <= 49151;
+    }
+
+    public static Boolean isValidID(int id) {
+        return id > 0 && id <= 41070;
     }
 }

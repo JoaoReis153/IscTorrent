@@ -4,7 +4,6 @@ import Core.Node;
 import Core.Utils;
 import FileSearch.FileSearchResult;
 import FileSearch.WordSearchMessage;
-import GUI.GUI;
 import Messaging.FileBlockAnswerMessage;
 import Messaging.FileBlockRequestMessage;
 import Messaging.NewConnectionRequest;
@@ -38,7 +37,6 @@ public class SubNode extends Thread {
         Node node,
         DownloadTasksManager downloadManager,
         Socket socket,
-        GUI gui,
         boolean userCreated
     ) {
         this.node = node;
@@ -129,11 +127,15 @@ public class SubNode extends Thread {
                     System.out.println(
                         "Original port: " + originalBeforeOSchangePort
                     );
+                    int port = Utils.isValidPort(socket.getPort())
+                        ? socket.getPort()
+                        : originalBeforeOSchangePort;
                     System.out.println("Socket port: " + socket.getPort());
+                    System.out.println("Port: " + port);
                     downloadManager.addDownloadProcess(
                         answer.getHash(),
                         socket.getInetAddress().getHostAddress(),
-                        originalBeforeOSchangePort,
+                        port,
                         answer
                     );
                     if (blockAnswerLatch != null) blockAnswerLatch.countDown();

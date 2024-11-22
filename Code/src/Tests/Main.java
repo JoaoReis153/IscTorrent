@@ -105,6 +105,10 @@ public class Main {
                     InetAddress.getLocalHost().getHostAddress(),
                     8081
                 );
+                fourthNode.connectToNode(
+                        InetAddress.getLocalHost().getHostAddress(),
+                        8082
+                    );
                 /*fourthNode.connectToNode(
                     InetAddress.getLocalHost().getHostAddress(),
                     8082

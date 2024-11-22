@@ -1,6 +1,7 @@
 package GUI;
 
 import Core.Node;
+import Core.Utils;
 import FileSearch.FileSearchResult;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -9,6 +10,8 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.BorderFactory;
@@ -55,7 +58,6 @@ public class GUI {
         }).start();
 
         frame.setVisible(true);
-        System.out.println("GUI is now visible.");
     }
 
     // Adds the content to the window
@@ -121,7 +123,6 @@ public class GUI {
                 public void actionPerformed(ActionEvent e) {
                     GuiNode newNodeWindow = new GuiNode(node);
                     newNodeWindow.open();
-                    System.out.println("New Node connection window opened.");
                 }
             }
         );
@@ -164,7 +165,25 @@ public class GUI {
 
     public synchronized void loadListModel(FileSearchResult[] list) {
         if (list == null || list.length == 0) return;
+        File[] files = node.getFolder().listFiles();
+        if (files != null) {
 
+            // Create FileSearchResult objects
+            for (File file : files) {
+                String hash = Utils.generateSHA256(file.getAbsolutePath());
+           
+                allFiles.add(new FileSearchResult(
+                    null,
+                    file.getName(),
+                    hash,
+                    file.length(),
+                    node.getEnderecoIP(),
+                    node.getPort()
+                ));
+                
+            }
+
+        }
         SwingUtilities.invokeLater(() -> {
             int added = 0;
             for (FileSearchResult searchResult : list) {

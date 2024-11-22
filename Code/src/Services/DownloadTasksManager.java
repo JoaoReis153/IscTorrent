@@ -39,6 +39,7 @@ public class DownloadTasksManager {
         String hash
     ) {
         ArrayList<FileBlockAnswerMessage> answers = downloadMap.get(hash);
+        if(answers == null) return new ArrayList<FileBlockAnswerMessage>();
         return answers;
     }
 

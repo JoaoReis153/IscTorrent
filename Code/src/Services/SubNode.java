@@ -54,9 +54,15 @@ public class SubNode extends Thread {
             while (running && (obj = in.readObject()) != null) {
                 // Handle New Connection Request
                 if (obj instanceof NewConnectionRequest) {
-                    System.out.println("Received a connection request");
                     this.originalBeforeOSchangePort =
                         ((NewConnectionRequest) obj).getClientPort();
+                    System.out.println(
+                            "Added new node::NodeAddress [address=" +
+                            socket.getInetAddress().getHostAddress() +
+                            " port=" +
+                            originalBeforeOSchangePort +
+                            "]"
+                        );
                     // Handle Word Search Message
                 } else if (obj instanceof WordSearchMessage) {
                     System.out.println(
@@ -241,8 +247,8 @@ public class SubNode extends Thread {
         }
 
         System.out.println(
-            "Added new node: NodeAddress [address=" +
-            endereco +
+            "Added new node::NodeAddress [address=" +
+            endereco.getHostAddress() +
             " port=" +
             socket.getPort() +
             "]"

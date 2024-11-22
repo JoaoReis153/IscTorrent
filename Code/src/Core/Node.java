@@ -69,10 +69,11 @@ public class Node {
 
     // Start server to accept connections
     public void startServing() {
+    	System.out.println("Awaiting connection...");
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("Connection established");
+
                 SubNode clientHandler = new SubNode(
                     this,
                     downloadManager,
@@ -88,7 +89,6 @@ public class Node {
             System.err.println("Failed to start server: " + e.getMessage());
             System.exit(1);
         }
-        System.out.println("Awaiting connection...");
     }
 
     // Broadcast a word search message to all peers

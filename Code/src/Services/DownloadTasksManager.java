@@ -59,12 +59,10 @@ public class DownloadTasksManager {
     ) {
         HashMap<String, ArrayList<FileBlockAnswerMessage>> fileMap =
             downloadMap.get(hash);
-        System.out.println("DownloadMap size: " + downloadMap.size());
         if (fileMap == null) {
             fileMap = new HashMap<String, ArrayList<FileBlockAnswerMessage>>();
             downloadMap.put(hash, fileMap);
         }
-        System.out.println("DownloadMap size: " + downloadMap.size());
 
         String key = address + "::" + port;
         ArrayList<FileBlockAnswerMessage> answers = fileMap.get(key);

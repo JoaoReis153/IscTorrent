@@ -19,27 +19,30 @@ public class Main {
             // GUI Initialization Test
             int argument = Integer.parseInt(args[0]);
             GUI gui = new GUI(argument);
-            gui.open();
         } else if (test == 2) {
             GUI gui1 = new GUI(1);
             GUI gui2 = new GUI(2);
+            GUI gui3 = new GUI(3);
 
             Node firstNode = gui1.getNode();
             Node secondNode = gui2.getNode();
+            Node thirdNode = gui3.getNode();
 
             try {
                 System.out.println("--------------------------------------");
                 Thread.sleep(500);
-                secondNode.connectToNode("192.168.1.85", 8081);
-                /*fourthNode.connectToNode(
-                                InetAddress.getLocalHost().getHostAddress(),
-                                8082
-                                );*/
+                secondNode.connectToNode(
+                    InetAddress.getLocalHost().getHostAddress(),
+                    8081
+                );
+                thirdNode.connectToNode(
+                    InetAddress.getLocalHost().getHostAddress(),
+                    8082
+                );
                 firstNode.broadcastWordSearchMessageRequest("");
                 Thread.sleep(500);
                 System.out.println(gui1.getListModel());
-                gui1.getNode().downloadFile(gui1.getListModel());
-            } catch (InterruptedException e) {
+            } catch (InterruptedException | UnknownHostException e) {
                 e.printStackTrace();
             }
         }

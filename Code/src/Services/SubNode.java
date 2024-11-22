@@ -8,12 +8,16 @@ import GUI.GUI;
 import Messaging.FileBlockAnswerMessage;
 import Messaging.FileBlockRequestMessage;
 import Messaging.NewConnectionRequest;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
@@ -192,9 +196,15 @@ public class SubNode extends Thread {
             String keyword = obj.getKeyword().toLowerCase();
             int keywordCount = 0;
 
+            // Ler o .gitignore, caso exista
+            List<String> filesToIgnore = getIgnoredFileNames();
+
             // Count matching files
             for (File file : files) {
-                if (file.getName().toLowerCase().contains(keyword)) {
+                if (
+                    file.getName().toLowerCase().contains(keyword) &&
+                    !filesToIgnore.contains(file.getName())
+                ) {
                     keywordCount++;
                 }
             }
@@ -206,8 +216,11 @@ public class SubNode extends Thread {
 
             // Create FileSearchResult objects
             for (File file : files) {
-                String hash = Utils.generateSHA256(file.getAbsolutePath());
-                if (file.getName().toLowerCase().contains(keyword)) {
+                if (
+                    file.getName().toLowerCase().contains(keyword) &&
+                    !filesToIgnore.contains(file.getName())
+                ) {
+                    String hash = Utils.generateSHA256(file.getAbsolutePath());
                     results[counter++] = new FileSearchResult(
                         obj,
                         file.getName(),
@@ -304,5 +317,36 @@ public class SubNode extends Thread {
             socket.getPort()
         );
         return super.hashCode();
+    }
+
+    // Método para obter nomes de arquivos do .gitignore
+    private List<String> getIgnoredFileNames() {
+        List<String> ignoredFiles = new ArrayList<>();
+        File gitignore = new File(
+            this.node.getFolder().getParentFile().getParentFile(),
+            ".gitignore"
+        );
+
+        if (gitignore.exists() && gitignore.isFile()) {
+            try (
+                BufferedReader br = new BufferedReader(
+                    new FileReader(gitignore)
+                )
+            ) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    line = line.trim();
+                    if (!line.isEmpty() && !line.startsWith("#")) {
+                        ignoredFiles.add(line);
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println(
+                    "Error reading .gitignore: " + e.getMessage()
+                );
+            }
+        }
+
+        return ignoredFiles;
     }
 }

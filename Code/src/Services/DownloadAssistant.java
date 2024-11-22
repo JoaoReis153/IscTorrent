@@ -92,7 +92,6 @@ public class DownloadAssistant extends Thread {
                     );
 
                     long duration = System.currentTimeMillis() - startTime;
-
                     taskManager
                         .getNode()
                         .getGUI()

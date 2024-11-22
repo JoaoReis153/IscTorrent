@@ -20,6 +20,7 @@ public class Node {
     public static final String WORK_FOLDER = "Code/dl";
     private static final int BASE_PORT = 8080;
     private static final int MAX_PORT = 65535;
+    private static final boolean DEBUG = true;
 
     private final int nodeId;
     private final int port;
@@ -68,7 +69,9 @@ public class Node {
     }
 
     public void startServing() {
-        System.out.println("Awaiting connection...");
+        System.out.println(
+            getAddressAndPortFormated() + "Awaiting connection..."
+        );
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -122,17 +125,26 @@ public class Node {
         int targetPort
     ) {
         if (targetPort <= BASE_PORT || targetPort >= MAX_PORT) {
-            System.out.println("Failed to connect: Invalid port range");
+            System.out.println(
+                getAddressAndPortFormated() +
+                "Failed to connect: Invalid port range"
+            );
             return false;
         }
 
         if (targetAddress.equals(this.address) && targetPort == this.port) {
-            System.out.println("Failed to connect: Cannot connect to itself");
+            System.out.println(
+                getAddressAndPortFormated() +
+                "Failed to connect: Cannot connect to itself"
+            );
             return false;
         }
 
         if (isAlreadyConnected(targetAddress, targetPort)) {
-            System.out.println("Failed to connect: Connection already exists");
+            System.out.println(
+                getAddressAndPortFormated() +
+                "Failed to connect: Connection already exists"
+            );
             return false;
         }
 
@@ -177,7 +189,9 @@ public class Node {
 
     public void downloadFile(List<FileSearchResult> searchResults) {
         for (FileSearchResult searchResult : searchResults) {
-            System.out.println("Request file: " + searchResult);
+            System.out.println(
+                getAddressAndPortFormated() + "Request file: " + searchResult
+            );
         }
 
         downloadManager.addDownloadRequest(searchResults);
@@ -205,6 +219,7 @@ public class Node {
             ? peer.getSocket().getPort()
             : peer.getOriginalBeforeOSchangePort();
         System.out.println(
+            getAddressAndPortFormated() +
             "Removed connection with: " +
             peer.getSocket().getInetAddress().getHostAddress() +
             "::" +
@@ -244,8 +259,13 @@ public class Node {
         return peers;
     }
 
-    public String getAddressPort() {
+    public String getAddressAndPort() {
         return address.getHostAddress() + ":" + port;
+    }
+
+    public String getAddressAndPortFormated() {
+        if (DEBUG == false) return "";
+        return "[" + address.getHostAddress() + ":" + port + "]";
     }
 
     @Override

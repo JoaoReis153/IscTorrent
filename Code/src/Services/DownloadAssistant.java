@@ -33,7 +33,11 @@ public class DownloadAssistant extends Thread {
         List<FileSearchResult> request = taskManager.getDownloadRequest();
         if (request == null || request.isEmpty()) return;
 
-        System.out.println("Download Requests: " + request);
+        System.out.println(
+            taskManager.getNode().getAddressAndPortFormated() +
+            "Download Requests: " +
+            request
+        );
 
         FileSearchResult firstRequest = request.get(0);
         int fileHash = firstRequest.getHash();
@@ -102,6 +106,7 @@ public class DownloadAssistant extends Thread {
             taskManager.getDownloadProcess(fileHash).size() < expectedBlocks
         ) {
             System.out.println(
+                taskManager.getNode().getAddressAndPortFormated() +
                 taskManager.getDownloadProcess(fileHash).size() +
                 " of " +
                 expectedBlocks
@@ -109,6 +114,7 @@ public class DownloadAssistant extends Thread {
         }
 
         System.out.println(
+            taskManager.getNode().getAddressAndPortFormated() +
             String.format(
                 "Received all blocks: %d of %d",
                 taskManager.getDownloadProcess(fileHash).size(),
@@ -123,7 +129,10 @@ public class DownloadAssistant extends Thread {
     ) throws IOException {
         TreeMap<Long, byte[]> fileParts = collectFileParts(receivedBlockMap);
         if (fileParts.isEmpty()) return;
-        System.out.println("Running assembleAndWriteFile");
+        System.out.println(
+            taskManager.getNode().getAddressAndPortFormated() +
+            "Running assembleAndWriteFile"
+        );
         String filePath = buildFilePath(fileName);
         writeFileToDisc(filePath, fileParts);
         verifyFileCreation(filePath);
@@ -190,6 +199,10 @@ public class DownloadAssistant extends Thread {
             System.err.println("Error: File was not created at: " + filePath);
             return;
         }
-        System.out.println("File written successfully to: " + filePath);
+        System.out.println(
+            taskManager.getNode().getAddressAndPortFormated() +
+            "File written successfully to: " +
+            filePath
+        );
     }
 }

@@ -151,16 +151,27 @@ public class GUI {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    System.out.println("N of Peers: " + node.getPeers().size());
+                    System.out.println(
+                        node.getAddressAndPortFormated() +
+                        "N of Peers: " +
+                        node.getPeers().size()
+                    );
                     for (SubNode peer : node.getPeers()) {
-                        System.out.println("Socket: " + peer.getSocket());
+                        System.out.println(
+                            node.getAddressAndPortFormated() +
+                            "Socket: " +
+                            peer.getSocket()
+                        );
                     }
                     listModel.clear();
                     allFiles.clear();
                     String searchText = searchTextField.getText().toLowerCase();
                     node.broadcastWordSearchMessageRequest(searchText);
                     System.out.println(
-                        "Search request sent for keyword: [" + searchText + "]"
+                        node.getAddressAndPortFormated() +
+                        "Search request sent for keyword: [" +
+                        searchText +
+                        "]"
                     );
                 }
             }

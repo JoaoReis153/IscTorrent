@@ -1,6 +1,5 @@
 package GUI;
 
-import Core.Node;
 import Messaging.FileBlockAnswerMessage;
 import java.awt.Font;
 import java.util.ArrayList;

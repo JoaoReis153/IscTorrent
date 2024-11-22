@@ -2,7 +2,6 @@ package Core;
 
 import FileSearch.FileSearchResult;
 import GUI.GUI;
-import Messaging.FileBlockRequestMessage;
 import Services.DownloadTasksManager;
 import Services.SubNode;
 import java.io.File;
@@ -12,7 +11,6 @@ import java.net.NoRouteToHostException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

@@ -1,9 +1,11 @@
 package Tests;
 
 import Core.Utils;
+import FileSearch.FileSearchResult;
 import GUI.GUI;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
 
@@ -55,19 +57,19 @@ public class Main {
                     e.printStackTrace();
                 }
             }
-            guiList.getFirst().getNode().broadcastWordSearchMessageRequest("");
+            guiList
+                .getFirst()
+                .getNode()
+                .broadcastWordSearchMessageRequest("video");
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            /*
-            System.out.println(guiList.getFirst().getListModel());
-            guiList
-                .getFirst()
-                .simulateDownloadButton(guiList.getFirst().getListModel());
-            */
+            List<FileSearchResult> list = new ArrayList<>();
+            list.add(guiList.getFirst().getListModel().getFirst());
 
+            guiList.getFirst().simulateDownloadButton(list);
         }
         if (test == 1) {
             String file = "./dl1/doc1.txt";

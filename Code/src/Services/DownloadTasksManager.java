@@ -52,6 +52,21 @@ public class DownloadTasksManager {
         return answers;
     }
 
+    public int getDownloadProcessSize(int hash) {
+        HashMap<String, ArrayList<FileBlockAnswerMessage>> answers =
+            downloadMap.get(hash);
+
+        if (answers == null) return 0;
+
+        int total = 0;
+
+        for (ArrayList<FileBlockAnswerMessage> answerBlock : answers.values()) {
+            total += answerBlock.size();
+        }
+
+        return total;
+    }
+
     public synchronized void addDownloadProcess(
         int hash,
         String address,
@@ -65,6 +80,7 @@ public class DownloadTasksManager {
             downloadMap.put(hash, fileMap);
         }
         String key = address + "::" + port;
+
         ArrayList<FileBlockAnswerMessage> answers = fileMap.get(key);
         if (answers == null) {
             answers = new ArrayList<FileBlockAnswerMessage>();

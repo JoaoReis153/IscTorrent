@@ -130,9 +130,7 @@ public class SubNode extends Thread {
 
     private void handleFileBlockAnswer(FileBlockAnswerMessage answer) {
         System.out.println(
-            node.getAddressAndPortFormated() +
-            "Received FileBlockAnswerMessage: " +
-            answer
+            node.getAddressAndPortFormated() + "Received " + answer
         );
         int port = Utils.isValidPort(socket.getPort())
             ? socket.getPort()
@@ -400,24 +398,18 @@ public class SubNode extends Thread {
 
     private void sendFileBlockAnswer(FileBlockRequestMessage request)
         throws IOException {
-        int length = node.hasFileWithHash(request.getHash())
-            ? request.getLength()
-            : 0;
+        if (!node.hasFileWithHash(request.getHash())) return;
 
         FileBlockAnswerMessage answer = new FileBlockAnswerMessage(
             node.getId(),
-            request.getHash(),
-            request.getOffset(),
-            length
+            request
         );
 
         try {
             out.writeObject(answer);
             out.flush();
             System.out.println(
-                node.getAddressAndPortFormated() +
-                "Sent FileBlockAnswerMessage: " +
-                answer
+                node.getAddressAndPortFormated() + "Sent " + answer
             );
         } catch (IOException e) {
             System.err.println(

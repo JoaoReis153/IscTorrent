@@ -58,7 +58,7 @@ public class DownloadAssistant extends Thread {
         String fileName = fileRequest.getFileName();
 
         int totalBlocks = blockList.size();
-
+        System.out.println("---- Total blocks: " + totalBlocks + " ----");
         CountDownLatch latch = new CountDownLatch(totalBlocks);
         distributeBlockRequests(blockList, latch);
         latch.await();
@@ -102,22 +102,13 @@ public class DownloadAssistant extends Thread {
         int fileHash,
         int expectedBlocks
     ) throws IOException {
-        while (
-            taskManager.getDownloadProcess(fileHash).size() < expectedBlocks
-        ) {
-            System.out.println(
-                taskManager.getNode().getAddressAndPortFormated() +
-                taskManager.getDownloadProcess(fileHash).size() +
-                " of " +
-                expectedBlocks
-            );
-        }
+        while (taskManager.getDownloadProcessSize(fileHash) < expectedBlocks) {}
 
         System.out.println(
             taskManager.getNode().getAddressAndPortFormated() +
             String.format(
-                "Received all blocks: %d of %d",
-                taskManager.getDownloadProcess(fileHash).size(),
+                "---- Received all blocks: %d of %d ----",
+                taskManager.getDownloadProcessSize(fileHash),
                 expectedBlocks
             )
         );
@@ -129,10 +120,6 @@ public class DownloadAssistant extends Thread {
     ) throws IOException {
         TreeMap<Long, byte[]> fileParts = collectFileParts(receivedBlockMap);
         if (fileParts.isEmpty()) return;
-        System.out.println(
-            taskManager.getNode().getAddressAndPortFormated() +
-            "Running assembleAndWriteFile"
-        );
         String filePath = buildFilePath(fileName);
         writeFileToDisc(filePath, fileParts);
         verifyFileCreation(filePath);
@@ -167,11 +154,10 @@ public class DownloadAssistant extends Thread {
     }
 
     private byte[] combineFileParts(TreeMap<Long, byte[]> fileParts) {
-        int totalSize = fileParts
-            .values()
-            .stream()
-            .mapToInt(bytes -> bytes.length)
-            .sum();
+        int totalSize = 0;
+        for (byte[] bytes : fileParts.values()) {
+            totalSize += bytes.length;
+        }
 
         byte[] combinedData = new byte[totalSize];
         int position = 0;
@@ -201,7 +187,7 @@ public class DownloadAssistant extends Thread {
         }
         System.out.println(
             taskManager.getNode().getAddressAndPortFormated() +
-            "File written successfully to: " +
+            "Downloaded: " +
             filePath
         );
     }

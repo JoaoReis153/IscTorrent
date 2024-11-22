@@ -50,6 +50,7 @@ public class GUI {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         addFrameContent();
         frame.pack();
+        open();
     }
 
     // Makes the window visible
@@ -188,6 +189,14 @@ public class GUI {
                 "Loaded " + added + " search results into the file list."
             );
         });
+    }
+
+    public ArrayList<FileSearchResult> getListModel() {
+        ArrayList<FileSearchResult> list = new ArrayList<>();
+        for (int i = 0; i < listModel.size(); i++) {
+            list.add(listModel.getElementAt(i));
+        }
+        return list;
     }
 
     public Node getNode() {

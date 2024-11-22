@@ -22,7 +22,6 @@ public class Main {
                     int id = Integer.parseInt(arg);
 
                     GUI gui = new GUI(id);
-                    gui.open();
 
                     System.out.println("GUI opened for ID: " + id);
                 } catch (NumberFormatException e) {

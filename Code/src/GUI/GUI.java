@@ -3,6 +3,7 @@ package GUI;
 import Core.Node;
 import Core.Utils;
 import FileSearch.FileSearchResult;
+import Services.SubNode;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -150,19 +151,23 @@ public class GUI {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    System.out.println("N of Peers: " + node.getPeers().size());
+                    for (SubNode peer : node.getPeers()) {
+                        System.out.println("Socket: " + peer.getSocket());
+                    }
                     listModel.clear();
                     allFiles.clear();
                     String searchText = searchTextField.getText().toLowerCase();
                     node.broadcastWordSearchMessageRequest(searchText);
                     System.out.println(
-                        "Search request sent for keyword: " + searchText
+                        "Search request sent for keyword: [" + searchText + "]"
                     );
                 }
             }
         );
     }
 
-    public void simulateSelectedOptions(List<FileSearchResult> options) {
+    public void simulateDownloadButton(List<FileSearchResult> options) {
         for (FileSearchResult option : options) {
             List<FileSearchResult> searchResultOfDifferentNodes = new ArrayList<
                 FileSearchResult
@@ -181,32 +186,16 @@ public class GUI {
         File[] files = node.getFolder().listFiles();
         if (files != null) {
             for (File file : files) {
-                int hash = Utils.calculateFileHash(file.getAbsolutePath());
-
-                allFiles.add(
-                    new FileSearchResult(
-                        null,
-                        file.getName(),
-                        hash,
-                        file.length(),
-                        node.getEnderecoIP(),
-                        node.getPort()
-                    )
-                );
+                allFiles.add(new FileSearchResult(file, node));
             }
         }
         SwingUtilities.invokeLater(() -> {
-            int added = 0;
             for (FileSearchResult searchResult : list) {
                 if (!allFiles.contains(searchResult)) {
-                    added++;
                     listModel.addElement(searchResult);
                 }
                 allFiles.add(searchResult);
             }
-            System.out.println(
-                "Loaded " + added + " search results into the file list."
-            );
         });
     }
 

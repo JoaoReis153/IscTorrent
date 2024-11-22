@@ -64,7 +64,6 @@ public class DownloadTasksManager {
             fileMap = new HashMap<String, ArrayList<FileBlockAnswerMessage>>();
             downloadMap.put(hash, fileMap);
         }
-
         String key = address + "::" + port;
         ArrayList<FileBlockAnswerMessage> answers = fileMap.get(key);
         if (answers == null) {

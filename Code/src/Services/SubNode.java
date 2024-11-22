@@ -61,7 +61,7 @@ public class SubNode extends Thread {
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("Error handling client: " + e.getMessage());
         } finally {
-            closeResources();
+            close();
         }
     }
 
@@ -86,9 +86,9 @@ public class SubNode extends Thread {
 
     private void handleWordSearchMessage(WordSearchMessage message) {
         System.out.println(
-            "Received WordSearchMessage with content: (" +
+            "Received WordSearchMessage with content: [" +
             message.getKeyword() +
-            ")"
+            "]"
         );
         if (node.getFolder().exists() && node.getFolder().isDirectory()) {
             sendFileSearchResultList(message);
@@ -100,6 +100,7 @@ public class SubNode extends Thread {
             System.out.println("There was a problem with the GUI");
             System.exit(1);
         }
+        System.out.println("Received " + results.length + " search results");
         node.getGUI().loadListModel(results);
     }
 
@@ -168,12 +169,16 @@ public class SubNode extends Thread {
     public void close() {
         running = false;
         closeResources();
+        int port = Utils.isValidPort(socket.getPort())
+            ? socket.getPort()
+            : originalBeforeOSchangePort;
         System.out.println(
             "Thread closed for SubNode at " +
-            socket.getInetAddress() +
+            socket.getInetAddress().getHostAddress() +
             ":" +
-            socket.getPort()
+            port
         );
+        node.removePeer(this);
     }
 
     private void closeResources() {
@@ -295,6 +300,18 @@ public class SubNode extends Thread {
             searchMessage
         );
 
+        if (results.length == 0) return;
+        else if (results.length == 1) System.out.println(
+            "Sent 1 file search result [" + results[0].getHash() + "]"
+        );
+        else System.out.println(
+            "Sent " +
+            results.length +
+            " files search result for keyword: [" +
+            searchMessage.getKeyword() +
+            "]"
+        );
+
         sendObject(results);
     }
 
@@ -365,6 +382,7 @@ public class SubNode extends Thread {
         try {
             out.writeObject(answer);
             out.flush();
+            System.out.println("Sent FileBlockAnswerMessage: " + answer);
         } catch (IOException e) {
             System.err.println(
                 "Error creating FileBlockAnswerMessage: " + e.getMessage()

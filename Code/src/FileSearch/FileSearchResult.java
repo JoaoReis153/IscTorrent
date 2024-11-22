@@ -1,5 +1,6 @@
 package FileSearch;
 
+import Core.Node;
 import Core.Utils;
 import java.io.File;
 import java.io.Serializable;
@@ -32,8 +33,13 @@ public class FileSearchResult
         this.port = port;
     }
 
-    public FileSearchResult(String fileName) {
-        this.fileName = fileName;
+    public FileSearchResult(File file, Node node) {
+        this.searchMessage = null;
+        this.fileName = file.getName();
+        this.hash = Utils.calculateFileHash(file.getAbsolutePath());
+        this.fileSize = file.length();
+        this.address = node.getEnderecoIP();
+        this.port = node.getPort();
     }
 
     public WordSearchMessage getSearchMessage() {

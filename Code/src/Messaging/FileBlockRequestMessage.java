@@ -56,12 +56,15 @@ public class FileBlockRequestMessage implements Serializable {
 
     public String toString() {
         String hashString = String.valueOf(hash);
+        int length = hashString.length();
+
+        String hashDisplay = length > 10
+            ? hashString.substring(length - 10)
+            : hashString;
+
         return (
             "FileBlockRequestMessage [hash=" +
-            hashString.substring(
-                hashString.length() - 10,
-                hashString.length()
-            ) +
+            hashDisplay +
             ", offset=" +
             offset +
             ", length=" +

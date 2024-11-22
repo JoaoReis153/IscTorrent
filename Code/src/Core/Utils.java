@@ -10,6 +10,7 @@ public class Utils {
             byte[] hash = MessageDigest.getInstance("SHA-256").digest(
                 fileContents
             );
+
             return new BigInteger(1, hash).intValue();
         } catch (Exception e) {
             System.err.println(
@@ -19,7 +20,6 @@ public class Utils {
         }
     }
 
-    // Overloaded method that takes a file path
     public static int calculateFileHash(String filePath) {
         try {
             byte[] fileContents = java.nio.file.Files.readAllBytes(
@@ -34,7 +34,6 @@ public class Utils {
         }
     }
 
-    // Method to verify if two files have the same hash
     public static boolean verifyFileHash(
         byte[] fileContents,
         int expectedHash

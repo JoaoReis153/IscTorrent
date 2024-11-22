@@ -3,8 +3,9 @@ package Services;
 import FileSearch.FileSearchResult;
 import Messaging.FileBlockAnswerMessage;
 import Messaging.FileBlockRequestMessage;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
@@ -38,10 +39,8 @@ public class DownloadAssistant extends Thread {
         int fileHash = firstRequest.getHash();
         long startTime = System.currentTimeMillis();
 
-        // Process download
         downloadFile(firstRequest);
 
-        // Show download statistics
         long duration = System.currentTimeMillis() - startTime;
         taskManager.getNode().getGUI().showDownloadStats(fileHash, duration);
     }
@@ -56,15 +55,12 @@ public class DownloadAssistant extends Thread {
 
         int totalBlocks = blockList.size();
 
-        // Download blocks
         CountDownLatch latch = new CountDownLatch(totalBlocks);
         distributeBlockRequests(blockList, latch);
         latch.await();
 
-        // Wait for all blocks to be received
         waitForBlockCompletion(fileName, fileHash, totalBlocks);
 
-        // Assemble and write file
         assembleAndWriteFile(
             fileRequest.getFileName(),
             taskManager.getDownloadProcess(fileHash)
@@ -105,7 +101,11 @@ public class DownloadAssistant extends Thread {
         while (
             taskManager.getDownloadProcess(fileHash).size() < expectedBlocks
         ) {
-            // Wait for all blocks to be received
+            System.out.println(
+                taskManager.getDownloadProcess(fileHash).size() +
+                " of " +
+                expectedBlocks
+            );
         }
 
         System.out.println(
@@ -115,11 +115,6 @@ public class DownloadAssistant extends Thread {
                 expectedBlocks
             )
         );
-
-        assembleAndWriteFile(
-            fileName,
-            taskManager.getDownloadProcess(fileHash)
-        );
     }
 
     private void assembleAndWriteFile(
@@ -128,7 +123,7 @@ public class DownloadAssistant extends Thread {
     ) throws IOException {
         TreeMap<Long, byte[]> fileParts = collectFileParts(receivedBlockMap);
         if (fileParts.isEmpty()) return;
-
+        System.out.println("Running assembleAndWriteFile");
         String filePath = buildFilePath(fileName);
         writeFileToDisc(filePath, fileParts);
         verifyFileCreation(filePath);
@@ -140,10 +135,8 @@ public class DownloadAssistant extends Thread {
         TreeMap<Long, byte[]> fileParts = new TreeMap<>();
         List<FileBlockAnswerMessage> allBlocks = new ArrayList<>();
 
-        // Collect all blocks
         receivedBlockMap.values().forEach(allBlocks::addAll);
 
-        // Sort blocks by offset
         for (FileBlockAnswerMessage block : allBlocks) {
             if (block.getData() == null) {
                 System.err.println(
@@ -164,15 +157,31 @@ public class DownloadAssistant extends Thread {
         );
     }
 
+    private byte[] combineFileParts(TreeMap<Long, byte[]> fileParts) {
+        int totalSize = fileParts
+            .values()
+            .stream()
+            .mapToInt(bytes -> bytes.length)
+            .sum();
+
+        byte[] combinedData = new byte[totalSize];
+        int position = 0;
+
+        for (byte[] part : fileParts.values()) {
+            System.arraycopy(part, 0, combinedData, position, part.length);
+            position += part.length;
+        }
+
+        return combinedData;
+    }
+
     private void writeFileToDisc(
         String filePath,
         TreeMap<Long, byte[]> fileParts
     ) throws IOException {
-        try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
-            for (byte[] data : fileParts.values()) {
-                fileOut.write(data);
-            }
-        }
+        byte[] combinedData = combineFileParts(fileParts);
+
+        Files.write(Paths.get(filePath), combinedData);
     }
 
     private void verifyFileCreation(String filePath) {

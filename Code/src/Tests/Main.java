@@ -3,6 +3,7 @@ package Tests;
 import Core.Utils;
 import GUI.GUI;
 import java.net.InetAddress;
+import java.util.ArrayList;
 
 public class Main {
 
@@ -19,10 +20,12 @@ public class Main {
 
             System.out.println("Number of nodes to create: " + args.length);
 
+            ArrayList<GUI> guiList = new ArrayList<GUI>();
             for (String arg : args) {
                 try {
                     int id = Integer.parseInt(arg);
                     GUI gui = new GUI(id);
+                    guiList.add(gui);
                     if (id != 1) {
                         gui
                             .getNode()
@@ -31,9 +34,7 @@ public class Main {
                                 8081
                             );
                     }
-                    gui.getNode().broadcastWordSearchMessageRequest("");
                     gui.open();
-                    System.out.println("GUI opened for ID: " + id);
                 } catch (NumberFormatException e) {
                     System.err.println(
                         "Invalid ID: " +
@@ -54,6 +55,19 @@ public class Main {
                     e.printStackTrace();
                 }
             }
+            guiList.getFirst().getNode().broadcastWordSearchMessageRequest("");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            /*
+            System.out.println(guiList.getFirst().getListModel());
+            guiList
+                .getFirst()
+                .simulateDownloadButton(guiList.getFirst().getListModel());
+            */
+
         }
         if (test == 1) {
             String file = "./dl1/doc1.txt";

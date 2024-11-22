@@ -4,17 +4,17 @@ import Core.Node;
 import Core.Utils;
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.util.Arrays;
 
 public class FileBlockAnswerMessage implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
-    private int nodeId;
-    private int hash;
-    private long offset;
-    private int length;
+    private final int nodeId;
+    private final int hash;
+    private final long offset;
+    private final int length;
     private byte[] data;
 
     public FileBlockAnswerMessage(
@@ -23,23 +23,65 @@ public class FileBlockAnswerMessage implements Serializable {
         long offset,
         int length
     ) {
-        System.out.println("Created FileBlockAnswerMessage");
+        if (length <= 0) {
+            throw new IllegalArgumentException(
+                "Invalid length: length must be positive"
+            );
+        }
+
         this.nodeId = nodeId;
         this.hash = hash;
         this.offset = offset;
-        if (length <= 0) {
-            System.out.println("ERRO");
-            throw new IllegalArgumentException(
-                "Error in FileBlockAnswerMessage: File is empty or a file with that lash couldn't be found"
-            );
-        }
         this.length = length;
+        loadDataFromFile();
+    }
+
+    private void loadDataFromFile() {
         try {
-            loadDataFromFile(hash);
+            File file = findFileByHash();
+            byte[] fileContents = Files.readAllBytes(file.toPath());
+
+            if (offset < 0 || offset + length > fileContents.length) {
+                throw new IllegalArgumentException("Invalid offset or length");
+            }
+
+            this.data = Arrays.copyOfRange(
+                fileContents,
+                (int) offset,
+                (int) (offset + length)
+            );
+        } catch (IOException e) {
+            System.err.println("Error reading file: " + e.getMessage());
+            this.data = new byte[0];
         } catch (IllegalArgumentException e) {
             System.err.println("Warning: " + e.getMessage());
             this.data = new byte[0];
         }
+    }
+
+    private File findFileByHash() throws IllegalArgumentException {
+        File folder = new File(Node.WORK_FOLDER + nodeId + "/");
+        if (!folder.isDirectory()) {
+            throw new IllegalArgumentException(
+                "Invalid directory path: " + folder.getPath()
+            );
+        }
+
+        File[] files = folder.listFiles();
+        if (files == null) {
+            throw new IllegalArgumentException(
+                "Unable to list files in directory"
+            );
+        }
+
+        for (File file : files) {
+            if (file.isFile()) {
+                if (Utils.calculateFileHash(file.getAbsolutePath()) == hash) {
+                    return file;
+                }
+            }
+        }
+        throw new IllegalArgumentException("No file found with hash: " + hash);
     }
 
     public int getHash() {
@@ -58,71 +100,14 @@ public class FileBlockAnswerMessage implements Serializable {
         return data;
     }
 
-    public void loadDataFromFile(int hash) {
-        File folder = new File(Node.WORK_FOLDER + nodeId + "/");
-        if (!folder.isDirectory()) {
-            throw new IllegalStateException(
-                "The path 'files' is not a directory"
-            );
-        }
-
-        File matchingFile = null;
-
-        try {
-            for (File file : folder.listFiles()) {
-                if (file.isFile()) {
-                    int fileHash = Utils.calculateFileHash(
-                        file.getAbsolutePath()
-                    );
-                    if (fileHash == hash) {
-                        matchingFile = file;
-                        break;
-                    }
-                }
-            }
-
-            if (matchingFile == null) {
-                throw new IllegalArgumentException(
-                    "No file found with the matching hash: " + hash
-                );
-            }
-
-            try (
-                RandomAccessFile raf = new RandomAccessFile(matchingFile, "r")
-            ) {
-                long fileLength = raf.length();
-
-                if (offset < 0 || offset + length > fileLength) {
-                    throw new IllegalArgumentException("Invalid range");
-                }
-
-                byte[] data = new byte[length];
-
-                raf.seek(offset);
-
-                raf.readFully(data);
-
-                this.data = data;
-            }
-        } catch (IOException e) {
-            System.out.println(
-                "Error loading data from file: " + e.getMessage()
-            );
-        }
-    }
-
     @Override
     public String toString() {
-        return (
-            "FileBlockAnswerMessage [hash=" +
-            hash +
-            ", offset=" +
-            offset +
-            ", length=" +
-            length +
-            ", data=" +
-            data +
-            "]"
+        return String.format(
+            "FileBlockAnswerMessage [hash=%d, offset=%d, length=%d, dataSize=%s]",
+            hash,
+            offset,
+            length,
+            data.length
         );
     }
 }

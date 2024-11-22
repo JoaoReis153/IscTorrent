@@ -199,9 +199,21 @@ public class Node {
         return false;
     }
 
+    public void removePeer(SubNode peer) {
+        peers.remove(peer);
+        int port = Utils.isValidPort(peer.getSocket().getPort())
+            ? peer.getSocket().getPort()
+            : peer.getOriginalBeforeOSchangePort();
+        System.out.println(
+            "Removed connection with: " +
+            peer.getSocket().getInetAddress().getHostAddress() +
+            "::" +
+            port
+        );
+    }
+
     public String getEnderecoIP() {
-        String addressString = address.toString();
-        return addressString.substring(addressString.indexOf("/") + 1);
+        return address.getHostAddress();
     }
 
     public File getFolder() {
@@ -230,6 +242,10 @@ public class Node {
 
     public Set<SubNode> getPeers() {
         return peers;
+    }
+
+    public String getAddressPort() {
+        return address.getHostAddress() + ":" + port;
     }
 
     @Override

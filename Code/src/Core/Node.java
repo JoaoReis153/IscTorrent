@@ -17,46 +17,54 @@ import java.util.Set;
 
 public class Node {
 
-    private int nodeId;
-    public static String WORK_FOLDER = "Code/dl";
-    private InetAddress address;
-    private final File folder;
-    private Set<SubNode> peers = new HashSet<>();
-    private DownloadTasksManager downloadManager;
-    private GUI gui;
+    private static final String WORK_FOLDER = "Code/dl";
+    private static final int BASE_PORT = 8080;
+    private static final int MAX_PORT = 65535;
 
-    private int port = 8080;
+    private final int nodeId;
+    private final int port;
+    private final InetAddress address;
+    private final File folder;
+    private final Set<SubNode> peers;
+    private final DownloadTasksManager downloadManager;
+    private final GUI gui;
 
     // Constructor
-    public Node(int nodeId, GUI gui) {
+    public Node(int nodeId, GUI gui) throws IllegalArgumentException {
         this.nodeId = nodeId;
-        this.downloadManager = new DownloadTasksManager(this, 5);
+        this.port = BASE_PORT + nodeId;
         this.gui = gui;
+        this.peers = new HashSet<>();
+        this.downloadManager = new DownloadTasksManager(this, 5);
 
-        // Validate Node ID
-        if (nodeId < 0) {
-            System.err.println("Invalid node ID");
-            System.exit(1);
+        validatePort();
+        this.folder = createWorkingDirectory();
+        this.address = initializeAddress();
+    }
+
+    private void validatePort() {
+        if (Utils.isValidPort(port)) {
+            throw new IllegalArgumentException(
+                "Invalid node ID. Input a valid number (0-41070)"
+            );
         }
-        this.port += nodeId;
+    }
 
-        // Create working directory if it doesn't exist
-        String workfolder = WORK_FOLDER + nodeId;
-        this.folder = new File(workfolder);
-        if (!this.folder.exists()) {
-            boolean created = this.folder.mkdirs();
-            if (!created) {
-                System.out.println("Failed to create directory: dl" + nodeId);
-                System.exit(1);
-            }
+    private File createWorkingDirectory() {
+        File folder = new File(WORK_FOLDER + nodeId);
+        if (!folder.exists() && !folder.mkdirs()) {
+            throw new RuntimeException(
+                "Failed to create directory: dl" + nodeId
+            );
         }
+        return folder;
+    }
 
-        // Get device address
+    private InetAddress initializeAddress() {
         try {
-            address = InetAddress.getLocalHost();
+            return InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
-            System.out.println("Unable to get the device's address: \n" + e);
-            System.exit(1);
+            throw new RuntimeException("Unable to get the device's address", e);
         }
     }
 
@@ -224,10 +232,6 @@ public class Node {
     // Getter and setter for port
     public int getPort() {
         return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
     }
 
     public DownloadTasksManager getDownloadManager() {

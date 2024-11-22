@@ -126,6 +126,10 @@ public class SubNode extends Thread {
                     );
                     FileBlockAnswerMessage answer =
                         (FileBlockAnswerMessage) obj;
+                    System.out.println(
+                        "Original port: " + originalBeforeOSchangePort
+                    );
+                    System.out.println("Socket port: " + socket.getPort());
                     downloadManager.addDownloadProcess(
                         answer.getHash(),
                         socket.getInetAddress().getHostAddress(),

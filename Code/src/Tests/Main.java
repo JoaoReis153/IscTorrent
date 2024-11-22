@@ -20,10 +20,8 @@ public class Main {
             for (String arg : args) {
                 try {
                     int id = Integer.parseInt(arg);
-
                     GUI gui = new GUI(id);
                     gui.open();
-
                     System.out.println("GUI opened for ID: " + id);
                 } catch (NumberFormatException e) {
                     System.err.println(
@@ -31,6 +29,12 @@ public class Main {
                         arg +
                         ". Please provide numeric values."
                     );
+                } catch (IllegalArgumentException e) {
+                    System.err.println(
+                        "Failed to create node: " + e.getMessage()
+                    );
+                    // Don't proceed with GUI creation for this instance
+                    continue;
                 } catch (Exception e) {
                     System.err.println(
                         "An error occurred while initializing the GUI for ID: " +

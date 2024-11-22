@@ -33,12 +33,19 @@ public class GUI {
     private DefaultListModel<FileSearchResult> listModel;
     private ArrayList<FileSearchResult> allFiles;
     private Node node;
-    private static boolean SHOW = false;
+    private static boolean SHOW = true;
+    private boolean isOpen = false;
 
     // Constructor of the GUI class where it receives the address, port, and work
     // folder
-    public GUI(int nodeId) {
+    public GUI(int nodeId) throws IllegalArgumentException { // Add throws clause
+        // Create node first, before any GUI elements
         this.node = new Node(nodeId, this);
+        // Only proceed with GUI creation if node creation was successful
+        createGUI();
+    }
+
+    private void createGUI() {
         frame = new JFrame(
             "Port NodeAddress [ address " +
             node.getEnderecoIP() +
@@ -49,11 +56,13 @@ public class GUI {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         addFrameContent();
         frame.pack();
-        open();
     }
 
     // Makes the window visible
     public void open() {
+        if (this.isOpen) return;
+        this.isOpen = true;
+
         new Thread(() -> {
             node.startServing();
         }).start();

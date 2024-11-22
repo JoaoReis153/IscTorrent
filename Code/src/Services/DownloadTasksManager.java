@@ -44,6 +44,7 @@ public class DownloadTasksManager {
     > getDownloadProcess(String hash) {
         HashMap<String, ArrayList<FileBlockAnswerMessage>> answers =
             downloadMap.get(hash);
+
         if (answers == null) return new HashMap<
             String,
             ArrayList<FileBlockAnswerMessage>

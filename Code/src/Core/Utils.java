@@ -8,36 +8,37 @@ import java.security.NoSuchAlgorithmException;
 
 public class Utils {
 
-	public static String generateSHA256(String filePath) {
-		try {
-			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
-			byte[] hashBytes = digest.digest(fileBytes);
+    public static String generateSHA256(String filePath) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
+            byte[] hashBytes = digest.digest(fileBytes);
 
-			StringBuilder hexString = new StringBuilder();
-			for (byte hashByte : hashBytes) {
-				String hex = Integer.toHexString(0xff & hashByte);
-				if (hex.length() == 1) {
-					hexString.append('0');
-				}
-				hexString.append(hex);
-			}
+            StringBuilder hexString = new StringBuilder();
+            for (byte hashByte : hashBytes) {
+                String hex = Integer.toHexString(0xff & hashByte);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
 
-			return hexString.toString();
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+            return null; // Optionally, return an empty string or an error message instead
+        }
+    }
 
-		} catch (NoSuchAlgorithmException | IOException e) {
-			e.printStackTrace();
-			return null; // Optionally, return an empty string or an error message instead
-		}
-	}
+    public static void main(String[] args) {
+        String file = "./dl1/doc1.txt";
 
-	public static void main(String[] args) {
+        String a = generateSHA256(file);
 
-		String file = "./dl1/doc1.txt";
+        System.out.println(a);
+    }
 
-		String a = generateSHA256(file);
-
-		System.out.println(a);
-
-	}
+    public static Boolean isValidPort(int port) {
+        return port >= 8080 && port <= 49151;
+    }
 }

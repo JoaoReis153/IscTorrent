@@ -11,9 +11,9 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -31,7 +31,7 @@ public class GUI {
 
     private JFrame frame;
     private JList<FileSearchResult> fileList;
-    public DefaultListModel<FileSearchResult> listModel;
+    private DefaultListModel<FileSearchResult> listModel;
     private ArrayList<FileSearchResult> allFiles;
     private Node node;
 
@@ -49,6 +49,7 @@ public class GUI {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         addFrameContent();
         frame.pack();
+        open();
     }
 
     // Makes the window visible
@@ -121,7 +122,7 @@ public class GUI {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    GuiNode newNodeWindow = new GuiNode(node);
+                    GUINode newNodeWindow = new GUINode(GUI.this);
                     newNodeWindow.open();
                 }
             }
@@ -167,22 +168,21 @@ public class GUI {
         if (list == null || list.length == 0) return;
         File[] files = node.getFolder().listFiles();
         if (files != null) {
-
             // Create FileSearchResult objects
             for (File file : files) {
                 String hash = Utils.generateSHA256(file.getAbsolutePath());
-           
-                allFiles.add(new FileSearchResult(
-                    null,
-                    file.getName(),
-                    hash,
-                    file.length(),
-                    node.getEnderecoIP(),
-                    node.getPort()
-                ));
-                
-            }
 
+                allFiles.add(
+                    new FileSearchResult(
+                        null,
+                        file.getName(),
+                        hash,
+                        file.length(),
+                        node.getEnderecoIP(),
+                        node.getPort()
+                    )
+                );
+            }
         }
         SwingUtilities.invokeLater(() -> {
             int added = 0;
@@ -197,6 +197,23 @@ public class GUI {
                 "Loaded " + added + " search results into the file list."
             );
         });
+    }
+
+    public ArrayList<FileSearchResult> getListModel() {
+        ArrayList<FileSearchResult> list = new ArrayList<>();
+        for (int i = 0; i < listModel.size(); i++) {
+            list.add(listModel.getElementAt(i));
+        }
+        return list;
+    }
+
+    public void showDownloadStats(String hash, long duration) {
+        GUIDownloadStats downloadStats = new GUIDownloadStats(
+            GUI.this,
+            hash,
+            duration
+        );
+        downloadStats.open();
     }
 
     public Node getNode() {

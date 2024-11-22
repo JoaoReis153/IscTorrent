@@ -57,12 +57,12 @@ public class SubNode extends Thread {
                     this.originalBeforeOSchangePort =
                         ((NewConnectionRequest) obj).getClientPort();
                     System.out.println(
-                            "Added new node::NodeAddress [address=" +
-                            socket.getInetAddress().getHostAddress() +
-                            " port=" +
-                            originalBeforeOSchangePort +
-                            "]"
-                        );
+                        "Added new node::NodeAddress [address=" +
+                        socket.getInetAddress().getHostAddress() +
+                        " port=" +
+                        originalBeforeOSchangePort +
+                        "]"
+                    );
                     // Handle Word Search Message
                 } else if (obj instanceof WordSearchMessage) {
                     System.out.println(
@@ -94,7 +94,8 @@ public class SubNode extends Thread {
                     FileBlockRequestMessage request =
                         (FileBlockRequestMessage) obj;
                     FileBlockAnswerMessage answer = new FileBlockAnswerMessage(
-                       node.getId(), request.getHash(),
+                        node.getId(),
+                        request.getHash(),
                         request.getOffset(),
                         request.getLength()
                     );
@@ -109,6 +110,8 @@ public class SubNode extends Thread {
                         (FileBlockAnswerMessage) obj;
                     downloadManager.addDownloadProcess(
                         answer.getHash(),
+                        socket.getInetAddress().getHostAddress(),
+                        originalBeforeOSchangePort,
                         answer
                     );
                     if (blockAnswerLatch != null) blockAnswerLatch.countDown();

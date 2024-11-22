@@ -1,11 +1,13 @@
 package Services;
 
+import Core.Node;
 import FileSearch.FileSearchResult;
 import Messaging.FileBlockAnswerMessage;
 import Messaging.FileBlockRequestMessage;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -45,14 +47,20 @@ public class DownloadAssistant extends Thread {
                         }
                     }
 
+                    long startTime = System.currentTimeMillis();
+
                     FileSearchResult first = request.get(0);
+
+                    String hash = first.getHash();
+
                     List<FileBlockRequestMessage> blockList =
                         FileBlockRequestMessage.createBlockList(
-                            first.getHash(),
+                            hash,
                             first.getFileSize()
                         );
 
                     CountDownLatch latch = new CountDownLatch(blockList.size());
+
                     int blockListSize = blockList.size();
                     while (blockList.size() > 0) {
                         FileBlockRequestMessage block = blockList.remove(0);
@@ -61,32 +69,34 @@ public class DownloadAssistant extends Thread {
                             peer.sendFileBlockRequestMessageRequest(block);
                         }
                     }
-
                     latch.await();
 
                     while (
-                        taskManager.getDownloadProcess(first.getHash()).size() <
+                        taskManager.getDownloadProcess(hash).size() <
                         blockList.size()
                     ) {}
 
                     System.out.println(
                         "Received all blocks: " +
-                                taskManager
-                                    .getDownloadProcess(first.getHash())
-                                    .size() ==
+                                taskManager.getDownloadProcess(hash).size() ==
                             null
                             ? 0
-                            : taskManager
-                                .getDownloadProcess(first.getHash())
-                                .size() +
+                            : taskManager.getDownloadProcess(hash).size() +
                             " of " +
                             blockListSize
                     );
 
                     assembleAndWriteFile(
                         first.getFileName(),
-                        taskManager.getDownloadProcess(first.getHash())
+                        taskManager.getDownloadProcess(hash)
                     );
+
+                    long duration = System.currentTimeMillis() - startTime;
+
+                    taskManager
+                        .getNode()
+                        .getGUI()
+                        .showDownloadStats(hash, duration);
                 }
             } catch (Exception e) {
                 e.printStackTrace(); // This will print the full stack trace
@@ -97,11 +107,16 @@ public class DownloadAssistant extends Thread {
 
     private void assembleAndWriteFile(
         String fileName,
-        List<FileBlockAnswerMessage> receivedBlocks
+        Map<String, ArrayList<FileBlockAnswerMessage>> receivedBlockMap
     ) throws IOException {
         // Use a TreeMap to keep blocks ordered by offset
         TreeMap<Long, byte[]> fileParts = new TreeMap<>();
-
+        List<FileBlockAnswerMessage> receivedBlocks = new ArrayList<
+            FileBlockAnswerMessage
+        >();
+        for (List<FileBlockAnswerMessage> blocks : receivedBlockMap.values()) {
+            receivedBlocks.addAll(blocks);
+        }
         // Populate the TreeMap with blocks
         for (FileBlockAnswerMessage block : receivedBlocks) {
             if (block.getData() == null) {
@@ -115,8 +130,11 @@ public class DownloadAssistant extends Thread {
             }
             fileParts.put(block.getOffset(), block.getData());
         }
-        
-        String filePath = taskManager.getNode().getFolder().getAbsolutePath() + "/" + fileName;
+
+        String filePath =
+            taskManager.getNode().getFolder().getAbsolutePath() +
+            "/" +
+            fileName;
         // Write the blocks to the file in the correct order
         try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
             for (Map.Entry<Long, byte[]> entry : fileParts.entrySet()) {

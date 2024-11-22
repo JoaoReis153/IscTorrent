@@ -19,9 +19,9 @@ import java.util.Set;
 
 public class Node {
 
-	private int nodeId;
-	public static String WORK_FOLDER = "Code/dl";
-    private InetAddress endereco;
+    private int nodeId;
+    public static String WORK_FOLDER = "Code/dl";
+    private InetAddress address;
     private final File folder;
     private Set<SubNode> peers = new HashSet<>();
     private DownloadTasksManager downloadManager;
@@ -31,7 +31,7 @@ public class Node {
 
     // Constructor
     public Node(int nodeId, GUI gui) {
-    	this.nodeId = nodeId;
+        this.nodeId = nodeId;
         this.downloadManager = new DownloadTasksManager(this, 5);
         this.gui = gui;
 
@@ -55,7 +55,7 @@ public class Node {
 
         // Get device address
         try {
-            endereco = InetAddress.getLocalHost();
+            address = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
             System.out.println("Unable to get the device's address: \n" + e);
             System.exit(1);
@@ -69,7 +69,7 @@ public class Node {
 
     // Start server to accept connections
     public void startServing() {
-    	System.out.println("Awaiting connection...");
+        System.out.println("Awaiting connection...");
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -129,7 +129,7 @@ public class Node {
         }
 
         // Attempt connection
-        if (targetEndereco.equals(this.endereco) && targetPort == this.port) {
+        if (targetEndereco.equals(this.address) && targetPort == this.port) {
             System.out.println("Failed to connect: Cannot connect to itself");
             return;
         }
@@ -168,7 +168,7 @@ public class Node {
 
             Thread.sleep(100);
 
-            handler.sendNewConnectionRequest(endereco, port);
+            handler.sendNewConnectionRequest(address, port);
         } catch (NoRouteToHostException e) {
             System.err.println("Failed to connect: Target is unreachable");
         } catch (IOException | InterruptedException e) {
@@ -182,23 +182,28 @@ public class Node {
         }
     }
 
-    public int getId() {
-    	return nodeId;
+    public GUI getGUI() {
+        return gui;
     }
+
+    public int getId() {
+        return nodeId;
+    }
+
     // String representation of the node
     @Override
     public String toString() {
-        return "Node " + endereco + " " + port;
+        return "Node " + address + " " + port;
     }
 
     // Getter for node's address
-    public InetAddress getEndereco() {
-        return endereco;
+    public InetAddress getAddress() {
+        return address;
     }
 
     // Getter for node's IP as a string
     public String getEnderecoIP() {
-        String enderecoString = endereco.toString();
+        String enderecoString = address.toString();
         return enderecoString.substring(enderecoString.indexOf("/") + 1);
     }
 
@@ -209,6 +214,10 @@ public class Node {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public DownloadTasksManager getDownloadManager() {
+        return downloadManager;
     }
 
     public Set<SubNode> getPeers() {

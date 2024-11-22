@@ -1,13 +1,12 @@
 package Messaging;
 
+import Core.Node;
+import Core.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
-
-import Core.Node;
-import Core.Utils;
 
 public class FileBlockAnswerMessage implements Serializable {
 
@@ -19,12 +18,13 @@ public class FileBlockAnswerMessage implements Serializable {
     private int length;
     private byte[] data;
 
-    public FileBlockAnswerMessage(int nodeId,
+    public FileBlockAnswerMessage(
+        int nodeId,
         String hash,
         long offset,
         int length
     ) {
-    	this.nodeId = nodeId;
+        this.nodeId = nodeId;
         this.hash = hash;
         this.offset = offset;
         this.length = length;
@@ -54,7 +54,9 @@ public class FileBlockAnswerMessage implements Serializable {
     public void loadDataFromFile() {
         File folder = new File(Node.WORK_FOLDER + nodeId + "/");
         if (!folder.isDirectory()) {
-            throw new IllegalStateException("The path 'files' is not a directory");
+            throw new IllegalStateException(
+                "The path 'files' is not a directory"
+            );
         }
 
         File matchingFile = null;
@@ -62,7 +64,9 @@ public class FileBlockAnswerMessage implements Serializable {
         try {
             for (File file : folder.listFiles()) {
                 if (file.isFile()) {
-                    String fileHash = Utils.generateSHA256(file.getAbsolutePath());
+                    String fileHash = Utils.generateSHA256(
+                        file.getAbsolutePath()
+                    );
                     if (fileHash.equals(hash)) {
                         matchingFile = file;
                         break;
@@ -71,10 +75,14 @@ public class FileBlockAnswerMessage implements Serializable {
             }
 
             if (matchingFile == null) {
-                throw new IllegalArgumentException("No file found with the matching hash: " + hash);
+                throw new IllegalArgumentException(
+                    "No file found with the matching hash: " + hash
+                );
             }
 
-            try (RandomAccessFile raf = new RandomAccessFile(matchingFile, "r")) {
+            try (
+                RandomAccessFile raf = new RandomAccessFile(matchingFile, "r")
+            ) {
                 long fileLength = raf.length();
 
                 // Validate the range
@@ -93,9 +101,10 @@ public class FileBlockAnswerMessage implements Serializable {
 
                 this.data = data;
             }
-
         } catch (IOException e) {
-            System.out.println("Error loading data from file: " + e.getMessage());
+            System.out.println(
+                "Error loading data from file: " + e.getMessage()
+            );
         }
     }
 

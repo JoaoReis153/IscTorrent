@@ -76,7 +76,9 @@ public class DownloadTasksManager {
     public synchronized void addDownloadRequest(
         List<FileSearchResult> searchResults
     ) {
+        System.out.println("Adding Download Requests: " + searchResults.size());
         downloadRequests.add(searchResults);
+        System.out.println("Download Requests: " + downloadRequests.size());
     }
 
     public List<DownloadAssistant> getAssistants() {

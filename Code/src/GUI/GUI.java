@@ -34,6 +34,7 @@ public class GUI {
     private DefaultListModel<FileSearchResult> listModel;
     private ArrayList<FileSearchResult> allFiles;
     private Node node;
+    private static boolean SHOW = false;
 
     // Constructor of the GUI class where it receives the address, port, and work
     // folder
@@ -57,8 +58,7 @@ public class GUI {
         new Thread(() -> {
             node.startServing();
         }).start();
-
-        frame.setVisible(true);
+        frame.setVisible(SHOW);
     }
 
     // Adds the content to the window
@@ -164,6 +164,20 @@ public class GUI {
         );
     }
 
+    public void simulateSelectedOptions(List<FileSearchResult> options) {
+        for (FileSearchResult option : options) {
+            List<FileSearchResult> searchResultOfDifferentNodes = new ArrayList<
+                FileSearchResult
+            >();
+            for (FileSearchResult searchResult : allFiles) {
+                if (option.equals(searchResult)) {
+                    searchResultOfDifferentNodes.add(searchResult);
+                }
+            }
+            node.downloadFile(searchResultOfDifferentNodes);
+        }
+    }
+
     public synchronized void loadListModel(FileSearchResult[] list) {
         if (list == null || list.length == 0) return;
         File[] files = node.getFolder().listFiles();
@@ -218,5 +232,9 @@ public class GUI {
 
     public Node getNode() {
         return node;
+    }
+
+    public static boolean getSHOW() {
+        return SHOW;
     }
 }

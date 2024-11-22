@@ -28,8 +28,8 @@ public class DownloadAssistant extends Thread {
                 List<FileSearchResult> request =
                     taskManager.getDownloadRequest();
                 if (request != null && !request.isEmpty()) {
+                    System.out.println("Download Requests: " + request);
                     ArrayList<SubNode> peersWithFile = new ArrayList<SubNode>();
-
                     for (SubNode peer : taskManager.getNode().getPeers()) {
                         String peerAddressPort =
                             peer.getSocket().getInetAddress().getHostAddress() +
@@ -63,8 +63,10 @@ public class DownloadAssistant extends Thread {
 
                     int blockListSize = blockList.size();
                     while (blockList.size() > 0) {
-                        FileBlockRequestMessage block = blockList.remove(0);
                         for (SubNode peer : taskManager.getNode().getPeers()) {
+                            if (blockList.size() == 0) break;
+                            FileBlockRequestMessage block = blockList.remove(0);
+                            if (block == null) continue;
                             peer.setBlockAnswerLatch(latch);
                             peer.sendFileBlockRequestMessageRequest(block);
                         }
@@ -99,7 +101,7 @@ public class DownloadAssistant extends Thread {
                 }
             } catch (Exception e) {
                 e.printStackTrace(); // This will print the full stack trace
-                System.out.println("Error in DownloadAssistant: " + e);
+                System.err.println("Error in DownloadAssistant: " + e);
             }
         }
     }
@@ -123,8 +125,7 @@ public class DownloadAssistant extends Thread {
                     "Warning: Block data is null for offset: " +
                     block.getOffset()
                 );
-                System.out.println("----------");
-                System.err.println(block);
+
                 return;
             }
             fileParts.put(block.getOffset(), block.getData());
@@ -139,6 +140,11 @@ public class DownloadAssistant extends Thread {
             for (Map.Entry<Long, byte[]> entry : fileParts.entrySet()) {
                 fileOut.write(entry.getValue());
             }
+        }
+        java.io.File file = new java.io.File(filePath);
+        if (!file.exists()) {
+            System.err.println("Error: File was not created at: " + filePath);
+            return;
         }
 
         System.out.println("File written successfully to: " + filePath);

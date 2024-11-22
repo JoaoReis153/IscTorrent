@@ -28,7 +28,6 @@ public class SubNode extends Thread {
     private int originalBeforeOSchangePort;
     private Socket socket;
     private Node node;
-    private GUI gui;
     private DownloadTasksManager downloadManager;
     private boolean userCreated;
     private boolean running = true;
@@ -45,7 +44,6 @@ public class SubNode extends Thread {
         this.node = node;
         this.downloadManager = downloadManager;
         this.socket = socket;
-        this.gui = gui;
         this.userCreated = userCreated;
     }
 
@@ -84,11 +82,11 @@ public class SubNode extends Thread {
                 } else if (obj instanceof FileSearchResult[]) {
                     FileSearchResult[] searchResultList =
                         (FileSearchResult[]) obj;
-                    if (gui == null) {
+                    if (node.getGUI() == null) {
                         System.out.println("There was a problem with the GUI");
                         System.exit(1);
                     }
-                    gui.loadListModel(searchResultList);
+                    node.getGUI().loadListModel(searchResultList);
                     // Handle File Block Request
                 } else if (obj instanceof FileBlockRequestMessage) {
                     System.out.println(
@@ -97,15 +95,31 @@ public class SubNode extends Thread {
 
                     FileBlockRequestMessage request =
                         (FileBlockRequestMessage) obj;
-                    FileBlockAnswerMessage answer = new FileBlockAnswerMessage(
-                        node.getId(),
-                        request.getHash(),
-                        request.getOffset(),
-                        request.getLength()
-                    );
 
-                    out.writeObject(answer);
-                    out.flush();
+                    try {
+                        int a = node.hasFileWithHash(request.getHash())
+                            ? request.getLength()
+                            : 0;
+                        System.out.println("Has file with has ? " + a);
+                        FileBlockAnswerMessage answer =
+                            new FileBlockAnswerMessage(
+                                node.getId(),
+                                request.getHash(),
+                                request.getOffset(),
+                                node.hasFileWithHash(request.getHash())
+                                    ? request.getLength()
+                                    : 0
+                            );
+
+                        out.writeObject(answer);
+                        out.flush();
+                    } catch (Exception e) {
+                        System.err.println(
+                            "Error creating FileBlockAnswerMessage: " +
+                            e.getMessage()
+                        );
+                        e.printStackTrace();
+                    }
                 } else if (obj instanceof FileBlockAnswerMessage) {
                     System.out.println(
                         "Received FileBlockAnswerMessage: " + obj
@@ -122,7 +136,8 @@ public class SubNode extends Thread {
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Error handling client: " + e.getMessage());
+            System.out.println(e);
+            System.err.println("Error handling client: " + e.getMessage());
         } finally {
             closeResources();
         }
@@ -285,7 +300,7 @@ public class SubNode extends Thread {
             ", node=" +
             node +
             ", gui=" +
-            gui +
+            node.getGUI() +
             ", userCreated=" +
             userCreated +
             ", running=" +

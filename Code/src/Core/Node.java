@@ -176,6 +176,22 @@ public class Node {
         }
     }
 
+    public boolean hasFileWithHash(String hash) {
+        if (folder == null || !folder.exists() || !folder.isDirectory()) {
+            return false;
+        }
+
+        File[] files = folder.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (Utils.generateSHA256(file.getAbsolutePath()).equals(hash)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public void listSubNodes() {
         for (SubNode peer : peers) {
             System.out.println(peer);

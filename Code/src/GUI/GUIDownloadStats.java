@@ -65,7 +65,7 @@ public class GUIDownloadStats {
 
         // Create frame
         JFrame frame = new JFrame();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setSize(400, 300);
         frame.setLayout(
             new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS)
@@ -95,6 +95,6 @@ public class GUIDownloadStats {
         frame.add(timeLabel);
 
         // Display the frame
-        frame.setVisible(true);
+        frame.setVisible(GUI.getSHOW());
     }
 }

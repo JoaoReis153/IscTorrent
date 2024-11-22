@@ -24,11 +24,24 @@ public class FileBlockAnswerMessage implements Serializable {
         long offset,
         int length
     ) {
+        System.out.println("Created FileBlockAnswerMessage");
         this.nodeId = nodeId;
         this.hash = hash;
         this.offset = offset;
+        if (length <= 0) {
+            System.out.println("ERRO");
+            throw new IllegalArgumentException(
+                "Error in FileBlockAnswerMessage: File is empty or a file with that lash couldn't be found"
+            );
+        }
         this.length = length;
-        loadDataFromFile();
+        try {
+            loadDataFromFile(hash);
+        } catch (IllegalArgumentException e) {
+            // Log the error and set data to empty or null
+            System.err.println("Warning: " + e.getMessage());
+            this.data = new byte[0];
+        }
     }
 
     public String getFilename() {
@@ -51,7 +64,7 @@ public class FileBlockAnswerMessage implements Serializable {
         return data;
     }
 
-    public void loadDataFromFile() {
+    public void loadDataFromFile(String hash) {
         File folder = new File(Node.WORK_FOLDER + nodeId + "/");
         if (!folder.isDirectory()) {
             throw new IllegalStateException(

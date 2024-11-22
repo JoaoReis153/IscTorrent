@@ -88,8 +88,7 @@ public class SubNode extends Thread {
                     FileBlockRequestMessage request =
                         (FileBlockRequestMessage) obj;
                     FileBlockAnswerMessage answer = new FileBlockAnswerMessage(
-                        node.getFolder().getAbsolutePath(),
-                        request.getHash(),
+                       node.getId(), request.getHash(),
                         request.getOffset(),
                         request.getLength()
                     );
@@ -99,6 +98,12 @@ public class SubNode extends Thread {
                 } else if (obj instanceof FileBlockAnswerMessage) {
                     System.out.println(
                         "Received FileBlockAnswerMessage: " + obj
+                    );
+                    FileBlockAnswerMessage answer =
+                        (FileBlockAnswerMessage) obj;
+                    downloadManager.addDownloadProcess(
+                        answer.getHash(),
+                        answer
                     );
                     if (blockAnswerLatch != null) blockAnswerLatch.countDown();
                 }

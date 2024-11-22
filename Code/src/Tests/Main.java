@@ -1,13 +1,12 @@
 package Tests;
 
 import Core.Node;
+import Core.Utils;
 import GUI.GUI;
+import Messaging.FileBlockAnswerMessage;
 import Messaging.FileBlockRequestMessage;
-import Services.SubNode;
 import java.io.File;
-import java.io.IOException;
 import java.net.InetAddress;
-import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.List;
 
@@ -115,6 +114,16 @@ public class Main {
             } catch (InterruptedException | UnknownHostException e) {
                 e.printStackTrace();
             }
+        } else if (test == 7) {
+        	int nodeId = 2;
+        	
+            FileBlockAnswerMessage msg = new FileBlockAnswerMessage(
+                1,
+                Utils.generateSHA256(new File(Node.WORK_FOLDER + nodeId + "/doc4.txt").getAbsolutePath()), 0,
+                1024
+            );
+            System.out.println(msg);
+            //  System.out.println(folder.getAbsolutePath());
         }
     }
 }

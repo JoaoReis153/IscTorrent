@@ -19,6 +19,8 @@ import java.util.Set;
 
 public class Node {
 
+	private int nodeId;
+	public static String WORK_FOLDER = "Code/dl";
     private InetAddress endereco;
     private final File folder;
     private Set<SubNode> peers = new HashSet<>();
@@ -29,6 +31,7 @@ public class Node {
 
     // Constructor
     public Node(int nodeId, GUI gui) {
+    	this.nodeId = nodeId;
         this.downloadManager = new DownloadTasksManager(this, 5);
         this.gui = gui;
 
@@ -40,7 +43,7 @@ public class Node {
         this.port += nodeId;
 
         // Create working directory if it doesn't exist
-        String workfolder = "Code/dl" + nodeId;
+        String workfolder = WORK_FOLDER + nodeId;
         this.folder = new File(workfolder);
         if (!this.folder.exists()) {
             boolean created = this.folder.mkdirs();
@@ -100,7 +103,7 @@ public class Node {
             "Request file: " + f
         );
 
-        downloadManager.downloadFile(searchResults);
+        downloadManager.addDownloadRequest(searchResults);
     }
 
     // Connect to another node
@@ -119,7 +122,6 @@ public class Node {
         } catch (IOException e) {
             System.out.println("Unable to resolve address: " + nomeEndereco);
         }
-
         // Validate port
         if (targetPort <= 8080 || targetPort >= 65535) {
             System.out.println("Failed to connect: Invalid port range");
@@ -180,6 +182,9 @@ public class Node {
         }
     }
 
+    public int getId() {
+    	return nodeId;
+    }
     // String representation of the node
     @Override
     public String toString() {

@@ -2,13 +2,12 @@ package Services;
 
 import Core.Node;
 import FileSearch.FileSearchResult;
-import Messaging.FileBlockRequestMessage;
+import Messaging.FileBlockAnswerMessage;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -16,12 +15,18 @@ public class DownloadTasksManager {
 
     private List<DownloadAssistant> assistants = new LinkedList<>();
     private final int DEFAULT_NUMBER_THREADS = 5;
-    private List<List<FileSearchResult>> downloadRequests = new LinkedList<>();
+    private Map<String, ArrayList<FileBlockAnswerMessage>> downloadMap;
+    private List<List<FileSearchResult>> downloadRequests;
     private Node node;
     private ThreadPoolExecutor threadPool;
 
     public DownloadTasksManager(Node node, int numThreads) {
         this.node = node;
+        this.downloadMap = new HashMap<
+            String,
+            ArrayList<FileBlockAnswerMessage>
+        >();
+        this.downloadRequests = new LinkedList<>();
         this.threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(
             numThreads
         );
@@ -30,7 +35,26 @@ public class DownloadTasksManager {
         );
     }
 
-    public synchronized void downloadFile(
+    public synchronized ArrayList<FileBlockAnswerMessage> getDownloadProcess(
+        String hash
+    ) {
+        ArrayList<FileBlockAnswerMessage> answers = downloadMap.get(hash);
+        return answers;
+    }
+
+    public synchronized void addDownloadProcess(
+        String hash,
+        FileBlockAnswerMessage answer
+    ) {
+        ArrayList<FileBlockAnswerMessage> answers = downloadMap.get(hash);
+        if (answers == null) {
+            answers = new ArrayList<FileBlockAnswerMessage>();
+            downloadMap.put(hash, answers);
+        }
+        answers.add(answer);
+    }
+
+    public synchronized void addDownloadRequest(
         List<FileSearchResult> searchResults
     ) {
         downloadRequests.add(searchResults);

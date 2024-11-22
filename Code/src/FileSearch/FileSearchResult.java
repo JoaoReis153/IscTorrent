@@ -11,7 +11,7 @@ public class FileSearchResult
     private WordSearchMessage searchMessage;
     private static final long serialVersionUID = 1L;
     private String fileName;
-    private String hash;
+    private int hash;
     private long fileSize;
     private String address;
     private int port;
@@ -19,7 +19,7 @@ public class FileSearchResult
     public FileSearchResult(
         WordSearchMessage searchMessage,
         String fileName,
-        String hash,
+        int hash,
         long fileSize,
         String address,
         int port
@@ -44,7 +44,7 @@ public class FileSearchResult
         return fileName;
     }
 
-    public String getHash() {
+    public int getHash() {
         return hash;
     }
 
@@ -72,7 +72,7 @@ public class FileSearchResult
             FileSearchResult[] results = new FileSearchResult[files.length];
 
             for (File file : files) {
-                String hash = Utils.generateSHA256(file.getAbsolutePath());
+                int hash = Utils.calculateFileHash(file.getAbsolutePath());
                 results[counter++] = new FileSearchResult(
                     obj,
                     file.getName(),
@@ -96,7 +96,7 @@ public class FileSearchResult
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FileSearchResult that = (FileSearchResult) o;
-        return hash.equals(that.hash);
+        return hash == that.hash;
     }
 
     @Override

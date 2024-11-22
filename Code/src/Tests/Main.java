@@ -1,6 +1,8 @@
 package Tests;
 
+import Core.Utils;
 import GUI.GUI;
+import java.net.InetAddress;
 
 public class Main {
 
@@ -21,6 +23,15 @@ public class Main {
                 try {
                     int id = Integer.parseInt(arg);
                     GUI gui = new GUI(id);
+                    if (id != 1) {
+                        gui
+                            .getNode()
+                            .connectToNode(
+                                InetAddress.getLocalHost().getHostAddress(),
+                                8081
+                            );
+                    }
+                    gui.getNode().broadcastWordSearchMessageRequest("");
                     gui.open();
                     System.out.println("GUI opened for ID: " + id);
                 } catch (NumberFormatException e) {
@@ -33,7 +44,7 @@ public class Main {
                     System.err.println(
                         "Failed to create node: " + e.getMessage()
                     );
-                    // Don't proceed with GUI creation for this instance
+
                     continue;
                 } catch (Exception e) {
                     System.err.println(
@@ -43,6 +54,13 @@ public class Main {
                     e.printStackTrace();
                 }
             }
+        }
+        if (test == 1) {
+            String file = "./dl1/doc1.txt";
+
+            int a = Utils.calculateFileHash(file);
+
+            System.out.println(a);
         }
     }
 }

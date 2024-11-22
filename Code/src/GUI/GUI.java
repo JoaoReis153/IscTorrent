@@ -36,12 +36,9 @@ public class GUI {
     private static boolean SHOW = true;
     private boolean isOpen = false;
 
-    // Constructor of the GUI class where it receives the address, port, and work
-    // folder
-    public GUI(int nodeId) throws IllegalArgumentException { // Add throws clause
-        // Create node first, before any GUI elements
+    public GUI(int nodeId) throws IllegalArgumentException {
         this.node = new Node(nodeId, this);
-        // Only proceed with GUI creation if node creation was successful
+
         createGUI();
     }
 
@@ -58,7 +55,6 @@ public class GUI {
         frame.pack();
     }
 
-    // Makes the window visible
     public void open() {
         if (this.isOpen) return;
         this.isOpen = true;
@@ -69,13 +65,11 @@ public class GUI {
         frame.setVisible(SHOW);
     }
 
-    // Adds the content to the window
     private void addFrameContent() {
         frame.setLayout(new BorderLayout());
 
-        // Search panel
         JPanel searchPanel = new JPanel();
-        searchPanel.setLayout(new FlowLayout(FlowLayout.LEFT)); // Align to the left
+        searchPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
         JLabel searchLabel = new JLabel("Text to search:");
         JTextField searchTextField = new JTextField(20);
@@ -87,11 +81,9 @@ public class GUI {
 
         frame.add(searchPanel, BorderLayout.NORTH);
 
-        // Bottom panel
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new BorderLayout());
 
-        // Left area
         JPanel leftArea = new JPanel();
         leftArea.setPreferredSize(new Dimension(300, 150));
         leftArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -107,7 +99,6 @@ public class GUI {
         leftArea.setLayout(new BorderLayout());
         leftArea.add(scrollPane, BorderLayout.CENTER);
 
-        // Right area with buttons
         JPanel rightButtonsPanel = new JPanel();
         rightButtonsPanel.setLayout(new GridLayout(2, 1, 10, 10));
 
@@ -125,7 +116,6 @@ public class GUI {
 
         frame.add(bottomPanel, BorderLayout.CENTER);
 
-        // Button event listeners
         connectButton.addActionListener(
             new ActionListener() {
                 @Override
@@ -190,9 +180,8 @@ public class GUI {
         if (list == null || list.length == 0) return;
         File[] files = node.getFolder().listFiles();
         if (files != null) {
-            // Create FileSearchResult objects
             for (File file : files) {
-                String hash = Utils.generateSHA256(file.getAbsolutePath());
+                int hash = Utils.calculateFileHash(file.getAbsolutePath());
 
                 allFiles.add(
                     new FileSearchResult(
@@ -229,7 +218,7 @@ public class GUI {
         return list;
     }
 
-    public void showDownloadStats(String hash, long duration) {
+    public void showDownloadStats(int hash, long duration) {
         GUIDownloadStats downloadStats = new GUIDownloadStats(
             GUI.this,
             hash,

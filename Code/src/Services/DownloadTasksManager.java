@@ -16,7 +16,7 @@ public class DownloadTasksManager {
     private List<DownloadAssistant> assistants = new LinkedList<>();
     private final int DEFAULT_NUMBER_THREADS = 5;
     private Map<
-        String,
+        Integer,
         HashMap<String, ArrayList<FileBlockAnswerMessage>>
     > downloadMap;
     private List<List<FileSearchResult>> downloadRequests;
@@ -26,7 +26,7 @@ public class DownloadTasksManager {
     public DownloadTasksManager(Node node, int numThreads) {
         this.node = node;
         this.downloadMap = new HashMap<
-            String,
+            Integer,
             HashMap<String, ArrayList<FileBlockAnswerMessage>>
         >();
         this.downloadRequests = new LinkedList<>();
@@ -41,7 +41,7 @@ public class DownloadTasksManager {
     public synchronized Map<
         String,
         ArrayList<FileBlockAnswerMessage>
-    > getDownloadProcess(String hash) {
+    > getDownloadProcess(int hash) {
         HashMap<String, ArrayList<FileBlockAnswerMessage>> answers =
             downloadMap.get(hash);
 
@@ -53,7 +53,7 @@ public class DownloadTasksManager {
     }
 
     public synchronized void addDownloadProcess(
-        String hash,
+        int hash,
         String address,
         int port,
         FileBlockAnswerMessage answer

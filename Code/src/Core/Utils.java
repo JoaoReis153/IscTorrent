@@ -1,41 +1,46 @@
 package Core;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.math.BigInteger;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class Utils {
 
-    public static String generateSHA256(String filePath) {
+    public static int calculateFileHash(byte[] fileContents) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
-            byte[] hashBytes = digest.digest(fileBytes);
-
-            StringBuilder hexString = new StringBuilder();
-            for (byte hashByte : hashBytes) {
-                String hex = Integer.toHexString(0xff & hashByte);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException | IOException e) {
-            e.printStackTrace();
-            return null; // Optionally, return an empty string or an error message instead
+            byte[] hash = MessageDigest.getInstance("SHA-256").digest(
+                fileContents
+            );
+            return new BigInteger(1, hash).intValue();
+        } catch (Exception e) {
+            System.err.println(
+                "Error calculating file hash: " + e.getMessage()
+            );
+            return -1;
         }
     }
 
-    public static void main(String[] args) {
-        String file = "./dl1/doc1.txt";
+    // Overloaded method that takes a file path
+    public static int calculateFileHash(String filePath) {
+        try {
+            byte[] fileContents = java.nio.file.Files.readAllBytes(
+                java.nio.file.Paths.get(filePath)
+            );
+            return calculateFileHash(fileContents);
+        } catch (Exception e) {
+            System.err.println(
+                "Error reading file for hashing: " + e.getMessage()
+            );
+            return -1;
+        }
+    }
 
-        String a = generateSHA256(file);
-
-        System.out.println(a);
+    // Method to verify if two files have the same hash
+    public static boolean verifyFileHash(
+        byte[] fileContents,
+        int expectedHash
+    ) {
+        int actualHash = calculateFileHash(fileContents);
+        return actualHash == expectedHash;
     }
 
     public static Boolean isValidPort(int port) {

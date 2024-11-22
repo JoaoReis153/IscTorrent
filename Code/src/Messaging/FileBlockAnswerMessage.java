@@ -12,14 +12,14 @@ public class FileBlockAnswerMessage implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int nodeId;
-    private String hash;
+    private int hash;
     private long offset;
     private int length;
     private byte[] data;
 
     public FileBlockAnswerMessage(
         int nodeId,
-        String hash,
+        int hash,
         long offset,
         int length
     ) {
@@ -37,17 +37,12 @@ public class FileBlockAnswerMessage implements Serializable {
         try {
             loadDataFromFile(hash);
         } catch (IllegalArgumentException e) {
-            // Log the error and set data to empty or null
             System.err.println("Warning: " + e.getMessage());
             this.data = new byte[0];
         }
     }
 
-    public String getFilename() {
-        return hash;
-    }
-
-    public String getHash() {
+    public int getHash() {
         return hash;
     }
 
@@ -63,7 +58,7 @@ public class FileBlockAnswerMessage implements Serializable {
         return data;
     }
 
-    public void loadDataFromFile(String hash) {
+    public void loadDataFromFile(int hash) {
         File folder = new File(Node.WORK_FOLDER + nodeId + "/");
         if (!folder.isDirectory()) {
             throw new IllegalStateException(
@@ -76,10 +71,10 @@ public class FileBlockAnswerMessage implements Serializable {
         try {
             for (File file : folder.listFiles()) {
                 if (file.isFile()) {
-                    String fileHash = Utils.generateSHA256(
+                    int fileHash = Utils.calculateFileHash(
                         file.getAbsolutePath()
                     );
-                    if (fileHash.equals(hash)) {
+                    if (fileHash == hash) {
                         matchingFile = file;
                         break;
                     }
@@ -97,18 +92,14 @@ public class FileBlockAnswerMessage implements Serializable {
             ) {
                 long fileLength = raf.length();
 
-                // Validate the range
                 if (offset < 0 || offset + length > fileLength) {
                     throw new IllegalArgumentException("Invalid range");
                 }
 
-                // Read the specified range of bytes
                 byte[] data = new byte[length];
 
-                // Move the pointer to the start position
                 raf.seek(offset);
 
-                // Read the data into the byte array
                 raf.readFully(data);
 
                 this.data = data;

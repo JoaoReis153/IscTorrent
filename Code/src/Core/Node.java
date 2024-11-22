@@ -183,7 +183,7 @@ public class Node {
         downloadManager.addDownloadRequest(searchResults);
     }
 
-    public boolean hasFileWithHash(String hash) {
+    public boolean hasFileWithHash(int hash) {
         if (folder == null || !folder.exists() || !folder.isDirectory()) {
             return false;
         }
@@ -191,7 +191,7 @@ public class Node {
         File[] files = folder.listFiles();
 
         for (File file : files) {
-            if (Utils.generateSHA256(file.getAbsolutePath()).equals(hash)) {
+            if (Utils.calculateFileHash(file.getAbsolutePath()) == hash) {
                 return true;
             }
         }
@@ -203,8 +203,6 @@ public class Node {
         String addressString = address.toString();
         return addressString.substring(addressString.indexOf("/") + 1);
     }
-
-    // Getters
 
     public File getFolder() {
         return folder;

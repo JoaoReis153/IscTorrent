@@ -5,19 +5,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FileBlockRequestMessage implements Serializable {
-	private static final long serialVersionUID = 1L;
-	
-	private String hash;
+
+    private static final long serialVersionUID = 1L;
+
+    private int hash;
     private long offset;
     private int length;
 
-    public FileBlockRequestMessage(String hash, long offset, int length) {
+    public FileBlockRequestMessage(int hash, long offset, int length) {
         this.hash = hash;
         this.offset = offset;
         this.length = length;
     }
 
-    public String getHash() {
+    public int getHash() {
         return hash;
     }
 
@@ -30,14 +31,14 @@ public class FileBlockRequestMessage implements Serializable {
     }
 
     public static List<FileBlockRequestMessage> createBlockList(
-        String hash,
+        int hash,
         long fileSize
     ) {
         return createBlockList(hash, fileSize, 10240);
     }
 
     public static List<FileBlockRequestMessage> createBlockList(
-        String hash,
+        int hash,
         long fileSize,
         int blockSize
     ) {
@@ -54,9 +55,13 @@ public class FileBlockRequestMessage implements Serializable {
     }
 
     public String toString() {
+        String hashString = String.valueOf(hash);
         return (
             "FileBlockRequestMessage [hash=" +
-            hash.substring(hash.length() - 10, hash.length()) +
+            hashString.substring(
+                hashString.length() - 10,
+                hashString.length()
+            ) +
             ", offset=" +
             offset +
             ", length=" +

@@ -12,13 +12,12 @@ import javax.swing.JLabel;
 
 public class GUIDownloadStats {
 
-    private Map<String, Integer> nodesNBlocks; // Node stats: Node and number of downloads
-    private Long durationInMiliseconds; // Total time in seconds
+    private Map<String, Integer> nodesNBlocks;
+    private Long durationInMiliseconds;
     private GUI gui;
-    private String hash;
+    private int hash;
 
-    // Constructor
-    public GUIDownloadStats(GUI gui, String hash, long durationInMiliseconds) {
+    public GUIDownloadStats(GUI gui, int hash, long durationInMiliseconds) {
         this.gui = gui;
         this.hash = hash;
         this.durationInMiliseconds = durationInMiliseconds;
@@ -37,19 +36,14 @@ public class GUIDownloadStats {
         }
     }
 
-    // Converts seconds to a readable time format
-    // Converts seconds and milliseconds to a readable time format
     private String formatTime(long totalMillis) {
         if (totalMillis < 1000) {
-            // If less than 1 second, show milliseconds
             return String.format("%d ms", totalMillis);
         } else if (totalMillis < 60000) {
-            // If between 1 second and 1 minute, show seconds and milliseconds
             long seconds = totalMillis / 1000;
             long millis = totalMillis % 1000;
             return String.format("%d.%03d seconds", seconds, millis);
         } else {
-            // If greater than 1 minute, show minutes, seconds, and milliseconds
             long minutes = TimeUnit.MILLISECONDS.toMinutes(totalMillis);
             long seconds = (totalMillis / 1000) % 60;
             long millis = totalMillis % 1000;
@@ -57,12 +51,9 @@ public class GUIDownloadStats {
         }
     }
 
-    // Displays the GUI
     public void open() {
-        // Convert time to human-readable format
         String readableTime = formatTime(durationInMiliseconds);
 
-        // Create frame
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setSize(400, 300);
@@ -73,7 +64,7 @@ public class GUIDownloadStats {
         JLabel downloadFinished = new JLabel("Download finished");
         downloadFinished.setFont(new Font("Arial", Font.PLAIN, 14));
         frame.add(downloadFinished);
-        // Add details for each node
+
         for (Map.Entry<String, Integer> entry : nodesNBlocks.entrySet()) {
             String node = entry.getKey();
             int downloads = entry.getValue();
@@ -88,12 +79,10 @@ public class GUIDownloadStats {
             frame.add(nodeLabel);
         }
 
-        // Add time label
         JLabel timeLabel = new JLabel("Time to Download: " + readableTime);
         timeLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         frame.add(timeLabel);
 
-        // Display the frame
         frame.setVisible(GUI.getSHOW());
     }
 }

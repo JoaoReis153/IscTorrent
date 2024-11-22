@@ -5,15 +5,12 @@ import Messaging.FileBlockAnswerMessage;
 import Messaging.FileBlockRequestMessage;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 public class DownloadAssistant extends Thread {
 
-    private DownloadTasksManager taskManager;
+    private final DownloadTasksManager taskManager;
 
     public DownloadAssistant(DownloadTasksManager taskManager) {
         this.taskManager = taskManager;
@@ -23,128 +20,167 @@ public class DownloadAssistant extends Thread {
     public void run() {
         while (true) {
             try {
-                List<FileSearchResult> request =
-                    taskManager.getDownloadRequest();
-                if (request != null && !request.isEmpty()) {
-                    System.out.println("Download Requests: " + request);
-                    ArrayList<SubNode> peersWithFile = new ArrayList<SubNode>();
-                    for (SubNode peer : taskManager.getNode().getPeers()) {
-                        String peerAddressPort =
-                            peer.getSocket().getInetAddress().getHostAddress() +
-                            "::" +
-                            peer.getSocket().getPort();
-                        for (FileSearchResult sr : request) {
-                            String searchResultAddressPort =
-                                sr.getAddress() + "::" + sr.getPort();
-                            if (
-                                peerAddressPort.equals(searchResultAddressPort)
-                            ) {
-                                peersWithFile.add(peer);
-                                continue;
-                            }
-                        }
-                    }
-
-                    long startTime = System.currentTimeMillis();
-
-                    FileSearchResult first = request.get(0);
-
-                    String hash = first.getHash();
-
-                    List<FileBlockRequestMessage> blockList =
-                        FileBlockRequestMessage.createBlockList(
-                            hash,
-                            first.getFileSize()
-                        );
-
-                    CountDownLatch latch = new CountDownLatch(blockList.size());
-
-                    int blockListSize = blockList.size();
-                    while (blockList.size() > 0) {
-                        for (SubNode peer : taskManager.getNode().getPeers()) {
-                            if (blockList.size() == 0) break;
-                            FileBlockRequestMessage block = blockList.remove(0);
-                            if (block == null) continue;
-                            peer.setBlockAnswerLatch(latch);
-                            peer.sendFileBlockRequestMessageRequest(block);
-                        }
-                    }
-                    latch.await();
-
-                    while (
-                        taskManager.getDownloadProcess(hash).size() <
-                        blockList.size()
-                    ) {}
-
-                    System.out.println(
-                        "Received all blocks: " +
-                                taskManager.getDownloadProcess(hash).size() ==
-                            null
-                            ? 0
-                            : taskManager.getDownloadProcess(hash).size() +
-                            " of " +
-                            blockListSize
-                    );
-
-                    assembleAndWriteFile(
-                        first.getFileName(),
-                        taskManager.getDownloadProcess(hash)
-                    );
-
-                    long duration = System.currentTimeMillis() - startTime;
-                    taskManager
-                        .getNode()
-                        .getGUI()
-                        .showDownloadStats(hash, duration);
-                }
+                handleDownloadRequests();
             } catch (Exception e) {
-                e.printStackTrace(); // This will print the full stack trace
+                e.printStackTrace();
                 System.err.println("Error in DownloadAssistant: " + e);
             }
         }
+    }
+
+    private void handleDownloadRequests() throws Exception {
+        List<FileSearchResult> request = taskManager.getDownloadRequest();
+        if (request == null || request.isEmpty()) return;
+
+        System.out.println("Download Requests: " + request);
+
+        FileSearchResult firstRequest = request.get(0);
+        int fileHash = firstRequest.getHash();
+        long startTime = System.currentTimeMillis();
+
+        // Process download
+        downloadFile(firstRequest);
+
+        // Show download statistics
+        long duration = System.currentTimeMillis() - startTime;
+        taskManager.getNode().getGUI().showDownloadStats(fileHash, duration);
+    }
+
+    private void downloadFile(FileSearchResult fileRequest) throws Exception {
+        int fileHash = fileRequest.getHash();
+        List<FileBlockRequestMessage> blockList = createBlockRequests(
+            fileRequest
+        );
+
+        String fileName = fileRequest.getFileName();
+
+        int totalBlocks = blockList.size();
+
+        // Download blocks
+        CountDownLatch latch = new CountDownLatch(totalBlocks);
+        distributeBlockRequests(blockList, latch);
+        latch.await();
+
+        // Wait for all blocks to be received
+        waitForBlockCompletion(fileName, fileHash, totalBlocks);
+
+        // Assemble and write file
+        assembleAndWriteFile(
+            fileRequest.getFileName(),
+            taskManager.getDownloadProcess(fileHash)
+        );
+    }
+
+    private List<FileBlockRequestMessage> createBlockRequests(
+        FileSearchResult fileRequest
+    ) {
+        return FileBlockRequestMessage.createBlockList(
+            fileRequest.getHash(),
+            fileRequest.getFileSize()
+        );
+    }
+
+    private void distributeBlockRequests(
+        List<FileBlockRequestMessage> blockList,
+        CountDownLatch latch
+    ) {
+        while (!blockList.isEmpty()) {
+            for (SubNode peer : taskManager.getNode().getPeers()) {
+                if (blockList.isEmpty()) break;
+
+                FileBlockRequestMessage block = blockList.remove(0);
+                if (block == null) continue;
+
+                peer.setBlockAnswerLatch(latch);
+                peer.sendFileBlockRequestMessageRequest(block);
+            }
+        }
+    }
+
+    private void waitForBlockCompletion(
+        String fileName,
+        int fileHash,
+        int expectedBlocks
+    ) throws IOException {
+        while (
+            taskManager.getDownloadProcess(fileHash).size() < expectedBlocks
+        ) {
+            // Wait for all blocks to be received
+        }
+
+        System.out.println(
+            String.format(
+                "Received all blocks: %d of %d",
+                taskManager.getDownloadProcess(fileHash).size(),
+                expectedBlocks
+            )
+        );
+
+        assembleAndWriteFile(
+            fileName,
+            taskManager.getDownloadProcess(fileHash)
+        );
     }
 
     private void assembleAndWriteFile(
         String fileName,
         Map<String, ArrayList<FileBlockAnswerMessage>> receivedBlockMap
     ) throws IOException {
-        // Use a TreeMap to keep blocks ordered by offset
+        TreeMap<Long, byte[]> fileParts = collectFileParts(receivedBlockMap);
+        if (fileParts.isEmpty()) return;
+
+        String filePath = buildFilePath(fileName);
+        writeFileToDisc(filePath, fileParts);
+        verifyFileCreation(filePath);
+    }
+
+    private TreeMap<Long, byte[]> collectFileParts(
+        Map<String, ArrayList<FileBlockAnswerMessage>> receivedBlockMap
+    ) {
         TreeMap<Long, byte[]> fileParts = new TreeMap<>();
-        List<FileBlockAnswerMessage> receivedBlocks = new ArrayList<
-            FileBlockAnswerMessage
-        >();
-        for (List<FileBlockAnswerMessage> blocks : receivedBlockMap.values()) {
-            receivedBlocks.addAll(blocks);
-        }
-        // Populate the TreeMap with blocks
-        for (FileBlockAnswerMessage block : receivedBlocks) {
+        List<FileBlockAnswerMessage> allBlocks = new ArrayList<>();
+
+        // Collect all blocks
+        receivedBlockMap.values().forEach(allBlocks::addAll);
+
+        // Sort blocks by offset
+        for (FileBlockAnswerMessage block : allBlocks) {
             if (block.getData() == null) {
                 System.err.println(
                     "Warning: Block data is null for offset: " +
                     block.getOffset()
                 );
-
-                return;
+                return new TreeMap<>();
             }
             fileParts.put(block.getOffset(), block.getData());
         }
 
-        String filePath =
-            taskManager.getNode().getFolder().getAbsolutePath() +
-            "/" +
-            fileName;
-        // Write the blocks to the file in the correct order
+        return fileParts;
+    }
+
+    private String buildFilePath(String fileName) {
+        return (
+            taskManager.getNode().getFolder().getAbsolutePath() + "/" + fileName
+        );
+    }
+
+    private void writeFileToDisc(
+        String filePath,
+        TreeMap<Long, byte[]> fileParts
+    ) throws IOException {
         try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
-            for (Map.Entry<Long, byte[]> entry : fileParts.entrySet()) {
-                fileOut.write(entry.getValue());
+            for (byte[] data : fileParts.values()) {
+                fileOut.write(data);
             }
         }
+    }
+
+    private void verifyFileCreation(String filePath) {
         java.io.File file = new java.io.File(filePath);
         if (!file.exists()) {
             System.err.println("Error: File was not created at: " + filePath);
             return;
         }
-
         System.out.println("File written successfully to: " + filePath);
     }
 }

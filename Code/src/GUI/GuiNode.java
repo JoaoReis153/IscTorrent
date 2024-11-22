@@ -14,42 +14,37 @@ public class GUINode {
     public GUINode(GUI gui) {
         this.node = gui.getNode();
         frame = new JFrame("Add Node");
-        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // Close only this window
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         addFrameContent();
-        frame.pack(); // Adjust the window size
+        frame.pack();
     }
 
     public void open() {
-        frame.setVisible(true); // Make the window visible
+        frame.setVisible(true);
     }
 
     private void addFrameContent() {
-        // Using FlowLayout to organize components in a line
-        frame.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10)); // Left-aligned with spacing
+        frame.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
 
-        // Label and text field for Address
         JLabel addressLabel = new JLabel("Address:");
-        JTextField addressField = new JTextField(15); // Text field for address
+        JTextField addressField = new JTextField(15);
         addressField.setText(node.getEnderecoIP());
         frame.add(addressLabel);
         frame.add(addressField);
 
-        // Label and text field for Port
         JLabel portLabel = new JLabel("Port:");
-        JTextField portField = new JTextField(5); // Text field for port
+        JTextField portField = new JTextField(5);
         frame.add(portLabel);
         frame.add(portField);
 
-        // Cancel and OK buttons
         JButton cancelButton = new JButton("Cancel");
         JButton okButton = new JButton("OK");
 
-        // Adding functionality to the buttons
         cancelButton.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    frame.dispose(); // Close the window when Cancel is clicked
+                    frame.dispose();
                 }
             }
         );
@@ -58,7 +53,6 @@ public class GUINode {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    // Logic to handle the address and port
                     String address = addressField.getText();
                     String portText = portField.getText();
                     try {

@@ -15,7 +15,7 @@ public class Main {
                 return;
             }
 
-            System.out.println("Number of arguments: " + args.length);
+            System.out.println("Number of nodes to create: " + args.length);
 
             for (String arg : args) {
                 try {

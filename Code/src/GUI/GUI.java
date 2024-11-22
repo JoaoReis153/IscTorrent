@@ -20,6 +20,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import Core.Node;
@@ -49,7 +50,6 @@ public class GUI {
     	}).start();
 
         frame.setVisible(true);
-
         System.out.println("GUI is now visible.");
     }
 
@@ -80,6 +80,7 @@ public class GUI {
         leftArea.setPreferredSize(new Dimension(300, 150));
         leftArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
+        allFiles = new ArrayList<>();
         listModel = new DefaultListModel<>();
         fileList = new JList<>(listModel);
         fileList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -146,16 +147,17 @@ public class GUI {
             }
         });
 
-        allFiles = new ArrayList<>();
+   
 
 
     }
 
-    public void loadListModel(FileSearchResult[] list) {
+    public synchronized  void loadListModel(FileSearchResult[] list) {
         if (list == null || list.length == 0) return;
+        
+        SwingUtilities.invokeLater(() -> {
         int added = 0;
         for (FileSearchResult searchResult : list) {
-        	
         	if(!allFiles.contains(searchResult)) {
         		added++;
         		System.out.println(searchResult + " " + searchResult.getHash());
@@ -164,8 +166,8 @@ public class GUI {
         	allFiles.add(searchResult);
         }
         System.out.println("FileSearchResult size: " + list.length);
-        
         System.out.println("Loaded " + added + " search results into the file list.");
+        });
     }
 
     public Node getNode() {

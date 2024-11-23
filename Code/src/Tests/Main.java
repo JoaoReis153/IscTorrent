@@ -71,12 +71,5 @@ public class Main {
 
             guiList.getFirst().simulateDownloadButton(list);
         }
-        if (test == 1) {
-            String file = "./dl1/doc1.txt";
-
-            int a = Utils.calculateFileHash(file);
-
-            System.out.println(a);
-        }
     }
 }

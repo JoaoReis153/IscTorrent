@@ -20,6 +20,7 @@ public class DownloadTasksManager {
         HashMap<String, ArrayList<FileBlockAnswerMessage>>
     > downloadMap;
     private List<List<FileSearchResult>> downloadRequestsOnWait;
+    private List<FileSearchResult> requestsBeingProcessed;
     private Node node;
     private ThreadPoolExecutor threadPool;
 
@@ -30,6 +31,7 @@ public class DownloadTasksManager {
             HashMap<String, ArrayList<FileBlockAnswerMessage>>
         >();
         this.downloadRequestsOnWait = new LinkedList<>();
+        this.requestsBeingProcessed = new LinkedList<>();
         this.threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(
             numThreads
         );
@@ -92,12 +94,30 @@ public class DownloadTasksManager {
     public synchronized void addDownloadRequest(
         List<FileSearchResult> searchResults
     ) {
+        if (searchResults.isEmpty()) return;
+        FileSearchResult request = searchResults.get(0);
+        if (requestsBeingProcessed.contains(request)) {
+            System.out.println(
+                node.getAddressAndPortFormated() +
+                "Already processing the doownload of: " +
+                request
+            );
+            return;
+        }
+
+        requestsBeingProcessed.add(request);
         downloadRequestsOnWait.add(searchResults);
+
         System.out.println(
             node.getAddressAndPortFormated() +
             "Download waiting for assistant: " +
             downloadRequestsOnWait.size()
         );
+        notifyAll();
+    }
+
+    public void removeDownloadBeingProcessed(FileSearchResult request) {
+        requestsBeingProcessed.remove(request);
     }
 
     public List<DownloadAssistant> getAssistants() {
@@ -109,7 +129,9 @@ public class DownloadTasksManager {
     }
 
     public synchronized List<FileSearchResult> getDownloadRequest() {
-        if (downloadRequestsOnWait.isEmpty()) return null;
+        try {
+            while (downloadRequestsOnWait.isEmpty()) wait();
+        } catch (InterruptedException e) {}
         return downloadRequestsOnWait.removeFirst();
     }
 
@@ -120,6 +142,4 @@ public class DownloadTasksManager {
     public ThreadPoolExecutor getThreadPool() {
         return threadPool;
     }
-
-    public synchronized void stopServer() {}
 }

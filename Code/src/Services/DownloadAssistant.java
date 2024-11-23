@@ -32,8 +32,8 @@ public class DownloadAssistant extends Thread {
     }
 
     private void handleDownloadRequests() throws Exception {
-        List<FileSearchResult> request = taskManager.getDownloadRequest();
-        if (request == null || request.isEmpty()) return;
+        List<FileSearchResult> requests = taskManager.getDownloadRequest();
+        if (requests == null || requests.isEmpty()) return;
 
         System.out.println(
             taskManager.getNode().getAddressAndPortFormated() +
@@ -41,23 +41,50 @@ public class DownloadAssistant extends Thread {
             ID +
             "]" +
             "Download request: " +
-            request +
+            requests +
             "(" +
-            request.get(0).getHash() +
+            requests.get(0).getHash() +
             ")"
         );
 
-        FileSearchResult firstRequest = request.get(0);
+        FileSearchResult firstRequest = requests.get(0);
         int fileHash = firstRequest.getHash();
         long startTime = System.currentTimeMillis();
 
-        downloadFile(firstRequest);
+        List<SubNode> nodesWithFile = getNodesWithFile(requests);
+
+        downloadFile(nodesWithFile, firstRequest);
 
         long duration = System.currentTimeMillis() - startTime;
         taskManager.getNode().getGUI().showDownloadStats(fileHash, duration);
     }
 
-    private void downloadFile(FileSearchResult fileRequest) throws Exception {
+    private List<SubNode> getNodesWithFile(List<FileSearchResult> requests) {
+        List<SubNode> nodesWithFile = new ArrayList<>();
+        for (SubNode subNode : taskManager.getNode().getPeers()) {
+            for (FileSearchResult request : requests) {
+                if (
+                    request
+                        .getAddress()
+                        .equals(
+                            subNode
+                                .getSocket()
+                                .getInetAddress()
+                                .getHostAddress()
+                        ) &&
+                    request.getPort() == subNode.getOriginalBeforeOSchangePort()
+                ) {
+                    nodesWithFile.add(subNode);
+                }
+            }
+        }
+        return nodesWithFile;
+    }
+
+    private void downloadFile(
+        List<SubNode> nodesWithFile,
+        FileSearchResult fileRequest
+    ) throws Exception {
         int fileHash = fileRequest.getHash();
         List<FileBlockRequestMessage> blockList = createBlockRequests(
             fileRequest
@@ -77,7 +104,7 @@ public class DownloadAssistant extends Thread {
         );
         CountDownLatch latch = new CountDownLatch(totalBlocks);
 
-        distributeBlockRequests(blockList, latch);
+        distributeBlockRequests(nodesWithFile, blockList, latch);
         latch.await();
 
         waitForBlockCompletion(fileName, fileHash, totalBlocks);
@@ -86,6 +113,9 @@ public class DownloadAssistant extends Thread {
             fileRequest.getFileName(),
             taskManager.getDownloadProcess(fileHash)
         );
+
+        taskManager.removeDownloadBeingProcessed(fileRequest);
+        taskManager.getNode().getGUI().reloadListModel();
     }
 
     private List<FileBlockRequestMessage> createBlockRequests(
@@ -98,11 +128,12 @@ public class DownloadAssistant extends Thread {
     }
 
     private void distributeBlockRequests(
+        List<SubNode> nodesWithFile,
         List<FileBlockRequestMessage> blockList,
         CountDownLatch latch
     ) {
         while (!blockList.isEmpty()) {
-            for (SubNode peer : taskManager.getNode().getPeers()) {
+            for (SubNode peer : nodesWithFile) {
                 if (blockList.isEmpty()) break;
 
                 FileBlockRequestMessage block = blockList.remove(0);

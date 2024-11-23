@@ -2,7 +2,6 @@ package GUI;
 
 import Core.Node;
 import FileSearch.FileSearchResult;
-import Services.SubNode;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -35,6 +34,7 @@ public class GUI {
     private Node node;
     private static boolean SHOW = true;
     private boolean isOpen = false;
+    private String lastSearchKeyword = "";
 
     public GUI(int nodeId) throws IllegalArgumentException {
         this.node = new Node(nodeId, this);
@@ -157,18 +157,6 @@ public class GUI {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    System.out.println(
-                        node.getAddressAndPortFormated() +
-                        "N of Peers: " +
-                        node.getPeers().size()
-                    );
-                    for (SubNode peer : node.getPeers()) {
-                        System.out.println(
-                            node.getAddressAndPortFormated() +
-                            "Socket: " +
-                            peer.getSocket()
-                        );
-                    }
                     listModel.clear();
                     allFiles.clear();
                     String searchText = searchTextField.getText().toLowerCase();
@@ -179,6 +167,7 @@ public class GUI {
                         searchText +
                         "]"
                     );
+                    lastSearchKeyword = searchText;
                 }
             }
         );
@@ -198,7 +187,16 @@ public class GUI {
         }
     }
 
-    public synchronized void loadListModel(FileSearchResult[] list) {
+    public void reloadListModel() {
+        System.out.println(
+            node.getAddressAndPortFormated() + "Reloading GUI list"
+        );
+        listModel.clear();
+        allFiles.clear();
+        node.broadcastWordSearchMessageRequest(lastSearchKeyword);
+    }
+
+    public void loadListModel(FileSearchResult[] list) {
         if (list == null || list.length == 0) return;
         File[] files = node.getFolder().listFiles();
         if (files != null) {

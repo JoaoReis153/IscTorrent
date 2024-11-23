@@ -54,10 +54,8 @@ public class Main {
                     e.printStackTrace();
                 }
             }
-            guiList
-                .getFirst()
-                .getNode()
-                .broadcastWordSearchMessageRequest("jpg");
+            guiList.getFirst().getNode().broadcastWordSearchMessageRequest("");
+            /*
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -66,6 +64,7 @@ public class Main {
             guiList
                 .getFirst()
                 .simulateDownloadButton(guiList.getFirst().getListModel());
+            */
         }
     }
 }

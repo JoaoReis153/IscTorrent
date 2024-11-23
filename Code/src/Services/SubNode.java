@@ -269,12 +269,15 @@ public class SubNode extends Thread {
     }
 
     private void logNewConnection() {
+        int port = Utils.isValidPort(originalBeforeOSchangePort)
+            ? originalBeforeOSchangePort
+            : socket.getPort();
         System.out.println(
             node.getAddressAndPortFormated() +
             "Added new node::NodeAddress [address=" +
             socket.getInetAddress().getHostAddress() +
             " port=" +
-            originalBeforeOSchangePort +
+            port +
             "]"
         );
     }

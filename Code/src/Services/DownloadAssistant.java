@@ -12,8 +12,10 @@ import java.util.concurrent.CountDownLatch;
 public class DownloadAssistant extends Thread {
 
     private final DownloadTasksManager taskManager;
+    private final int ID;
 
-    public DownloadAssistant(DownloadTasksManager taskManager) {
+    public DownloadAssistant(DownloadTasksManager taskManager, int ID) {
+        this.ID = ID;
         this.taskManager = taskManager;
     }
 
@@ -35,8 +37,14 @@ public class DownloadAssistant extends Thread {
 
         System.out.println(
             taskManager.getNode().getAddressAndPortFormated() +
-            "Download Requests: " +
-            request
+            "[assistant" +
+            ID +
+            "]" +
+            "Download request: " +
+            request +
+            "(" +
+            request.get(0).getHash() +
+            ")"
         );
 
         FileSearchResult firstRequest = request.get(0);
@@ -58,8 +66,17 @@ public class DownloadAssistant extends Thread {
         String fileName = fileRequest.getFileName();
 
         int totalBlocks = blockList.size();
-        System.out.println("---- Total blocks: " + totalBlocks + " ----");
+        System.out.println(
+            taskManager.getNode().getAddressAndPortFormated() +
+            "[assistant" +
+            ID +
+            "]" +
+            "---- Total blocks: " +
+            totalBlocks +
+            " ----"
+        );
         CountDownLatch latch = new CountDownLatch(totalBlocks);
+
         distributeBlockRequests(blockList, latch);
         latch.await();
 
@@ -92,6 +109,14 @@ public class DownloadAssistant extends Thread {
                 if (block == null) continue;
 
                 peer.setBlockAnswerLatch(latch);
+                System.out.println(
+                    taskManager.getNode().getAddressAndPortFormated() +
+                    "[assistant" +
+                    ID +
+                    "]" +
+                    "Sending block request: " +
+                    block
+                );
                 peer.sendFileBlockRequestMessageRequest(block);
             }
         }
@@ -106,6 +131,9 @@ public class DownloadAssistant extends Thread {
 
         System.out.println(
             taskManager.getNode().getAddressAndPortFormated() +
+            "[assistant" +
+            ID +
+            "]" +
             String.format(
                 "---- Received all blocks: %d of %d ----",
                 taskManager.getDownloadProcessSize(fileHash),
@@ -187,6 +215,9 @@ public class DownloadAssistant extends Thread {
         }
         System.out.println(
             taskManager.getNode().getAddressAndPortFormated() +
+            "[assistant" +
+            ID +
+            "]" +
             "Downloaded: " +
             filePath
         );

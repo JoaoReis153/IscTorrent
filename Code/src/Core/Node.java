@@ -187,7 +187,7 @@ public class Node {
         for (SubNode peer : peers) peer.sendWordSearchMessageRequest(keyword);
     }
 
-    public void downloadFile(List<FileSearchResult> searchResults) {
+    public void createDownloadRequest(List<FileSearchResult> searchResults) {
         for (FileSearchResult searchResult : searchResults) {
             System.out.println(
                 getAddressAndPortFormated() + "Request file: " + searchResult

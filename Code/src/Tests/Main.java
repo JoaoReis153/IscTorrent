@@ -1,11 +1,8 @@
 package Tests;
 
-import Core.Utils;
-import FileSearch.FileSearchResult;
 import GUI.GUI;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.List;
 
 public class Main {
 
@@ -60,16 +57,15 @@ public class Main {
             guiList
                 .getFirst()
                 .getNode()
-                .broadcastWordSearchMessageRequest("video");
+                .broadcastWordSearchMessageRequest("jpg");
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            List<FileSearchResult> list = new ArrayList<>();
-            list.add(guiList.getFirst().getListModel().getFirst());
-
-            guiList.getFirst().simulateDownloadButton(list);
+            guiList
+                .getFirst()
+                .simulateDownloadButton(guiList.getFirst().getListModel());
         }
     }
 }

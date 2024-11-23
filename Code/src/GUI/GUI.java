@@ -1,7 +1,6 @@
 package GUI;
 
 import Core.Node;
-import Core.Utils;
 import FileSearch.FileSearchResult;
 import Services.SubNode;
 import java.awt.BorderLayout;
@@ -61,7 +60,12 @@ public class GUI {
         this.isOpen = true;
 
         new Thread(() -> {
-            node.startServing();
+            try {
+                node.startServing();
+            } catch (Exception e) {
+                System.err.println("Failed to start server: " + e.getMessage());
+                frame.dispose();
+            }
         }).start();
         frame.setVisible(SHOW);
     }
@@ -141,7 +145,9 @@ public class GUI {
                                 searchResultOfDifferentNodes.add(searchResult);
                             }
                         }
-                        node.downloadFile(searchResultOfDifferentNodes);
+                        node.createDownloadRequest(
+                            searchResultOfDifferentNodes
+                        );
                     }
                 }
             }
@@ -188,7 +194,7 @@ public class GUI {
                     searchResultOfDifferentNodes.add(searchResult);
                 }
             }
-            node.downloadFile(searchResultOfDifferentNodes);
+            node.createDownloadRequest(searchResultOfDifferentNodes);
         }
     }
 

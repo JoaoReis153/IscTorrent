@@ -58,8 +58,18 @@ public class SubNode extends Thread {
             while (running && (obj = in.readObject()) != null) {
                 handleIncomingMessage(obj);
             }
-        } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Error handling client: " + e.getMessage());
+        } catch (StreamCorruptedException e) {
+            System.err.println("Stream corrupted: " + e.getMessage());
+            e.printStackTrace();
+        } catch (InvalidClassException e) {
+            System.err.println("Invalid class: " + e.getMessage());
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("IO error: " + e.getMessage());
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            System.err.println("Class not found: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             close();
         }
@@ -173,9 +183,10 @@ public class SubNode extends Thread {
         logNewConnection();
     }
 
-    private void sendObject(Object message) {
+    private synchronized void sendObject(Object message) {
         if (out != null && !socket.isClosed()) {
             try {
+                out.reset();
                 out.writeObject(message);
                 out.flush();
             } catch (IOException e) {

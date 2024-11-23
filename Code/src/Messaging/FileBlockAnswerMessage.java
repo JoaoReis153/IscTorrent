@@ -17,22 +17,16 @@ public class FileBlockAnswerMessage implements Serializable {
     private final int length;
     private byte[] data;
 
-    public FileBlockAnswerMessage(
-        int nodeId,
-        int hash,
-        long offset,
-        int length
-    ) {
+    public FileBlockAnswerMessage(int nodeId, FileBlockRequestMessage request) {
+        this.nodeId = nodeId;
+        this.hash = request.getHash();
+        this.offset = request.getOffset();
+        this.length = request.getLength();
         if (length <= 0) {
             throw new IllegalArgumentException(
                 "Invalid length: length must be positive"
             );
         }
-
-        this.nodeId = nodeId;
-        this.hash = hash;
-        this.offset = offset;
-        this.length = length;
         loadDataFromFile();
     }
 
@@ -102,12 +96,19 @@ public class FileBlockAnswerMessage implements Serializable {
 
     @Override
     public String toString() {
-        return String.format(
-            "FileBlockAnswerMessage [hash=%d, offset=%d, length=%d, dataSize=%s]",
-            hash,
-            offset,
-            length,
-            data.length
+        return (
+            "FileBlockAnswerMessage{" +
+            "nodeId=" +
+            nodeId +
+            ", hash=" +
+            hash +
+            ", offset=" +
+            offset +
+            ", length=" +
+            length +
+            ", dataSize= " +
+            data.length +
+            '}'
         );
     }
 }

@@ -1,7 +1,6 @@
 package GUI;
 
 import Core.Node;
-import Core.Utils;
 import FileSearch.FileSearchResult;
 import Services.SubNode;
 import java.awt.BorderLayout;
@@ -61,7 +60,12 @@ public class GUI {
         this.isOpen = true;
 
         new Thread(() -> {
-            node.startServing();
+            try {
+                node.startServing();
+            } catch (Exception e) {
+                System.err.println("Failed to start server: " + e.getMessage());
+                frame.dispose();
+            }
         }).start();
         frame.setVisible(SHOW);
     }
@@ -141,7 +145,9 @@ public class GUI {
                                 searchResultOfDifferentNodes.add(searchResult);
                             }
                         }
-                        node.downloadFile(searchResultOfDifferentNodes);
+                        node.createDownloadRequest(
+                            searchResultOfDifferentNodes
+                        );
                     }
                 }
             }
@@ -151,16 +157,27 @@ public class GUI {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    System.out.println("N of Peers: " + node.getPeers().size());
+                    System.out.println(
+                        node.getAddressAndPortFormated() +
+                        "N of Peers: " +
+                        node.getPeers().size()
+                    );
                     for (SubNode peer : node.getPeers()) {
-                        System.out.println("Socket: " + peer.getSocket());
+                        System.out.println(
+                            node.getAddressAndPortFormated() +
+                            "Socket: " +
+                            peer.getSocket()
+                        );
                     }
                     listModel.clear();
                     allFiles.clear();
                     String searchText = searchTextField.getText().toLowerCase();
                     node.broadcastWordSearchMessageRequest(searchText);
                     System.out.println(
-                        "Search request sent for keyword: [" + searchText + "]"
+                        node.getAddressAndPortFormated() +
+                        "Search request sent for keyword: [" +
+                        searchText +
+                        "]"
                     );
                 }
             }
@@ -177,7 +194,7 @@ public class GUI {
                     searchResultOfDifferentNodes.add(searchResult);
                 }
             }
-            node.downloadFile(searchResultOfDifferentNodes);
+            node.createDownloadRequest(searchResultOfDifferentNodes);
         }
     }
 

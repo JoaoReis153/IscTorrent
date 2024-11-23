@@ -58,8 +58,18 @@ public class SubNode extends Thread {
             while (running && (obj = in.readObject()) != null) {
                 handleIncomingMessage(obj);
             }
-        } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Error handling client: " + e.getMessage());
+        } catch (StreamCorruptedException e) {
+            System.err.println("Stream corrupted: " + e.getMessage());
+            e.printStackTrace();
+        } catch (InvalidClassException e) {
+            System.err.println("Invalid class: " + e.getMessage());
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("IO error: " + e.getMessage());
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            System.err.println("Class not found: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             close();
         }
@@ -86,6 +96,7 @@ public class SubNode extends Thread {
 
     private void handleWordSearchMessage(WordSearchMessage message) {
         System.out.println(
+            node.getAddressAndPortFormated() +
             "Received WordSearchMessage with content: [" +
             message.getKeyword() +
             "]"
@@ -97,15 +108,27 @@ public class SubNode extends Thread {
 
     private void handleFileSearchResults(FileSearchResult[] results) {
         if (node.getGUI() == null) {
-            System.out.println("There was a problem with the GUI");
+            System.out.println(
+                node.getAddressAndPortFormated() +
+                "There was a problem with the GUI"
+            );
             System.exit(1);
         }
-        System.out.println("Received " + results.length + " search results");
+        System.out.println(
+            node.getAddressAndPortFormated() +
+            "Received " +
+            results.length +
+            " search results"
+        );
         node.getGUI().loadListModel(results);
     }
 
     private void handleFileBlockRequest(FileBlockRequestMessage request) {
-        System.out.println("Received FileBlockRequestMessage: " + request);
+        System.out.println(
+            node.getAddressAndPortFormated() +
+            "Received FileBlockRequestMessage: " +
+            request
+        );
         try {
             sendFileBlockAnswer(request);
         } catch (IOException e) {
@@ -116,7 +139,9 @@ public class SubNode extends Thread {
     }
 
     private void handleFileBlockAnswer(FileBlockAnswerMessage answer) {
-        System.out.println("Received FileBlockAnswerMessage: " + answer);
+        System.out.println(
+            node.getAddressAndPortFormated() + "Received " + answer
+        );
         int port = Utils.isValidPort(socket.getPort())
             ? socket.getPort()
             : originalBeforeOSchangePort;
@@ -143,7 +168,10 @@ public class SubNode extends Thread {
     public void sendNewConnectionRequest(InetAddress endereco, int thisPort) {
         if (out == null) {
             System.out.println(
-                "OutputStream is null [invalid port: " + thisPort + "]"
+                node.getAddressAndPortFormated() +
+                "OutputStream is null [invalid port: " +
+                thisPort +
+                "]"
             );
             return;
         }
@@ -155,9 +183,10 @@ public class SubNode extends Thread {
         logNewConnection();
     }
 
-    private void sendObject(Object message) {
+    private synchronized void sendObject(Object message) {
         if (out != null && !socket.isClosed()) {
             try {
+                out.reset();
                 out.writeObject(message);
                 out.flush();
             } catch (IOException e) {
@@ -173,6 +202,7 @@ public class SubNode extends Thread {
             ? socket.getPort()
             : originalBeforeOSchangePort;
         System.out.println(
+            node.getAddressAndPortFormated() +
             "Thread closed for SubNode at " +
             socket.getInetAddress().getHostAddress() +
             ":" +
@@ -187,7 +217,11 @@ public class SubNode extends Thread {
             if (out != null) out.close();
             if (socket != null) socket.close();
         } catch (IOException e) {
-            System.out.println("Error closing resources: " + e.getMessage());
+            System.out.println(
+                node.getAddressAndPortFormated() +
+                "Error closing resources: " +
+                e.getMessage()
+            );
         }
     }
 
@@ -213,7 +247,9 @@ public class SubNode extends Thread {
                 }
             } catch (IOException e) {
                 System.out.println(
-                    "Error reading .gitignore: " + e.getMessage()
+                    node.getAddressAndPortFormated() +
+                    "Error reading .gitignore: " +
+                    e.getMessage()
                 );
             }
         }
@@ -234,6 +270,7 @@ public class SubNode extends Thread {
 
     private void logNewConnection() {
         System.out.println(
+            node.getAddressAndPortFormated() +
             "Added new node::NodeAddress [address=" +
             socket.getInetAddress().getHostAddress() +
             " port=" +
@@ -302,9 +339,13 @@ public class SubNode extends Thread {
 
         if (results.length == 0) return;
         else if (results.length == 1) System.out.println(
-            "Sent 1 file search result [" + results[0].getHash() + "]"
+            node.getAddressAndPortFormated() +
+            "Sent 1 file search result [" +
+            results[0].getHash() +
+            "]"
         );
         else System.out.println(
+            node.getAddressAndPortFormated() +
             "Sent " +
             results.length +
             " files search result for keyword: [" +
@@ -368,21 +409,19 @@ public class SubNode extends Thread {
 
     private void sendFileBlockAnswer(FileBlockRequestMessage request)
         throws IOException {
-        int length = node.hasFileWithHash(request.getHash())
-            ? request.getLength()
-            : 0;
+        if (!node.hasFileWithHash(request.getHash())) return;
 
         FileBlockAnswerMessage answer = new FileBlockAnswerMessage(
             node.getId(),
-            request.getHash(),
-            request.getOffset(),
-            length
+            request
         );
 
         try {
             out.writeObject(answer);
             out.flush();
-            System.out.println("Sent FileBlockAnswerMessage: " + answer);
+            System.out.println(
+                node.getAddressAndPortFormated() + "Sent " + answer
+            );
         } catch (IOException e) {
             System.err.println(
                 "Error creating FileBlockAnswerMessage: " + e.getMessage()

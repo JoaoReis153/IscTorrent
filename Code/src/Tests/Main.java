@@ -1,6 +1,5 @@
 package Tests;
 
-import Core.Utils;
 import GUI.GUI;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -55,26 +54,18 @@ public class Main {
                     e.printStackTrace();
                 }
             }
-            guiList.getFirst().getNode().broadcastWordSearchMessageRequest("");
+            guiList
+                .getFirst()
+                .getNode()
+                .broadcastWordSearchMessageRequest("jpg");
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            /*
-            System.out.println(guiList.getFirst().getListModel());
             guiList
                 .getFirst()
                 .simulateDownloadButton(guiList.getFirst().getListModel());
-            */
-
-        }
-        if (test == 1) {
-            String file = "./dl1/doc1.txt";
-
-            int a = Utils.calculateFileHash(file);
-
-            System.out.println(a);
         }
     }
 }

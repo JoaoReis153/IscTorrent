@@ -12,8 +12,10 @@ import java.util.concurrent.CountDownLatch;
 public class DownloadAssistant extends Thread {
 
     private final DownloadTasksManager taskManager;
+    private final int ID;
 
-    public DownloadAssistant(DownloadTasksManager taskManager) {
+    public DownloadAssistant(DownloadTasksManager taskManager, int ID) {
+        this.ID = ID;
         this.taskManager = taskManager;
     }
 
@@ -33,7 +35,17 @@ public class DownloadAssistant extends Thread {
         List<FileSearchResult> request = taskManager.getDownloadRequest();
         if (request == null || request.isEmpty()) return;
 
-        System.out.println("Download Requests: " + request);
+        System.out.println(
+            taskManager.getNode().getAddressAndPortFormated() +
+            "[assistant" +
+            ID +
+            "]" +
+            "Download request: " +
+            request +
+            "(" +
+            request.get(0).getHash() +
+            ")"
+        );
 
         FileSearchResult firstRequest = request.get(0);
         int fileHash = firstRequest.getHash();
@@ -54,8 +66,17 @@ public class DownloadAssistant extends Thread {
         String fileName = fileRequest.getFileName();
 
         int totalBlocks = blockList.size();
-
+        System.out.println(
+            taskManager.getNode().getAddressAndPortFormated() +
+            "[assistant" +
+            ID +
+            "]" +
+            "---- Total blocks: " +
+            totalBlocks +
+            " ----"
+        );
         CountDownLatch latch = new CountDownLatch(totalBlocks);
+
         distributeBlockRequests(blockList, latch);
         latch.await();
 
@@ -88,6 +109,14 @@ public class DownloadAssistant extends Thread {
                 if (block == null) continue;
 
                 peer.setBlockAnswerLatch(latch);
+                System.out.println(
+                    taskManager.getNode().getAddressAndPortFormated() +
+                    "[assistant" +
+                    ID +
+                    "]" +
+                    "Sending block request: " +
+                    block
+                );
                 peer.sendFileBlockRequestMessageRequest(block);
             }
         }
@@ -98,20 +127,16 @@ public class DownloadAssistant extends Thread {
         int fileHash,
         int expectedBlocks
     ) throws IOException {
-        while (
-            taskManager.getDownloadProcess(fileHash).size() < expectedBlocks
-        ) {
-            System.out.println(
-                taskManager.getDownloadProcess(fileHash).size() +
-                " of " +
-                expectedBlocks
-            );
-        }
+        while (taskManager.getDownloadProcessSize(fileHash) < expectedBlocks) {}
 
         System.out.println(
+            taskManager.getNode().getAddressAndPortFormated() +
+            "[assistant" +
+            ID +
+            "]" +
             String.format(
-                "Received all blocks: %d of %d",
-                taskManager.getDownloadProcess(fileHash).size(),
+                "---- Received all blocks: %d of %d ----",
+                taskManager.getDownloadProcessSize(fileHash),
                 expectedBlocks
             )
         );
@@ -123,7 +148,6 @@ public class DownloadAssistant extends Thread {
     ) throws IOException {
         TreeMap<Long, byte[]> fileParts = collectFileParts(receivedBlockMap);
         if (fileParts.isEmpty()) return;
-        System.out.println("Running assembleAndWriteFile");
         String filePath = buildFilePath(fileName);
         writeFileToDisc(filePath, fileParts);
         verifyFileCreation(filePath);
@@ -158,11 +182,10 @@ public class DownloadAssistant extends Thread {
     }
 
     private byte[] combineFileParts(TreeMap<Long, byte[]> fileParts) {
-        int totalSize = fileParts
-            .values()
-            .stream()
-            .mapToInt(bytes -> bytes.length)
-            .sum();
+        int totalSize = 0;
+        for (byte[] bytes : fileParts.values()) {
+            totalSize += bytes.length;
+        }
 
         byte[] combinedData = new byte[totalSize];
         int position = 0;
@@ -190,6 +213,13 @@ public class DownloadAssistant extends Thread {
             System.err.println("Error: File was not created at: " + filePath);
             return;
         }
-        System.out.println("File written successfully to: " + filePath);
+        System.out.println(
+            taskManager.getNode().getAddressAndPortFormated() +
+            "[assistant" +
+            ID +
+            "]" +
+            "Downloaded: " +
+            filePath
+        );
     }
 }

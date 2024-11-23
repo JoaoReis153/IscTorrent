@@ -19,7 +19,7 @@ public class DownloadTasksManager {
         Integer,
         HashMap<String, ArrayList<FileBlockAnswerMessage>>
     > downloadMap;
-    private List<List<FileSearchResult>> downloadRequests;
+    private List<List<FileSearchResult>> downloadRequestsOnWait;
     private Node node;
     private ThreadPoolExecutor threadPool;
 
@@ -29,12 +29,12 @@ public class DownloadTasksManager {
             Integer,
             HashMap<String, ArrayList<FileBlockAnswerMessage>>
         >();
-        this.downloadRequests = new LinkedList<>();
+        this.downloadRequestsOnWait = new LinkedList<>();
         this.threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(
             numThreads
         );
         for (int i = 0; i < DEFAULT_NUMBER_THREADS; i++) threadPool.execute(
-            new DownloadAssistant(this)
+            new DownloadAssistant(this, i)
         );
     }
 
@@ -52,6 +52,21 @@ public class DownloadTasksManager {
         return answers;
     }
 
+    public int getDownloadProcessSize(int hash) {
+        HashMap<String, ArrayList<FileBlockAnswerMessage>> answers =
+            downloadMap.get(hash);
+
+        if (answers == null) return 0;
+
+        int total = 0;
+
+        for (ArrayList<FileBlockAnswerMessage> answerBlock : answers.values()) {
+            total += answerBlock.size();
+        }
+
+        return total;
+    }
+
     public synchronized void addDownloadProcess(
         int hash,
         String address,
@@ -65,6 +80,7 @@ public class DownloadTasksManager {
             downloadMap.put(hash, fileMap);
         }
         String key = address + "::" + port;
+
         ArrayList<FileBlockAnswerMessage> answers = fileMap.get(key);
         if (answers == null) {
             answers = new ArrayList<FileBlockAnswerMessage>();
@@ -76,9 +92,12 @@ public class DownloadTasksManager {
     public synchronized void addDownloadRequest(
         List<FileSearchResult> searchResults
     ) {
-        System.out.println("Adding Download Requests: " + searchResults.size());
-        downloadRequests.add(searchResults);
-        System.out.println("Download Requests: " + downloadRequests.size());
+        downloadRequestsOnWait.add(searchResults);
+        System.out.println(
+            node.getAddressAndPortFormated() +
+            "Download waiting for assistant: " +
+            downloadRequestsOnWait.size()
+        );
     }
 
     public List<DownloadAssistant> getAssistants() {
@@ -90,8 +109,8 @@ public class DownloadTasksManager {
     }
 
     public synchronized List<FileSearchResult> getDownloadRequest() {
-        if (downloadRequests.isEmpty()) return null;
-        return downloadRequests.removeFirst();
+        if (downloadRequestsOnWait.isEmpty()) return null;
+        return downloadRequestsOnWait.removeFirst();
     }
 
     public Node getNode() {

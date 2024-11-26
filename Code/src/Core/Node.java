@@ -97,13 +97,7 @@ public class Node {
             return;
         }
 
-        try {
-            establishConnection(targetInetAddress, targetPort);
-        } catch (NoRouteToHostException e) {
-            System.err.println("Failed to connect: Target is unreachable");
-        } catch (IOException | InterruptedException e) {
-            System.err.println("Failed to connect: " + e);
-        }
+        establishConnection(targetInetAddress, targetPort);
     }
 
     private InetAddress resolveAddress(String address) {
@@ -167,20 +161,31 @@ public class Node {
         return false;
     }
 
-    private void establishConnection(InetAddress targetAddress, int targetPort)
-        throws IOException, InterruptedException {
-        Socket clientSocket = new Socket(targetAddress, targetPort);
-        SubNode handler = new SubNode(
-            this,
-            downloadManager,
-            clientSocket,
-            true
-        );
-        handler.start();
-        peers.add(handler);
+    private void establishConnection(
+        InetAddress targetAddress,
+        int targetPort
+    ) {
+        try (Socket clientSocket = new Socket(targetAddress, targetPort)) {
+            SubNode handler = new SubNode(
+                this,
+                downloadManager,
+                clientSocket,
+                true
+            );
+            handler.start();
+            peers.add(handler);
 
-        Thread.sleep(100);
-        handler.sendNewConnectionRequest(address, port);
+            Thread.sleep(100);
+            handler.sendNewConnectionRequest(address, port);
+        } catch (IOException e) {
+            System.err.println(
+                "Failed to establish connection: " + e.getMessage()
+            );
+        } catch (InterruptedException e) {
+            System.err.println(
+                "Failed to establish connection: " + e.getMessage()
+            );
+        }
     }
 
     public void broadcastWordSearchMessageRequest(String keyword) {

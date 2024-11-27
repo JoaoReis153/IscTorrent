@@ -14,7 +14,7 @@ import java.util.concurrent.CountDownLatch;
 public class SubNode extends Thread {
 
     private final Node node;
-    private final DownloadTasksManager downloadManager;
+
     private final Socket socket;
     private final boolean userCreated;
 
@@ -24,14 +24,8 @@ public class SubNode extends Thread {
     private boolean running = true;
     private CountDownLatch blockAnswerLatch;
 
-    public SubNode(
-        Node node,
-        DownloadTasksManager downloadManager,
-        Socket socket,
-        boolean userCreated
-    ) {
+    public SubNode(Node node, Socket socket, boolean userCreated) {
         this.node = node;
-        this.downloadManager = downloadManager;
         this.socket = socket;
         this.userCreated = userCreated;
     }
@@ -61,16 +55,21 @@ public class SubNode extends Thread {
         } catch (StreamCorruptedException e) {
             System.err.println("Stream corrupted: " + e.getMessage());
             e.printStackTrace();
+        } catch (EOFException e) {
+            System.out.println("End of stream reached unexpectedly.");
         } catch (InvalidClassException e) {
             System.err.println("Invalid class: " + e.getMessage());
             e.printStackTrace();
         } catch (IOException e) {
-            System.err.println("IO error: " + e.getMessage());
+            System.err.println(
+                node.getAddressAndPortFormated() + "IO error: " + e.getMessage()
+            );
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             System.err.println("Class not found: " + e.getMessage());
             e.printStackTrace();
         } finally {
+            System.out.println("Closed in 0");
             close();
         }
     }
@@ -129,13 +128,8 @@ public class SubNode extends Thread {
             "Received FileBlockRequestMessage: " +
             request
         );
-        try {
-            sendFileBlockAnswer(request);
-        } catch (IOException e) {
-            System.err.println(
-                "Error handling file block request: " + e.getMessage()
-            );
-        }
+
+        sendFileBlockAnswer(request);
     }
 
     private void handleFileBlockAnswer(FileBlockAnswerMessage answer) {
@@ -145,9 +139,9 @@ public class SubNode extends Thread {
         int port = Utils.isValidPort(socket.getPort())
             ? socket.getPort()
             : originalBeforeOSchangePort;
-        downloadManager.addDownloadProcess(
+        node.addDownloadAnswer(
             answer.getHash(),
-            socket.getInetAddress().getHostAddress(),
+            socket.getInetAddress(),
             port,
             answer
         );
@@ -184,6 +178,9 @@ public class SubNode extends Thread {
     }
 
     private synchronized void sendObject(Object message) {
+        System.out.println(
+            node.getAddressAndPortFormated() + "Sending message: " + message
+        );
         if (out != null && !socket.isClosed()) {
             try {
                 out.reset();
@@ -191,12 +188,22 @@ public class SubNode extends Thread {
                 out.flush();
             } catch (IOException e) {
                 e.printStackTrace();
+                System.out.println("Closed in 1");
+                close();
             }
+        } else {
+            System.out.println(
+                node.getAddressAndPortFormated() +
+                "Cannot send message because socket is closed"
+            );
         }
     }
 
     public void close() {
+        if (!running) return;
+
         running = false;
+
         closeResources();
         int port = Utils.isValidPort(socket.getPort())
             ? socket.getPort()
@@ -313,6 +320,12 @@ public class SubNode extends Thread {
         );
     }
 
+    public boolean hasConnectionWith(InetAddress address, int port) {
+        return (
+            socket.getInetAddress().equals(address) && socket.getPort() == port
+        );
+    }
+
     @Override
     public int hashCode() {
         if (userCreated) return Objects.hash(
@@ -402,7 +415,7 @@ public class SubNode extends Thread {
                     file.getName(),
                     hash,
                     file.length(),
-                    node.getEnderecoIP(),
+                    node.getAddress(),
                     node.getPort()
                 );
             }
@@ -410,8 +423,7 @@ public class SubNode extends Thread {
         return results;
     }
 
-    private void sendFileBlockAnswer(FileBlockRequestMessage request)
-        throws IOException {
+    private void sendFileBlockAnswer(FileBlockRequestMessage request) {
         if (!node.hasFileWithHash(request.getHash())) return;
 
         FileBlockAnswerMessage answer = new FileBlockAnswerMessage(
@@ -429,7 +441,6 @@ public class SubNode extends Thread {
             System.err.println(
                 "Error creating FileBlockAnswerMessage: " + e.getMessage()
             );
-            throw e;
         }
     }
 }

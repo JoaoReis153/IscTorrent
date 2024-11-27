@@ -36,7 +36,7 @@ public class GUI {
     private boolean isOpen = false;
     private String lastSearchKeyword = "";
 
-    public GUI(int nodeId) throws IllegalArgumentException {
+    public GUI(int nodeId) {
         this.node = new Node(nodeId, this);
 
         createGUI();
@@ -45,7 +45,7 @@ public class GUI {
     private void createGUI() {
         frame = new JFrame(
             "Port NodeAddress [ address " +
-            node.getEnderecoIP() +
+            node.getAddress().getHostAddress() +
             ":" +
             node.getPort() +
             " ]"
@@ -137,6 +137,8 @@ public class GUI {
                 public void actionPerformed(ActionEvent e) {
                     List<FileSearchResult> selectedOptions =
                         fileList.getSelectedValuesList();
+                    List<List<FileSearchResult>> filesToDownload =
+                        new ArrayList<>();
                     for (FileSearchResult option : selectedOptions) {
                         List<FileSearchResult> searchResultOfDifferentNodes =
                             new ArrayList<FileSearchResult>();
@@ -145,10 +147,9 @@ public class GUI {
                                 searchResultOfDifferentNodes.add(searchResult);
                             }
                         }
-                        node.createDownloadRequest(
-                            searchResultOfDifferentNodes
-                        );
+                        filesToDownload.add(searchResultOfDifferentNodes);
                     }
+                    node.downloadFiles(filesToDownload);
                 }
             }
         );
@@ -174,6 +175,7 @@ public class GUI {
     }
 
     public void simulateDownloadButton(List<FileSearchResult> options) {
+        List<List<FileSearchResult>> filesToDownload = new ArrayList<>();
         for (FileSearchResult option : options) {
             List<FileSearchResult> searchResultOfDifferentNodes = new ArrayList<
                 FileSearchResult
@@ -183,8 +185,9 @@ public class GUI {
                     searchResultOfDifferentNodes.add(searchResult);
                 }
             }
-            node.createDownloadRequest(searchResultOfDifferentNodes);
+            filesToDownload.add(searchResultOfDifferentNodes);
         }
+        node.downloadFiles(filesToDownload);
     }
 
     public void reloadListModel() {

@@ -28,7 +28,6 @@ public class GUIDownloadStats {
     private void load() {
         Map<String, ArrayList<FileBlockAnswerMessage>> downloadStatsMap = gui
             .getNode()
-            .getDownloadManager()
             .getDownloadProcess(hash);
 
         for (String key : downloadStatsMap.keySet()) {

@@ -2,17 +2,20 @@ package Core;
 
 import FileSearch.FileSearchResult;
 import GUI.GUI;
+import Messaging.FileBlockAnswerMessage;
 import Services.DownloadTasksManager;
 import Services.SubNode;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.NoRouteToHostException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class Node {
@@ -27,16 +30,15 @@ public class Node {
     private final InetAddress address;
     private final File folder;
     private final Set<SubNode> peers;
-    private final DownloadTasksManager downloadManager;
+    private final HashMap<Integer, DownloadTasksManager> downloadManagers;
     private final GUI gui;
 
-    public Node(int nodeId, GUI gui) throws IllegalArgumentException {
+    public Node(int nodeId, GUI gui) {
         this.nodeId = nodeId;
         this.port = BASE_PORT + nodeId;
         this.gui = gui;
         this.peers = new HashSet<>();
-        this.downloadManager = new DownloadTasksManager(this, 5);
-
+        downloadManagers = new HashMap<>();
         validatePort();
         this.folder = createWorkingDirectory();
         this.address = initializeAddress();
@@ -75,12 +77,7 @@ public class Node {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                SubNode clientHandler = new SubNode(
-                    this,
-                    downloadManager,
-                    clientSocket,
-                    true
-                );
+                SubNode clientHandler = new SubNode(this, clientSocket, true);
                 clientHandler.start();
                 peers.add(clientHandler);
             }
@@ -92,12 +89,17 @@ public class Node {
     }
 
     public void connectToNode(String targetAddress, int targetPort) {
-        InetAddress targetInetAddress = resolveAddress(targetAddress);
-        if (!isValidConnection(targetInetAddress, targetPort)) {
-            return;
-        }
+        try {
+            InetAddress targetInetAddress = resolveAddress(targetAddress);
+            if (!isValidConnection(targetInetAddress, targetPort)) {
+                return;
+            }
 
-        establishConnection(targetInetAddress, targetPort);
+            establishConnection(targetInetAddress, targetPort);
+        } catch (Exception e) {
+            System.err.println("Error connecting to node: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private InetAddress resolveAddress(String address) {
@@ -165,13 +167,9 @@ public class Node {
         InetAddress targetAddress,
         int targetPort
     ) {
-        try (Socket clientSocket = new Socket(targetAddress, targetPort)) {
-            SubNode handler = new SubNode(
-                this,
-                downloadManager,
-                clientSocket,
-                true
-            );
+        try {
+            Socket clientSocket = new Socket(targetAddress, targetPort);
+            SubNode handler = new SubNode(this, clientSocket, true);
             handler.start();
             peers.add(handler);
 
@@ -192,14 +190,17 @@ public class Node {
         for (SubNode peer : peers) peer.sendWordSearchMessageRequest(keyword);
     }
 
-    public void createDownloadRequest(List<FileSearchResult> searchResults) {
-        for (FileSearchResult searchResult : searchResults) {
+    public void downloadFiles(List<List<FileSearchResult>> filesToDownload) {
+        for (List<FileSearchResult> file : filesToDownload) {
+            FileSearchResult example = file.getFirst();
             System.out.println(
-                getAddressAndPortFormated() + "Request file: " + searchResult
+                getAddressAndPortFormated() + "Request file: " + example
+            );
+            downloadManagers.put(
+                example.getHash(),
+                new DownloadTasksManager(this, file)
             );
         }
-
-        downloadManager.addDownloadRequest(searchResults);
     }
 
     public boolean hasFileWithHash(int hash) {
@@ -218,6 +219,22 @@ public class Node {
         return false;
     }
 
+    public Map<String, ArrayList<FileBlockAnswerMessage>> getDownloadProcess(
+        int hash
+    ) {
+        return new HashMap<>();
+        //return downloadManagers.get(hash).getDownloadProcess();
+    }
+
+    public void addDownloadAnswer(
+        int hash,
+        InetAddress address,
+        int port,
+        FileBlockAnswerMessage answer
+    ) {
+        downloadManagers.get(hash).addDownloadAnswer(address, port, answer);
+    }
+
     public void removePeer(SubNode peer) {
         peers.remove(peer);
         int port = Utils.isValidPort(peer.getSocket().getPort())
@@ -230,10 +247,6 @@ public class Node {
             "::" +
             port
         );
-    }
-
-    public String getEnderecoIP() {
-        return address.getHostAddress();
     }
 
     public File getFolder() {
@@ -254,10 +267,6 @@ public class Node {
 
     public int getPort() {
         return port;
-    }
-
-    public DownloadTasksManager getDownloadManager() {
-        return downloadManager;
     }
 
     public Set<SubNode> getPeers() {

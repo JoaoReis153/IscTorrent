@@ -4,6 +4,7 @@ import Core.Node;
 import Core.Utils;
 import java.io.File;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.util.Objects;
 
 public class FileSearchResult
@@ -14,7 +15,7 @@ public class FileSearchResult
     private String fileName;
     private int hash;
     private long fileSize;
-    private String address;
+    private InetAddress address;
     private int port;
 
     public FileSearchResult(
@@ -22,7 +23,7 @@ public class FileSearchResult
         String fileName,
         int hash,
         long fileSize,
-        String address,
+        InetAddress address,
         int port
     ) {
         this.searchMessage = searchMessage;
@@ -38,7 +39,7 @@ public class FileSearchResult
         this.fileName = file.getName();
         this.hash = Utils.calculateFileHash(file.getAbsolutePath());
         this.fileSize = file.length();
-        this.address = node.getEnderecoIP();
+        this.address = node.getAddress();
         this.port = node.getPort();
     }
 
@@ -58,38 +59,12 @@ public class FileSearchResult
         return fileSize;
     }
 
-    public String getAddress() {
+    public InetAddress getAddress() {
         return address;
     }
 
     public int getPort() {
         return port;
-    }
-
-    public static FileSearchResult[] getFileSearchResultFromFilesList(
-        File[] files,
-        String keyword,
-        WordSearchMessage obj,
-        String endereco,
-        int port
-    ) {
-        if (files.length != 0) {
-            int counter = 0;
-            FileSearchResult[] results = new FileSearchResult[files.length];
-
-            for (File file : files) {
-                int hash = Utils.calculateFileHash(file.getAbsolutePath());
-                results[counter++] = new FileSearchResult(
-                    obj,
-                    file.getName(),
-                    hash,
-                    file.length(),
-                    endereco,
-                    port
-                );
-            }
-        }
-        return new FileSearchResult[0];
     }
 
     @Override

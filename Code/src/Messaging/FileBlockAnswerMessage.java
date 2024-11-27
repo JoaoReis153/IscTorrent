@@ -15,9 +15,11 @@ public class FileBlockAnswerMessage implements Serializable {
     private final int hash;
     private final long offset;
     private final int length;
+    private FileBlockRequestMessage request;
     private byte[] data;
 
     public FileBlockAnswerMessage(int nodeId, FileBlockRequestMessage request) {
+        this.request = request;
         this.nodeId = nodeId;
         this.hash = request.getHash();
         this.offset = request.getOffset();
@@ -53,7 +55,7 @@ public class FileBlockAnswerMessage implements Serializable {
         }
     }
 
-    private File findFileByHash() throws IllegalArgumentException {
+    private File findFileByHash() {
         File folder = new File(Node.WORK_FOLDER + nodeId + "/");
         if (!folder.isDirectory()) {
             throw new IllegalArgumentException(
@@ -92,6 +94,10 @@ public class FileBlockAnswerMessage implements Serializable {
 
     public byte[] getData() {
         return data;
+    }
+
+    public FileBlockRequestMessage getBlockRequest() {
+        return request;
     }
 
     @Override

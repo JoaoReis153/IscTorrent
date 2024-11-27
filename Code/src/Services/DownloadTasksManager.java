@@ -3,143 +3,110 @@ package Services;
 import Core.Node;
 import FileSearch.FileSearchResult;
 import Messaging.FileBlockAnswerMessage;
+import Messaging.FileBlockRequestMessage;
+import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
-public class DownloadTasksManager {
+public class DownloadTasksManager extends Thread {
 
-    private List<DownloadAssistant> assistants = new LinkedList<>();
     private final int DEFAULT_NUMBER_THREADS = 5;
-    private Map<
-        Integer,
-        HashMap<String, ArrayList<FileBlockAnswerMessage>>
-    > downloadMap;
-    private List<List<FileSearchResult>> downloadRequestsOnWait;
-    private List<FileSearchResult> requestsBeingProcessed;
+
     private Node node;
-    private ThreadPoolExecutor threadPool;
+    private FileSearchResult example;
+    private List<FileSearchResult> requests;
+    private ExecutorService threadPool;
+    private CountDownLatch latch;
+    private List<FileBlockRequestMessage> requestList;
+    private List<FileBlockAnswerMessage> answerList;
 
-    public DownloadTasksManager(Node node, int numThreads) {
+    public DownloadTasksManager(Node node, List<FileSearchResult> requests) {
         this.node = node;
-        this.downloadMap = new HashMap<
-            Integer,
-            HashMap<String, ArrayList<FileBlockAnswerMessage>>
-        >();
-        this.downloadRequestsOnWait = new LinkedList<>();
-        this.requestsBeingProcessed = new LinkedList<>();
-        this.threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(
-            numThreads
+        this.requests = requests;
+        this.example = requests.getFirst();
+        this.requestList = FileBlockRequestMessage.createBlockList(
+            example.getHash(),
+            example.getFileSize()
         );
-        for (int i = 0; i < DEFAULT_NUMBER_THREADS; i++) threadPool.execute(
-            new DownloadAssistant(this, i)
-        );
+        this.threadPool = Executors.newFixedThreadPool(DEFAULT_NUMBER_THREADS);
     }
 
-    public synchronized Map<
-        String,
-        ArrayList<FileBlockAnswerMessage>
-    > getDownloadProcess(int hash) {
-        HashMap<String, ArrayList<FileBlockAnswerMessage>> answers =
-            downloadMap.get(hash);
-
-        if (answers == null) return new HashMap<
-            String,
-            ArrayList<FileBlockAnswerMessage>
-        >();
-        return answers;
-    }
-
-    public int getDownloadProcessSize(int hash) {
-        HashMap<String, ArrayList<FileBlockAnswerMessage>> answers =
-            downloadMap.get(hash);
-
-        if (answers == null) return 0;
-
-        int total = 0;
-
-        for (ArrayList<FileBlockAnswerMessage> answerBlock : answers.values()) {
-            total += answerBlock.size();
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                processDownload();
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println("Error in DownloadAssistant: " + e);
+            }
         }
-
-        return total;
     }
 
-    public synchronized void addDownloadProcess(
-        int hash,
-        String address,
+    private void processDownload() {
+        for (SubNode peer : getNodesWithFile()) {
+            DownloadAssistant assistant = new DownloadAssistant(
+                this,
+                latch,
+                peer,
+                1
+            );
+            threadPool.submit(assistant);
+        }
+    }
+
+    public synchronized boolean finished() {
+        return requestList.isEmpty();
+    }
+
+    public synchronized FileBlockRequestMessage getDownloadRequest() {
+        return requestList.removeFirst();
+    }
+
+    public synchronized void addDownloadAnswer(
+        InetAddress address,
         int port,
         FileBlockAnswerMessage answer
     ) {
-        HashMap<String, ArrayList<FileBlockAnswerMessage>> fileMap =
-            downloadMap.get(hash);
-        if (fileMap == null) {
-            fileMap = new HashMap<String, ArrayList<FileBlockAnswerMessage>>();
-            downloadMap.put(hash, fileMap);
-        }
-        String key = address + "::" + port;
-
-        ArrayList<FileBlockAnswerMessage> answers = fileMap.get(key);
-        if (answers == null) {
-            answers = new ArrayList<FileBlockAnswerMessage>();
-            fileMap.put(key, answers);
-        }
-        answers.add(answer);
-    }
-
-    public synchronized void addDownloadRequest(
-        List<FileSearchResult> searchResults
-    ) {
-        if (searchResults.isEmpty()) return;
-        FileSearchResult request = searchResults.get(0);
-        if (requestsBeingProcessed.contains(request)) {
+        if (requestList.contains(answer.getBlockRequest())) {
             System.out.println(
                 node.getAddressAndPortFormated() +
-                "Already processing the doownload of: " +
-                request
+                "[" +
+                this +
+                "]" +
+                "Received answer for block request: " +
+                answer.getBlockRequest()
             );
-            return;
+            requestList.remove(answer.getBlockRequest());
+            answerList.add(answer);
         }
-
-        requestsBeingProcessed.add(request);
-        downloadRequestsOnWait.add(searchResults);
-
-        System.out.println(
-            node.getAddressAndPortFormated() +
-            "Download waiting for assistant: " +
-            downloadRequestsOnWait.size()
-        );
-        notifyAll();
     }
 
-    public void removeDownloadBeingProcessed(FileSearchResult request) {
-        requestsBeingProcessed.remove(request);
+    private ArrayList<SubNode> getNodesWithFile() {
+        ArrayList<SubNode> nodesWithFile = new ArrayList<>();
+        for (FileSearchResult request : requests) {
+            for (SubNode peer : node.getPeers()) {
+                if (
+                    peer.hasConnectionWith(
+                        request.getAddress(),
+                        request.getPort()
+                    )
+                ) {
+                    nodesWithFile.add(peer);
+                }
+            }
+        }
+        return nodesWithFile;
     }
 
-    public List<DownloadAssistant> getAssistants() {
-        return assistants;
-    }
-
-    public int getDEFAULT_NUMBER_THREADS() {
-        return DEFAULT_NUMBER_THREADS;
-    }
-
-    public synchronized List<FileSearchResult> getDownloadRequest() {
-        try {
-            while (downloadRequestsOnWait.isEmpty()) wait();
-        } catch (InterruptedException e) {}
-        return downloadRequestsOnWait.removeFirst();
+    public List<FileBlockAnswerMessage> getAnswerList() {
+        return answerList;
     }
 
     public Node getNode() {
         return node;
-    }
-
-    public ThreadPoolExecutor getThreadPool() {
-        return threadPool;
     }
 }

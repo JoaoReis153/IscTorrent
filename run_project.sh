@@ -1,7 +1,7 @@
 #!/bin/bash
 sed -i -e 's/\r$//' run_project.sh
 
-PROJECT_DIR="./code"
+PROJECT_DIR="./Code"
 SRC_DIR="$PROJECT_DIR/src"
 BIN_DIR="$PROJECT_DIR/bin"
 DEFAULT_FILE_STRUCTURE="files"

@@ -233,7 +233,8 @@ public class Node {
         int port,
         FileBlockAnswerMessage answer
     ) {
-        downloadManagers.get(hash).addDownloadAnswer(address, port, answer);
+        downloadManagers.get(hash).addDownloadAnswer(answer);
+        System.out.println(downloadManagers.get(hash).getAnswerList()); 
     }
 
     public void removePeer(SubNode peer) {

@@ -28,10 +28,11 @@ public class DownloadAssistant extends Thread {
         while (!taskManager.finished()) {
             FileBlockRequestMessage request = taskManager.getDownloadRequest();
             if (request != null) {
-                peerToRequestBlock.sendFileBlockRequestMessage(request);
+                peerToRequestBlock.sendFileBlockRequest(request);
                 while (getRespectiveAnswerMessage(request) == null) {}
             }
         }
+        latch.countDown();
     }
 
     private FileBlockAnswerMessage getRespectiveAnswerMessage(
@@ -40,6 +41,7 @@ public class DownloadAssistant extends Thread {
         List<FileBlockAnswerMessage> answerList = taskManager.getAnswerList();
         for (FileBlockAnswerMessage answer : answerList) {
             if (answer.getBlockRequest().equals(request)) {
+                System.out.println("found answer");
                 return answer;
             }
         }

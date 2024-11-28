@@ -139,6 +139,7 @@ public class SubNode extends Thread {
         int port = Utils.isValidPort(socket.getPort())
             ? socket.getPort()
             : originalBeforeOSchangePort;
+
         node.addDownloadAnswer(
             answer.getHash(),
             socket.getInetAddress(),
@@ -148,9 +149,7 @@ public class SubNode extends Thread {
         if (blockAnswerLatch != null) blockAnswerLatch.countDown();
     }
 
-    public void sendFileBlockRequestMessage(
-        FileBlockRequestMessage block
-    ) {
+    public void sendFileBlockRequest(FileBlockRequestMessage block) {
         sendObject(block);
     }
 
@@ -321,10 +320,15 @@ public class SubNode extends Thread {
     }
 
     public boolean hasConnectionWith(InetAddress address, int port) {
-        int thisSocketPort = Utils.isValidPort(socket.getPort()) ? socket.getPort() : originalBeforeOSchangePort;
+        int thisSocketPort = Utils.isValidPort(socket.getPort())
+            ? socket.getPort()
+            : originalBeforeOSchangePort;
 
         return (
-            this.socket.getLocalAddress().getHostAddress().equals(address.getHostAddress()) && thisSocketPort == port
+            this.socket.getLocalAddress()
+                .getHostAddress()
+                .equals(address.getHostAddress()) &&
+            thisSocketPort == port
         );
     }
 
@@ -427,22 +431,11 @@ public class SubNode extends Thread {
 
     private void sendFileBlockAnswer(FileBlockRequestMessage request) {
         if (!node.hasFileWithHash(request.getHash())) return;
-
         FileBlockAnswerMessage answer = new FileBlockAnswerMessage(
             node.getId(),
             request
         );
 
-        try {
-            out.writeObject(answer);
-            out.flush();
-            System.out.println(
-                node.getAddressAndPortFormated() + "Sent " + answer
-            );
-        } catch (IOException e) {
-            System.err.println(
-                "Error creating FileBlockAnswerMessage: " + e.getMessage()
-            );
-        }
+        sendObject(answer);
     }
 }

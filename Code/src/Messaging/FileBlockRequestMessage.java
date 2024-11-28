@@ -3,6 +3,7 @@ package Messaging;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class FileBlockRequestMessage implements Serializable {
 
@@ -30,6 +31,40 @@ public class FileBlockRequestMessage implements Serializable {
         return length;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FileBlockRequestMessage that = (FileBlockRequestMessage) o;
+        return (
+            hash == that.hash && offset == that.offset && length == that.length
+        );
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(hash, offset, length);
+    }
+
+    public String toString() {
+        String hashString = String.valueOf(hash);
+        int length = hashString.length();
+
+        String hashDisplay = length > 10
+            ? hashString.substring(length - 10)
+            : hashString;
+
+        return (
+            "FileBlockRequestMessage [hash=" +
+            hashDisplay +
+            ", offset=" +
+            offset +
+            ", length=" +
+            length +
+            "]"
+        );
+    }
+
     public static List<FileBlockRequestMessage> createBlockList(
         int hash,
         long fileSize
@@ -52,24 +87,5 @@ public class FileBlockRequestMessage implements Serializable {
         }
 
         return blockList;
-    }
-
-    public String toString() {
-        String hashString = String.valueOf(hash);
-        int length = hashString.length();
-
-        String hashDisplay = length > 10
-            ? hashString.substring(length - 10)
-            : hashString;
-
-        return (
-            "FileBlockRequestMessage [hash=" +
-            hashDisplay +
-            ", offset=" +
-            offset +
-            ", length=" +
-            length +
-            "]"
-        );
     }
 }

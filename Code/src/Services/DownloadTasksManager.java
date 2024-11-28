@@ -27,7 +27,9 @@ public class DownloadTasksManager extends Thread {
         this.node = node;
         this.requests = requests;
         this.example = requests.getFirst();
+        
         System.out.println("Download task manager created for file " + example.getHash());
+        this.answerList = new ArrayList<>();
         this.requestList = FileBlockRequestMessage.createBlockList(
             example.getHash(),
             example.getFileSize()
@@ -37,28 +39,37 @@ public class DownloadTasksManager extends Thread {
 
     @Override
     public void run() {
-        while (true) {
             try {
                 processDownload();
             } catch (Exception e) {
                 e.printStackTrace();
                 System.err.println("Error in DownloadAssistant: " + e);
             }
-        }
     }
 
     private void processDownload() {
-        
-        for (SubNode peer : getNodesWithFile()) {
+        ArrayList<SubNode> peers = getNodesWithFile();
+        latch = new CountDownLatch(peers.size());
+        for (int i=0; i<peers.size(); i++) {
             
             DownloadAssistant assistant = new DownloadAssistant(
                 this,
                 latch,
-                peer,
-                1
+                peers.get(i),
+                i
             );
             threadPool.submit(assistant);
+            System.out.println("Submitted a new assistant");
         }
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        System.out.println("All assistants finished");
     }
 
     public synchronized boolean finished() {
@@ -66,23 +77,14 @@ public class DownloadTasksManager extends Thread {
     }
 
     public synchronized FileBlockRequestMessage getDownloadRequest() {
-        return requestList.removeFirst();
+        return requestList.getFirst();
     }
 
     public synchronized void addDownloadAnswer(
-        InetAddress address,
-        int port,
         FileBlockAnswerMessage answer
     ) {
+        
         if (requestList.contains(answer.getBlockRequest())) {
-            System.out.println(
-                node.getAddressAndPortFormated() +
-                "[" +
-                this +
-                "]" +
-                "Received answer for block request: " +
-                answer.getBlockRequest()
-            );
             requestList.remove(answer.getBlockRequest());
             answerList.add(answer);
         }

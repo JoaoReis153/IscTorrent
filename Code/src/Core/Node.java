@@ -196,10 +196,11 @@ public class Node {
             System.out.println(
                 getAddressAndPortFormated() + "Request file: " + example
             );
+            DownloadTasksManager downloadManager =  new DownloadTasksManager(this, file);
             downloadManagers.put(
                 example.getHash(),
-                new DownloadTasksManager(this, file)
-            );
+                downloadManager);
+            downloadManager.start();
         }
     }
 

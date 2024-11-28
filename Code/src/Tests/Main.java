@@ -55,7 +55,7 @@ public class Main {
                 }
             }
             guiList.getFirst().getNode().broadcastWordSearchMessageRequest("");
-            /*
+            
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -64,7 +64,7 @@ public class Main {
             guiList
                 .getFirst()
                 .simulateDownloadButton(guiList.getFirst().getListModel());
-            */
+            
         } else if (test == 1) {
             System.out.println("Test 1");
             if (args.length == 0) {

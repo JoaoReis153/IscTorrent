@@ -1,11 +1,7 @@
 package Services;
 
-import FileSearch.FileSearchResult;
 import Messaging.FileBlockAnswerMessage;
 import Messaging.FileBlockRequestMessage;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
@@ -32,7 +28,7 @@ public class DownloadAssistant extends Thread {
         while (!taskManager.finished()) {
             FileBlockRequestMessage request = taskManager.getDownloadRequest();
             if (request != null) {
-                peerToRequestBlock.sendFileBlockMessageRequest(request);
+                peerToRequestBlock.sendFileBlockRequestMessage(request);
                 while (getRespectiveAnswerMessage(request) == null) {}
             }
         }

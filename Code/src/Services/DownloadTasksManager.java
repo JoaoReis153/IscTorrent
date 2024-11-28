@@ -27,11 +27,12 @@ public class DownloadTasksManager extends Thread {
         this.node = node;
         this.requests = requests;
         this.example = requests.getFirst();
+        System.out.println("Download task manager created for file " + example.getHash());
         this.requestList = FileBlockRequestMessage.createBlockList(
             example.getHash(),
             example.getFileSize()
-        );
-        this.threadPool = Executors.newFixedThreadPool(DEFAULT_NUMBER_THREADS);
+            );
+            this.threadPool = Executors.newFixedThreadPool(DEFAULT_NUMBER_THREADS);
     }
 
     @Override
@@ -47,7 +48,9 @@ public class DownloadTasksManager extends Thread {
     }
 
     private void processDownload() {
+        
         for (SubNode peer : getNodesWithFile()) {
+            
             DownloadAssistant assistant = new DownloadAssistant(
                 this,
                 latch,

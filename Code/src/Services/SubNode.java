@@ -148,7 +148,7 @@ public class SubNode extends Thread {
         if (blockAnswerLatch != null) blockAnswerLatch.countDown();
     }
 
-    public void sendFileBlockRequestMessageRequest(
+    public void sendFileBlockRequestMessage(
         FileBlockRequestMessage block
     ) {
         sendObject(block);
@@ -321,8 +321,10 @@ public class SubNode extends Thread {
     }
 
     public boolean hasConnectionWith(InetAddress address, int port) {
+        int thisSocketPort = Utils.isValidPort(socket.getPort()) ? socket.getPort() : originalBeforeOSchangePort;
+
         return (
-            socket.getInetAddress().equals(address) && socket.getPort() == port
+            this.socket.getLocalAddress().getHostAddress().equals(address.getHostAddress()) && thisSocketPort == port
         );
     }
 

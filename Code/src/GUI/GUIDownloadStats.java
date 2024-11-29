@@ -1,8 +1,6 @@
 package GUI;
 
-import Messaging.FileBlockAnswerMessage;
 import java.awt.Font;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -26,13 +24,9 @@ public class GUIDownloadStats {
     }
 
     private void load() {
-        Map<String, ArrayList<FileBlockAnswerMessage>> downloadStatsMap = gui
+        this.nodesNBlocks = gui
             .getNode()
             .getDownloadProcess(hash);
-
-        for (String key : downloadStatsMap.keySet()) {
-            nodesNBlocks.put(key, downloadStatsMap.get(key).size());
-        }
     }
 
     private String formatTime(long totalMillis) {

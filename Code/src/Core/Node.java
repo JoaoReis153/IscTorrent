@@ -3,6 +3,7 @@ package Core;
 import FileSearch.FileSearchResult;
 import GUI.GUI;
 import Messaging.FileBlockAnswerMessage;
+import Messaging.FileBlockRequestMessage;
 import Services.DownloadTasksManager;
 import Services.SubNode;
 import java.io.File;
@@ -17,6 +18,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Node {
 
@@ -32,6 +38,10 @@ public class Node {
     private final Set<SubNode> peers;
     private final HashMap<Integer, DownloadTasksManager> downloadManagers;
     private final GUI gui;
+    private ArrayList<FileBlockRequestMessage> blocksToProcess;
+    private Lock lock = new ReentrantLock();
+    private Condition condition = lock.newCondition();
+    private ExecutorService senders;
 
     public Node(int nodeId, GUI gui) {
         this.nodeId = nodeId;
@@ -40,6 +50,7 @@ public class Node {
         this.peers = new HashSet<>();
         downloadManagers = new HashMap<>();
         validatePort();
+        this.senders = Executors.newFixedThreadPool(5);
         this.folder = createWorkingDirectory();
         this.address = initializeAddress();
     }
@@ -85,6 +96,25 @@ public class Node {
             throw new RuntimeException(
                 "Failed to start server: " + e.getMessage()
             );
+        }
+    }
+
+    public void addElementToBlocksToProcess(FileBlockRequestMessage request) {
+        lock.lock();
+        try {
+            blocksToProcess.add(request);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void removeElementFromBlocksToProcess(FileBlockRequestMessage request) throws InterruptedException {
+        lock.lock();
+        try {
+            if(blocksToProcess.isEmpty()) condition.await();
+            blocksToProcess.remove(request);
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -221,11 +251,16 @@ public class Node {
         return false;
     }
 
-    public Map<String, ArrayList<FileBlockAnswerMessage>> getDownloadProcess(
+    public void removeDownloadProcess(int hash) {
+
+        downloadManagers.remove(hash);
+
+    }
+
+    public Map<String, Integer> getDownloadProcess(
         int hash
     ) {
-        return new HashMap<>();
-        //return downloadManagers.get(hash).getDownloadProcess();
+        return downloadManagers.get(hash).getDownloadProcess();
     }
 
     public void addDownloadAnswer(
@@ -235,6 +270,7 @@ public class Node {
         FileBlockAnswerMessage answer
     ) {
         downloadManagers.get(hash).addDownloadAnswer(answer);
+        downloadManagers.get(hash).addNumberOfDownloadsForPeer(address.getHostAddress() + ":" + port, 1);
     }
 
     public void removePeer(SubNode peer) {

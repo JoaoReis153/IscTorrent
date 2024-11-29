@@ -178,7 +178,7 @@ public class SubNode extends Thread {
 
     private synchronized void sendObject(Object message) {
         System.out.println(
-            node.getAddressAndPortFormated() + "Sending message: " + message
+            node.getAddressAndPortFormated() + "Sending message: " + message.toString()
         );
         if (out != null && !socket.isClosed()) {
             try {

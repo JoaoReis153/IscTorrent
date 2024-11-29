@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -19,8 +21,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class DownloadTasksManager extends Thread {
 
-    private final int DEFAULT_NUMBER_THREADS = 5;
-
     private Node node;
     private FileSearchResult example;
     private List<FileSearchResult> requests;
@@ -28,6 +28,8 @@ public class DownloadTasksManager extends Thread {
     private CountDownLatch latch;
     private List<FileBlockRequestMessage> requestList; 
     private List<FileBlockAnswerMessage> answerList;
+    private Map<String, Integer> numberOfDownloadsForPeer;
+    private ArrayList<SubNode> peersWithFile;
 
     private Lock lock = new ReentrantLock();
     private Condition condition  = lock.newCondition();
@@ -42,34 +44,44 @@ public class DownloadTasksManager extends Thread {
         
         System.out.println(node.getAddressAndPortFormated() + "[taskmanager]" +  "Download task manager created for file " + example.getHash());
         this.answerList = new ArrayList<>();
-
+        this.numberOfDownloadsForPeer = new HashMap<>();
         this.requestList = FileBlockRequestMessage.createBlockList(
             example.getHash(),
             example.getFileSize()
             );
-        System.out.println("Created " + requestList.size() + " blocks");
-        this.threadPool = Executors.newFixedThreadPool(DEFAULT_NUMBER_THREADS);
+            this.peersWithFile =  getNodesWithFile();
+        this.threadPool = Executors.newFixedThreadPool(peersWithFile.size());
+        System.out.println(node.getAddressAndPortFormated() + "[taskmanager]" + " "+ requestList.size() + " blocks to process");
     }
-
+    
     @Override
     public void run() {
-            try {
-                processDownload();
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.err.println(node.getAddressAndPortFormated() + "[taskmanager]" + "Error in DownloadAssistant: " + e);
-            }
+        try {
+            long start = System.currentTimeMillis();
+            processDownload();
+            long duration = System.currentTimeMillis() - start;
+            node.getGUI().showDownloadStats(example.getHash(), duration);
+            System.out.println( node.getAddressAndPortFormated() + "[taskmanager]" + "Download finished for file " + example.getHash() + " at a rate of " + (example.getFileSize() / duration) + " bytes/s");
+            node.removeDownloadProcess(example.getHash());
+            node.getGUI().reloadListModel();
+            
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println(node.getAddressAndPortFormated() + "[taskmanager]" + "Error in DownloadAssistant: " + e);
+        }
     }
-
+    
     private void processDownload() {
-        ArrayList<SubNode> peers = getNodesWithFile();
+        
+        
         latch = new CountDownLatch(requestList.size());
-        for (int i=0; i<peers.size(); i++) {
+        for (int i=0; i<peersWithFile.size(); i++) {
             
             DownloadAssistant assistant = new DownloadAssistant(
                 this,
                 latch,
-                peers.get(i),
+                peersWithFile.get(i),
                 i
             );
             threadPool.submit(assistant);
@@ -77,9 +89,9 @@ public class DownloadTasksManager extends Thread {
         }
 
         try {
-            System.out.println("Got here");
+
             latch.await();
-            System.out.println("Passed the latch");
+
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -89,6 +101,14 @@ public class DownloadTasksManager extends Thread {
         System.out.println(node.getAddressAndPortFormated() + "[taskmanager]" + "All assistants finished");
 
         assembleAndWriteFile(example.getFileName(), answerList);
+    }
+
+    public void addNumberOfDownloadsForPeer(String peer, int number) {
+        if(numberOfDownloadsForPeer.containsKey(peer)) {
+            numberOfDownloadsForPeer.put(peer, numberOfDownloadsForPeer.get(peer) + number);
+        } else {
+            numberOfDownloadsForPeer.put(peer, number);
+        }
     }
 
     public List<FileBlockRequestMessage> getDownloadRequestList() {
@@ -109,7 +129,10 @@ public class DownloadTasksManager extends Thread {
         }
 
     }
-
+    
+    public Map<String, Integer> getDownloadProcess() {
+        return numberOfDownloadsForPeer;
+    }
 
     public void addDownloadAnswer(
         FileBlockAnswerMessage answer
@@ -243,12 +266,6 @@ public class DownloadTasksManager extends Thread {
             System.err.println("Error: File was not created at: " + filePath);
             return;
         }
-        System.out.println(
-            getNode().getAddressAndPortFormated() +
-            "[taskmanager]"  +
-            "Downloaded: " +
-            filePath
-        );
     }
 
     private String buildFilePath(String fileName) {

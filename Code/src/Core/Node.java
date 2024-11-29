@@ -202,6 +202,7 @@ public class Node {
                 downloadManager);
             downloadManager.start();
         }
+       
     }
 
     public boolean hasFileWithHash(int hash) {
@@ -234,7 +235,6 @@ public class Node {
         FileBlockAnswerMessage answer
     ) {
         downloadManagers.get(hash).addDownloadAnswer(answer);
-        System.out.println(downloadManagers.get(hash).getAnswerList()); 
     }
 
     public void removePeer(SubNode peer) {
@@ -278,6 +278,8 @@ public class Node {
     public String getAddressAndPort() {
         return address.getHostAddress() + ":" + port;
     }
+
+
 
     public String getAddressAndPortFormated() {
         if (DEBUG == false) return "";

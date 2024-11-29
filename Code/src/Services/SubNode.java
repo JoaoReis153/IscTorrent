@@ -56,7 +56,7 @@ public class SubNode extends Thread {
             System.err.println("Stream corrupted: " + e.getMessage());
             e.printStackTrace();
         } catch (EOFException e) {
-            System.out.println("End of stream reached unexpectedly.");
+            System.err.println("End of stream reached unexpectedly.");
         } catch (InvalidClassException e) {
             System.err.println("Invalid class: " + e.getMessage());
             e.printStackTrace();
@@ -69,7 +69,7 @@ public class SubNode extends Thread {
             System.err.println("Class not found: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            System.out.println("Closed in 0");
+            System.err.println("Closed in 0");
             close();
         }
     }
@@ -187,7 +187,6 @@ public class SubNode extends Thread {
                 out.flush();
             } catch (IOException e) {
                 e.printStackTrace();
-                System.out.println("Closed in 1");
                 close();
             }
         } else {

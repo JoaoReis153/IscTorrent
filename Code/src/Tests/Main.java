@@ -54,6 +54,7 @@ public class Main {
                     e.printStackTrace();
                 }
             }
+            /*
             guiList.getFirst().getNode().broadcastWordSearchMessageRequest("");
             
             try {
@@ -64,7 +65,7 @@ public class Main {
             guiList
                 .getFirst()
                 .simulateDownloadButton(guiList.getFirst().getListModel());
-            
+            */
         } else if (test == 1) {
             System.out.println("Test 1");
             if (args.length == 0) {

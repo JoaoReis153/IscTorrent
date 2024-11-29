@@ -2,7 +2,6 @@ package Services;
 
 import Messaging.FileBlockAnswerMessage;
 import Messaging.FileBlockRequestMessage;
-import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 public class DownloadAssistant extends Thread {
@@ -28,23 +27,27 @@ public class DownloadAssistant extends Thread {
         while (!taskManager.finished()) {
             FileBlockRequestMessage request = taskManager.getDownloadRequest();
             if (request != null) {
-                peerToRequestBlock.sendFileBlockRequest(request);
-                while (getRespectiveAnswerMessage(request) == null) {}
+                handleRequest(request);
             }
         }
-        latch.countDown();
     }
 
-    private FileBlockAnswerMessage getRespectiveAnswerMessage(
-        FileBlockRequestMessage request
-    ) {
-        List<FileBlockAnswerMessage> answerList = taskManager.getAnswerList();
-        for (FileBlockAnswerMessage answer : answerList) {
-            if (answer.getBlockRequest().equals(request)) {
-                System.out.println("found answer");
-                return answer;
-            }
-        }
-        return null;
+    private void handleRequest(FileBlockRequestMessage request) {
+
+        peerToRequestBlock.sendFileBlockRequest(request);
+
+        waitForAnswer(request);
+
     }
+
+    private void waitForAnswer(FileBlockRequestMessage request) {
+        while (true) {
+            FileBlockAnswerMessage answer = taskManager.getRespectiveAnswerMessage(request);
+            if (answer != null) 
+                break; 
+
+        }
+    }
+
+    
 }

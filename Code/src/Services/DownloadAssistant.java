@@ -25,9 +25,16 @@ public class DownloadAssistant extends Thread {
 
     public void run() {
         while (!taskManager.finished()) {
-            FileBlockRequestMessage request = taskManager.getDownloadRequest();
-            if (request != null) {
-                handleRequest(request);
+            
+            FileBlockRequestMessage request;
+            try {
+                request = taskManager.getDownloadRequest();
+                if (request != null) {
+                    handleRequest(request);
+                }
+            } catch (InterruptedException e) {
+                System.out.println("Error in DownloadAssistant");
+                e.printStackTrace();
             }
         }
     }

@@ -31,11 +31,6 @@ public class DownloadTasksManager extends Thread {
     private Map<String, Integer> numberOfDownloadsForPeer;
     private ArrayList<SubNode> peersWithFile;
 
-    private Lock lock = new ReentrantLock();
-    private Condition condition  = lock.newCondition();
-
-
-
 
     public DownloadTasksManager(Node node, List<FileSearchResult> requests) {
         this.node = node;
@@ -119,14 +114,12 @@ public class DownloadTasksManager extends Thread {
         return requestList.isEmpty();
     }
 
-    public FileBlockRequestMessage getDownloadRequest() {
-        lock.lock();
-        try {
-            FileBlockRequestMessage request = !requestList.isEmpty() ? requestList.removeFirst() : null; 
-            return request;
-        } finally {
-            lock.unlock();
-        }
+    public synchronized FileBlockRequestMessage getDownloadRequest() throws InterruptedException {
+        
+        while(requestList.isEmpty()) wait();
+            
+        FileBlockRequestMessage request = requestList.removeFirst();  
+        return request;
 
     }
     
@@ -134,39 +127,29 @@ public class DownloadTasksManager extends Thread {
         return numberOfDownloadsForPeer;
     }
 
-    public void addDownloadAnswer(
+    public synchronized void addDownloadAnswer(
         FileBlockAnswerMessage answer
     ) {
-        lock.lock();
-        try {
-            if(!answerList.contains(answer)) {
-                answerList.add(answer);
-                latch.countDown();
-                condition.signalAll();
-            } 
-        } finally {
-            lock.unlock();
-        }
-    
+        if(!answerList.contains(answer)) {
+            answerList.add(answer);
+            latch.countDown();
+            notifyAll();
+        } 
     }
 
     
 
-    public FileBlockAnswerMessage getRespectiveAnswerMessage(
+    public synchronized FileBlockAnswerMessage getRespectiveAnswerMessage(
         FileBlockRequestMessage request
     ) {
-        lock.lock();
-        try {
-            if(answerList.isEmpty()) return null;
-            for (FileBlockAnswerMessage answer : answerList) {
-    
-                if (answer.getBlockRequest().equals(request)) {
-                    return answer;
-                }}    
-            return null;
-        } finally {
-            lock.unlock();
-        }
+        if(answerList.isEmpty()) return null;
+        for (FileBlockAnswerMessage answer : answerList) {
+
+            if (answer.getBlockRequest().equals(request)) {
+                return answer;
+            }}    
+        return null;
+        
         
     }
 

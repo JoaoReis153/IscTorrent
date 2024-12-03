@@ -28,7 +28,9 @@ public class GUINode {
 
         JLabel addressLabel = new JLabel("Address:");
         JTextField addressField = new JTextField(15);
+
         addressField.setText(node.getAddress().getHostAddress());
+
         frame.add(addressLabel);
         frame.add(addressField);
 

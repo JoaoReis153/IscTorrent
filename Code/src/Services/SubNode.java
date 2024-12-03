@@ -129,7 +129,7 @@ public class SubNode extends Thread {
             request
         );
 
-        sendFileBlockAnswer(request);
+        node.addBlockRequest(request);
     }
 
     private void handleFileBlockAnswer(FileBlockAnswerMessage answer) {
@@ -150,6 +150,8 @@ public class SubNode extends Thread {
     }
 
     public void sendFileBlockRequest(FileBlockRequestMessage block) {
+        block.setSenderAddress(node.getAddress().getHostAddress());
+        block.setSenderPort(node.getPort());
         sendObject(block);
     }
 
@@ -176,7 +178,7 @@ public class SubNode extends Thread {
         logNewConnection();
     }
 
-    private synchronized void sendObject(Object message) {
+    public synchronized void sendObject(Object message) {
         System.out.println(
             node.getAddressAndPortFormated() + "Sending message: " + message.toString()
         );
@@ -428,13 +430,21 @@ public class SubNode extends Thread {
         return results;
     }
 
-    private void sendFileBlockAnswer(FileBlockRequestMessage request) {
-        if (!node.hasFileWithHash(request.getHash())) return;
-        FileBlockAnswerMessage answer = new FileBlockAnswerMessage(
-            node.getId(),
-            request
-        );
+    public void sendFileBlockAnswer(FileBlockAnswerMessage answer) {
+        
+
 
         sendObject(answer);
+    }
+
+    public String getDestinationAddress() {
+        return socket.getInetAddress().getHostAddress();
+    }
+    
+    public int getDestinationPort() {
+        int port = Utils.isValidPort(socket.getPort())
+            ? socket.getPort()
+            : originalBeforeOSchangePort;
+        return port;
     }
 }

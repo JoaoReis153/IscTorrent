@@ -15,10 +15,15 @@ public class FileBlockAnswerMessage implements Serializable {
     private final int hash;
     private final long offset;
     private final int length;
+    private int senderPort;
+    private String senderAddress;
     private FileBlockRequestMessage request;
     private byte[] data;
 
-    public FileBlockAnswerMessage(int nodeId, FileBlockRequestMessage request) {
+
+    public FileBlockAnswerMessage( String senderAddress, int senderPort, int nodeId, FileBlockRequestMessage request) { 
+        this.senderPort = senderPort;
+        this.senderAddress = senderAddress;
         this.request = request;
         this.nodeId = nodeId;
         this.hash = request.getHash();
@@ -100,6 +105,14 @@ public class FileBlockAnswerMessage implements Serializable {
         return request;
     }
 
+    public int getSenderPort() {
+        return senderPort;
+    }
+
+    public String getSenderAddress() {
+        return senderAddress;
+    }   
+
     @Override
     public String toString() {
         return (
@@ -117,4 +130,6 @@ public class FileBlockAnswerMessage implements Serializable {
             '}'
         );
     }
+
+
 }

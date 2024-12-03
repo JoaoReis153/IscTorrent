@@ -15,11 +15,8 @@ import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
-public class DownloadTasksManager extends Thread {
+public class DownloadTasksManager {
 
     private Node node;
     private FileSearchResult example;
@@ -49,7 +46,7 @@ public class DownloadTasksManager extends Thread {
         System.out.println(node.getAddressAndPortFormated() + "[taskmanager]" + " "+ requestList.size() + " blocks to process");
     }
     
-    @Override
+
     public void run() {
         try {
             long start = System.currentTimeMillis();
@@ -59,8 +56,6 @@ public class DownloadTasksManager extends Thread {
             System.out.println( node.getAddressAndPortFormated() + "[taskmanager]" + "Download finished for file " + example.getHash() + " at a rate of " + (example.getFileSize() / duration) + " bytes/s");
             node.removeDownloadProcess(example.getHash());
             node.getGUI().reloadListModel();
-            
-            
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println(node.getAddressAndPortFormated() + "[taskmanager]" + "Error in DownloadAssistant: " + e);
@@ -133,7 +128,7 @@ public class DownloadTasksManager extends Thread {
         if(!answerList.contains(answer)) {
             answerList.add(answer);
             latch.countDown();
-            notifyAll();
+            notify();
         } 
     }
 
@@ -141,10 +136,9 @@ public class DownloadTasksManager extends Thread {
 
     public synchronized FileBlockAnswerMessage getRespectiveAnswerMessage(
         FileBlockRequestMessage request
-    ) {
-        if(answerList.isEmpty()) return null;
+    ) throws InterruptedException {
+        if(answerList.isEmpty()) wait();
         for (FileBlockAnswerMessage answer : answerList) {
-
             if (answer.getBlockRequest().equals(request)) {
                 return answer;
             }}    

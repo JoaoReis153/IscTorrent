@@ -5,6 +5,7 @@ import GUI.GUI;
 import Messaging.FileBlockAnswerMessage;
 import Messaging.FileBlockRequestMessage;
 import Services.DownloadTasksManager;
+import Services.SenderAssistant;
 import Services.SubNode;
 import java.io.File;
 import java.io.IOException;
@@ -39,20 +40,38 @@ public class Node {
     private final HashMap<Integer, DownloadTasksManager> downloadManagers;
     private final GUI gui;
     private ArrayList<FileBlockRequestMessage> blocksToProcess;
-    private Lock lock = new ReentrantLock();
-    private Condition condition = lock.newCondition();
     private ExecutorService senders;
+    private final int numberOfSenders = 5;
 
     public Node(int nodeId, GUI gui) {
         this.nodeId = nodeId;
         this.port = BASE_PORT + nodeId;
         this.gui = gui;
         this.peers = new HashSet<>();
-        downloadManagers = new HashMap<>();
+        this.downloadManagers = new HashMap<>();
+        this.blocksToProcess = new ArrayList<>();
         validatePort();
-        this.senders = Executors.newFixedThreadPool(5);
+        initializeSenders(numberOfSenders);
         this.folder = createWorkingDirectory();
         this.address = initializeAddress();
+    }
+
+    public SubNode getPeerToSend(String address, int port) {
+        for(SubNode peer : peers) {
+            if(peer.getDestinationAddress().equals(address) && peer.getDestinationPort() == port) {
+                return peer;
+            }
+        }
+        return null;
+    }
+    private void initializeSenders(int n) {
+        if (n <= 0) 
+            return;
+
+        this.senders = Executors.newFixedThreadPool(n);
+        for (int i = 0; i < n; i++) {
+            this.senders.execute(new SenderAssistant(this));
+        }
     }
 
     private void validatePort() {
@@ -99,23 +118,14 @@ public class Node {
         }
     }
 
-    public void addElementToBlocksToProcess(FileBlockRequestMessage request) {
-        lock.lock();
-        try {
+    public synchronized void addElementToBlocksToProcess(FileBlockRequestMessage request) {
             blocksToProcess.add(request);
-        } finally {
-            lock.unlock();
-        }
+            notify();
     }
 
-    public void removeElementFromBlocksToProcess(FileBlockRequestMessage request) throws InterruptedException {
-        lock.lock();
-        try {
-            if(blocksToProcess.isEmpty()) condition.await();
-            blocksToProcess.remove(request);
-        } finally {
-            lock.unlock();
-        }
+    public synchronized void removeElementFromBlocksToProcess(FileBlockRequestMessage request) throws InterruptedException {
+        if(blocksToProcess.isEmpty()) wait();
+        blocksToProcess.remove(request);
     }
 
     public void connectToNode(String targetAddress, int targetPort) {
@@ -230,7 +240,7 @@ public class Node {
             downloadManagers.put(
                 example.getHash(),
                 downloadManager);
-            downloadManager.start();
+            downloadManager.run();
         }
        
     }
@@ -249,6 +259,16 @@ public class Node {
         }
 
         return false;
+    }
+
+    public synchronized FileBlockRequestMessage getBlockRequest() throws InterruptedException {
+        if (blocksToProcess.isEmpty()) wait();
+        return blocksToProcess.removeFirst();
+    }
+
+    public synchronized void addBlockRequest(FileBlockRequestMessage request) {
+        blocksToProcess.add(request); 
+        notify();  
     }
 
     public void removeDownloadProcess(int hash) {

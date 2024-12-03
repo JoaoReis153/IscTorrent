@@ -3,143 +3,251 @@ package Services;
 import Core.Node;
 import FileSearch.FileSearchResult;
 import Messaging.FileBlockAnswerMessage;
+import Messaging.FileBlockRequestMessage;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class DownloadTasksManager {
 
-    private List<DownloadAssistant> assistants = new LinkedList<>();
-    private final int DEFAULT_NUMBER_THREADS = 5;
-    private Map<
-        Integer,
-        HashMap<String, ArrayList<FileBlockAnswerMessage>>
-    > downloadMap;
-    private List<List<FileSearchResult>> downloadRequestsOnWait;
-    private List<FileSearchResult> requestsBeingProcessed;
     private Node node;
-    private ThreadPoolExecutor threadPool;
+    private FileSearchResult example;
+    private List<FileSearchResult> requests;
+    private ExecutorService threadPool;
+    private CountDownLatch latch;
+    private List<FileBlockRequestMessage> requestList; 
+    private List<FileBlockAnswerMessage> answerList;
+    private Map<String, Integer> numberOfDownloadsForPeer;
+    private ArrayList<SubNode> peersWithFile;
 
-    public DownloadTasksManager(Node node, int numThreads) {
+
+    public DownloadTasksManager(Node node, List<FileSearchResult> requests) {
         this.node = node;
-        this.downloadMap = new HashMap<
-            Integer,
-            HashMap<String, ArrayList<FileBlockAnswerMessage>>
-        >();
-        this.downloadRequestsOnWait = new LinkedList<>();
-        this.requestsBeingProcessed = new LinkedList<>();
-        this.threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(
-            numThreads
-        );
-        for (int i = 0; i < DEFAULT_NUMBER_THREADS; i++) threadPool.execute(
-            new DownloadAssistant(this, i)
-        );
+        this.requests = requests;
+        this.example = requests.getFirst();
+        
+        System.out.println(node.getAddressAndPortFormated() + "[taskmanager]" +  "Download task manager created for file " + example.getHash());
+        this.answerList = new ArrayList<>();
+        this.numberOfDownloadsForPeer = new HashMap<>();
+        this.requestList = FileBlockRequestMessage.createBlockList(
+            example.getHash(),
+            example.getFileSize()
+            );
+            this.peersWithFile =  getNodesWithFile();
+        this.threadPool = Executors.newFixedThreadPool(peersWithFile.size());
+        System.out.println(node.getAddressAndPortFormated() + "[taskmanager]" + " "+ requestList.size() + " blocks to process");
     }
+    
 
-    public synchronized Map<
-        String,
-        ArrayList<FileBlockAnswerMessage>
-    > getDownloadProcess(int hash) {
-        HashMap<String, ArrayList<FileBlockAnswerMessage>> answers =
-            downloadMap.get(hash);
-
-        if (answers == null) return new HashMap<
-            String,
-            ArrayList<FileBlockAnswerMessage>
-        >();
-        return answers;
+    public void run() {
+        try {
+            long start = System.currentTimeMillis();
+            processDownload();
+            long duration = System.currentTimeMillis() - start;
+            node.getGUI().showDownloadStats(example.getHash(), duration);
+            System.out.println( node.getAddressAndPortFormated() + "[taskmanager]" + "Download finished for file " + example.getHash() + " at a rate of " + (example.getFileSize() / duration) + " bytes/s");
+            node.removeDownloadProcess(example.getHash());
+            node.getGUI().reloadListModel();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println(node.getAddressAndPortFormated() + "[taskmanager]" + "Error in DownloadAssistant: " + e);
+        }
     }
-
-    public int getDownloadProcessSize(int hash) {
-        HashMap<String, ArrayList<FileBlockAnswerMessage>> answers =
-            downloadMap.get(hash);
-
-        if (answers == null) return 0;
-
-        int total = 0;
-
-        for (ArrayList<FileBlockAnswerMessage> answerBlock : answers.values()) {
-            total += answerBlock.size();
+    
+    private void processDownload() {
+        
+        
+        latch = new CountDownLatch(requestList.size());
+        for (int i=0; i<peersWithFile.size(); i++) {
+            
+            DownloadAssistant assistant = new DownloadAssistant(
+                this,
+                latch,
+                peersWithFile.get(i),
+                i
+            );
+            threadPool.submit(assistant);
+            System.out.println(node.getAddressAndPortFormated() + "[taskmanager]" + "Submitted " + (i + 1) + "º assistant");
         }
 
-        return total;
+        try {
+
+            latch.await();
+
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        
+        System.out.println(node.getAddressAndPortFormated() + "[taskmanager]" + "All assistants finished");
+
+        assembleAndWriteFile(example.getFileName(), answerList);
     }
 
-    public synchronized void addDownloadProcess(
-        int hash,
-        String address,
-        int port,
+    public void addNumberOfDownloadsForPeer(String peer, int number) {
+        if(numberOfDownloadsForPeer.containsKey(peer)) {
+            numberOfDownloadsForPeer.put(peer, numberOfDownloadsForPeer.get(peer) + number);
+        } else {
+            numberOfDownloadsForPeer.put(peer, number);
+        }
+    }
+
+    public List<FileBlockRequestMessage> getDownloadRequestList() {
+        return requestList;
+    }
+
+    public boolean finished() {
+        return requestList.isEmpty();
+    }
+
+    public synchronized FileBlockRequestMessage getDownloadRequest() throws InterruptedException {
+        
+        while(requestList.isEmpty()) wait();
+            
+        FileBlockRequestMessage request = requestList.removeFirst();  
+        return request;
+
+    }
+    
+    public Map<String, Integer> getDownloadProcess() {
+        return numberOfDownloadsForPeer;
+    }
+
+    public synchronized void addDownloadAnswer(
         FileBlockAnswerMessage answer
     ) {
-        HashMap<String, ArrayList<FileBlockAnswerMessage>> fileMap =
-            downloadMap.get(hash);
-        if (fileMap == null) {
-            fileMap = new HashMap<String, ArrayList<FileBlockAnswerMessage>>();
-            downloadMap.put(hash, fileMap);
+        if(!answerList.contains(answer)) {
+            answerList.add(answer);
+            latch.countDown();
+            notify();
+        } 
+    }
+
+    
+
+    public synchronized FileBlockAnswerMessage getRespectiveAnswerMessage(
+        FileBlockRequestMessage request
+    ) throws InterruptedException {
+        if(answerList.isEmpty()) wait();
+        for (FileBlockAnswerMessage answer : answerList) {
+            if (answer.getBlockRequest().equals(request)) {
+                return answer;
+            }}    
+        return null;
+        
+        
+    }
+
+    private ArrayList<SubNode> getNodesWithFile() {
+        ArrayList<SubNode> nodesWithFile = new ArrayList<>();
+        for (FileSearchResult request : requests) {
+            for (SubNode peer : node.getPeers()) {
+                if (
+                    peer.hasConnectionWith(
+                        request.getAddress(),
+                        request.getPort()
+                    )
+                ) {
+                    nodesWithFile.add(peer);
+                }
+            }
         }
-        String key = address + "::" + port;
-
-        ArrayList<FileBlockAnswerMessage> answers = fileMap.get(key);
-        if (answers == null) {
-            answers = new ArrayList<FileBlockAnswerMessage>();
-            fileMap.put(key, answers);
-        }
-        answers.add(answer);
+        return nodesWithFile;
     }
 
-    public synchronized void addDownloadRequest(
-        List<FileSearchResult> searchResults
-    ) {
-        if (searchResults.isEmpty()) return;
-        FileSearchResult request = searchResults.get(0);
-        if (requestsBeingProcessed.contains(request)) {
-            System.out.println(
-                node.getAddressAndPortFormated() +
-                "Already processing the doownload of: " +
-                request
-            );
-            return;
-        }
-
-        requestsBeingProcessed.add(request);
-        downloadRequestsOnWait.add(searchResults);
-
-        System.out.println(
-            node.getAddressAndPortFormated() +
-            "Download waiting for assistant: " +
-            downloadRequestsOnWait.size()
-        );
-        notifyAll();
-    }
-
-    public void removeDownloadBeingProcessed(FileSearchResult request) {
-        requestsBeingProcessed.remove(request);
-    }
-
-    public List<DownloadAssistant> getAssistants() {
-        return assistants;
-    }
-
-    public int getDEFAULT_NUMBER_THREADS() {
-        return DEFAULT_NUMBER_THREADS;
-    }
-
-    public synchronized List<FileSearchResult> getDownloadRequest() {
-        try {
-            while (downloadRequestsOnWait.isEmpty()) wait();
-        } catch (InterruptedException e) {}
-        return downloadRequestsOnWait.removeFirst();
+    public List<FileBlockAnswerMessage> getAnswerList() {
+        return answerList;
     }
 
     public Node getNode() {
         return node;
     }
 
-    public ThreadPoolExecutor getThreadPool() {
-        return threadPool;
+
+    
+    private void assembleAndWriteFile(
+        String fileName,
+        List<FileBlockAnswerMessage> receivedBlockMap
+    )  {
+        TreeMap<Long, byte[]> fileParts = collectFileParts(receivedBlockMap);
+        if (fileParts.isEmpty()) return;
+        String filePath = buildFilePath(fileName);
+        writeFileToDisc(filePath, fileParts);
+        verifyFileCreation(filePath);
+    }
+
+    private TreeMap<Long, byte[]> collectFileParts(
+        List<FileBlockAnswerMessage> receivedBlockMap
+    ) {
+        TreeMap<Long, byte[]> fileParts = new TreeMap<>();
+
+
+        for (FileBlockAnswerMessage block : receivedBlockMap) {
+            if (block.getData() == null) {
+                System.err.println(
+                    "Warning: Block data is null for offset: " +
+                    block.getOffset()
+                );
+                return new TreeMap<>();
+            }
+            fileParts.put(block.getOffset(), block.getData());
+        }
+
+        return fileParts;
+    }
+
+
+      private void writeFileToDisc(
+        String filePath,
+        TreeMap<Long, byte[]> fileParts
+    )  {
+        byte[] combinedData = combineFileParts(fileParts);
+
+        try {
+            Files.write(Paths.get(filePath), combinedData);
+        } catch (IOException e) {
+            System.out.println("Error writing file: " + filePath);
+            e.printStackTrace();
+        }
+    }
+
+    private byte[] combineFileParts(TreeMap<Long, byte[]> fileParts) {
+        int totalSize = 0;
+        for (byte[] bytes : fileParts.values()) {
+            totalSize += bytes.length;
+        }
+
+        byte[] combinedData = new byte[totalSize];
+        int position = 0;
+
+        for (byte[] part : fileParts.values()) {
+            System.arraycopy(part, 0, combinedData, position, part.length);
+            position += part.length;
+        }
+
+        return combinedData;
+    }
+
+    private void verifyFileCreation(String filePath) {
+        java.io.File file = new java.io.File(filePath);
+        if (!file.exists()) {
+            System.err.println("Error: File was not created at: " + filePath);
+            return;
+        }
+    }
+
+    private String buildFilePath(String fileName) {
+        return (
+            getNode().getFolder().getAbsolutePath() + "/" + fileName
+        );
     }
 }

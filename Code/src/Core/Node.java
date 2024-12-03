@@ -2,18 +2,28 @@ package Core;
 
 import FileSearch.FileSearchResult;
 import GUI.GUI;
+import Messaging.FileBlockAnswerMessage;
+import Messaging.FileBlockRequestMessage;
 import Services.DownloadTasksManager;
+import Services.SenderAssistant;
 import Services.SubNode;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.NoRouteToHostException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Node {
 
@@ -27,19 +37,41 @@ public class Node {
     private final InetAddress address;
     private final File folder;
     private final Set<SubNode> peers;
-    private final DownloadTasksManager downloadManager;
+    private final HashMap<Integer, DownloadTasksManager> downloadManagers;
     private final GUI gui;
+    private ArrayList<FileBlockRequestMessage> blocksToProcess;
+    private ExecutorService senders;
+    private final int numberOfSenders = 5;
 
-    public Node(int nodeId, GUI gui) throws IllegalArgumentException {
+    public Node(int nodeId, GUI gui) {
         this.nodeId = nodeId;
         this.port = BASE_PORT + nodeId;
         this.gui = gui;
         this.peers = new HashSet<>();
-        this.downloadManager = new DownloadTasksManager(this, 5);
-
+        this.downloadManagers = new HashMap<>();
+        this.blocksToProcess = new ArrayList<>();
         validatePort();
+        initializeSenders(numberOfSenders);
         this.folder = createWorkingDirectory();
         this.address = initializeAddress();
+    }
+
+    public SubNode getPeerToSend(String address, int port) {
+        for(SubNode peer : peers) {
+            if(peer.getDestinationAddress().equals(address) && peer.getDestinationPort() == port) {
+                return peer;
+            }
+        }
+        return null;
+    }
+    private void initializeSenders(int n) {
+        if (n <= 0) 
+            return;
+
+        this.senders = Executors.newFixedThreadPool(n);
+        for (int i = 0; i < n; i++) {
+            this.senders.execute(new SenderAssistant(this));
+        }
     }
 
     private void validatePort() {
@@ -75,12 +107,7 @@ public class Node {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                SubNode clientHandler = new SubNode(
-                    this,
-                    downloadManager,
-                    clientSocket,
-                    true
-                );
+                SubNode clientHandler = new SubNode(this, clientSocket, true);
                 clientHandler.start();
                 peers.add(clientHandler);
             }
@@ -91,13 +118,28 @@ public class Node {
         }
     }
 
-    public void connectToNode(String targetAddress, int targetPort) {
-        InetAddress targetInetAddress = resolveAddress(targetAddress);
-        if (!isValidConnection(targetInetAddress, targetPort)) {
-            return;
-        }
+    public synchronized void addElementToBlocksToProcess(FileBlockRequestMessage request) {
+            blocksToProcess.add(request);
+            notify();
+    }
 
-        establishConnection(targetInetAddress, targetPort);
+    public synchronized void removeElementFromBlocksToProcess(FileBlockRequestMessage request) throws InterruptedException {
+        if(blocksToProcess.isEmpty()) wait();
+        blocksToProcess.remove(request);
+    }
+
+    public void connectToNode(String targetAddress, int targetPort) {
+        try {
+            InetAddress targetInetAddress = resolveAddress(targetAddress);
+            if (!isValidConnection(targetInetAddress, targetPort)) {
+                return;
+            }
+
+            establishConnection(targetInetAddress, targetPort);
+        } catch (Exception e) {
+            System.err.println("Error connecting to node: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private InetAddress resolveAddress(String address) {
@@ -165,13 +207,9 @@ public class Node {
         InetAddress targetAddress,
         int targetPort
     ) {
-        try (Socket clientSocket = new Socket(targetAddress, targetPort)) {
-            SubNode handler = new SubNode(
-                this,
-                downloadManager,
-                clientSocket,
-                true
-            );
+        try {
+            Socket clientSocket = new Socket(targetAddress, targetPort);
+            SubNode handler = new SubNode(this, clientSocket, true);
             handler.start();
             peers.add(handler);
 
@@ -192,14 +230,19 @@ public class Node {
         for (SubNode peer : peers) peer.sendWordSearchMessageRequest(keyword);
     }
 
-    public void createDownloadRequest(List<FileSearchResult> searchResults) {
-        for (FileSearchResult searchResult : searchResults) {
+    public void downloadFiles(List<List<FileSearchResult>> filesToDownload) {
+        for (List<FileSearchResult> file : filesToDownload) {
+            FileSearchResult example = file.getFirst();
             System.out.println(
-                getAddressAndPortFormated() + "Request file: " + searchResult
+                getAddressAndPortFormated() + "Request file: " + example
             );
+            DownloadTasksManager downloadManager =  new DownloadTasksManager(this, file);
+            downloadManagers.put(
+                example.getHash(),
+                downloadManager);
+            downloadManager.run();
         }
-
-        downloadManager.addDownloadRequest(searchResults);
+       
     }
 
     public boolean hasFileWithHash(int hash) {
@@ -218,6 +261,38 @@ public class Node {
         return false;
     }
 
+    public synchronized FileBlockRequestMessage getBlockRequest() throws InterruptedException {
+        if (blocksToProcess.isEmpty()) wait();
+        return blocksToProcess.removeFirst();
+    }
+
+    public synchronized void addBlockRequest(FileBlockRequestMessage request) {
+        blocksToProcess.add(request); 
+        notify();  
+    }
+
+    public void removeDownloadProcess(int hash) {
+
+        downloadManagers.remove(hash);
+
+    }
+
+    public Map<String, Integer> getDownloadProcess(
+        int hash
+    ) {
+        return downloadManagers.get(hash).getDownloadProcess();
+    }
+
+    public void addDownloadAnswer(
+        int hash,
+        InetAddress address,
+        int port,
+        FileBlockAnswerMessage answer
+    ) {
+        downloadManagers.get(hash).addDownloadAnswer(answer);
+        downloadManagers.get(hash).addNumberOfDownloadsForPeer(address.getHostAddress() + ":" + port, 1);
+    }
+
     public void removePeer(SubNode peer) {
         peers.remove(peer);
         int port = Utils.isValidPort(peer.getSocket().getPort())
@@ -230,10 +305,6 @@ public class Node {
             "::" +
             port
         );
-    }
-
-    public String getEnderecoIP() {
-        return address.getHostAddress();
     }
 
     public File getFolder() {
@@ -256,10 +327,6 @@ public class Node {
         return port;
     }
 
-    public DownloadTasksManager getDownloadManager() {
-        return downloadManager;
-    }
-
     public Set<SubNode> getPeers() {
         return peers;
     }
@@ -267,6 +334,8 @@ public class Node {
     public String getAddressAndPort() {
         return address.getHostAddress() + ":" + port;
     }
+
+
 
     public String getAddressAndPortFormated() {
         if (DEBUG == false) return "";

@@ -43,6 +43,9 @@ public class Node {
     private ExecutorService senders;
     private final int numberOfSenders = 5;
 
+    private final ExecutorService downloadTaskManagersThreadPool =
+        Executors.newFixedThreadPool(5);
+
     public Node(int nodeId, GUI gui) {
         this.nodeId = nodeId;
         this.port = BASE_PORT + nodeId;
@@ -57,16 +60,19 @@ public class Node {
     }
 
     public SubNode getPeerToSend(String address, int port) {
-        for(SubNode peer : peers) {
-            if(peer.getDestinationAddress().equals(address) && peer.getDestinationPort() == port) {
+        for (SubNode peer : peers) {
+            if (
+                peer.getDestinationAddress().equals(address) &&
+                peer.getDestinationPort() == port
+            ) {
                 return peer;
             }
         }
         return null;
     }
+
     private void initializeSenders(int n) {
-        if (n <= 0) 
-            return;
+        if (n <= 0) return;
 
         this.senders = Executors.newFixedThreadPool(n);
         for (int i = 0; i < n; i++) {
@@ -118,13 +124,17 @@ public class Node {
         }
     }
 
-    public synchronized void addElementToBlocksToProcess(FileBlockRequestMessage request) {
-            blocksToProcess.add(request);
-            notify();
+    public synchronized void addElementToBlocksToProcess(
+        FileBlockRequestMessage request
+    ) {
+        blocksToProcess.add(request);
+        notify();
     }
 
-    public synchronized void removeElementFromBlocksToProcess(FileBlockRequestMessage request) throws InterruptedException {
-        if(blocksToProcess.isEmpty()) wait();
+    public synchronized void removeElementFromBlocksToProcess(
+        FileBlockRequestMessage request
+    ) throws InterruptedException {
+        if (blocksToProcess.isEmpty()) wait();
         blocksToProcess.remove(request);
     }
 
@@ -232,17 +242,22 @@ public class Node {
 
     public void downloadFiles(List<List<FileSearchResult>> filesToDownload) {
         for (List<FileSearchResult> file : filesToDownload) {
-            FileSearchResult example = file.getFirst();
-            System.out.println(
-                getAddressAndPortFormated() + "Request file: " + example
-            );
-            DownloadTasksManager downloadManager =  new DownloadTasksManager(this, file);
-            downloadManagers.put(
-                example.getHash(),
-                downloadManager);
-            downloadManager.run();
+            if (downloadManagers.containsKey(file.get(0).getHash())) continue;
+            if (hasFileWithHash(file.get(0).getHash())) continue;
+            downloadTaskManagersThreadPool.submit(() -> {
+                FileSearchResult example = file.get(0);
+                System.out.println(
+                    getAddressAndPortFormated() + "Request file: " + example
+                );
+
+                DownloadTasksManager downloadManager = new DownloadTasksManager(
+                    this,
+                    file
+                );
+                downloadManagers.put(example.getHash(), downloadManager);
+                downloadManager.startDownload();
+            });
         }
-       
     }
 
     public boolean hasFileWithHash(int hash) {
@@ -261,25 +276,22 @@ public class Node {
         return false;
     }
 
-    public synchronized FileBlockRequestMessage getBlockRequest() throws InterruptedException {
+    public synchronized FileBlockRequestMessage getBlockRequest()
+        throws InterruptedException {
         if (blocksToProcess.isEmpty()) wait();
         return blocksToProcess.removeFirst();
     }
 
     public synchronized void addBlockRequest(FileBlockRequestMessage request) {
-        blocksToProcess.add(request); 
-        notify();  
+        blocksToProcess.add(request);
+        notify();
     }
 
     public void removeDownloadProcess(int hash) {
-
         downloadManagers.remove(hash);
-
     }
 
-    public Map<String, Integer> getDownloadProcess(
-        int hash
-    ) {
+    public Map<String, Integer> getDownloadProcess(int hash) {
         return downloadManagers.get(hash).getDownloadProcess();
     }
 
@@ -289,8 +301,14 @@ public class Node {
         int port,
         FileBlockAnswerMessage answer
     ) {
+        if (downloadManagers.get(hash) == null) return;
         downloadManagers.get(hash).addDownloadAnswer(answer);
-        downloadManagers.get(hash).addNumberOfDownloadsForPeer(address.getHostAddress() + ":" + port, 1);
+        downloadManagers
+            .get(hash)
+            .addNumberOfDownloadsForPeer(
+                address.getHostAddress() + ":" + port,
+                1
+            );
     }
 
     public void removePeer(SubNode peer) {
@@ -334,8 +352,6 @@ public class Node {
     public String getAddressAndPort() {
         return address.getHostAddress() + ":" + port;
     }
-
-
 
     public String getAddressAndPortFormated() {
         if (DEBUG == false) return "";

@@ -24,9 +24,7 @@ public class GUIDownloadStats {
     }
 
     private void load() {
-        this.nodesNBlocks = gui
-            .getNode()
-            .getDownloadProcess(hash);
+        this.nodesNBlocks = gui.getNode().getDownloadProcess(hash);
     }
 
     private String formatTime(long totalMillis) {

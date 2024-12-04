@@ -47,19 +47,14 @@ public class DownloadTasksManager {
     }
     
 
-    public void run() {
-        try {
-            long start = System.currentTimeMillis();
-            processDownload();
-            long duration = System.currentTimeMillis() - start;
-            node.getGUI().showDownloadStats(example.getHash(), duration);
-            System.out.println( node.getAddressAndPortFormated() + "[taskmanager]" + "Download finished for file " + example.getHash() + " at a rate of " + (example.getFileSize() / duration) + " bytes/s");
-            node.removeDownloadProcess(example.getHash());
-            node.getGUI().reloadListModel();
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println(node.getAddressAndPortFormated() + "[taskmanager]" + "Error in DownloadAssistant: " + e);
-        }
+    public void startDownload() {
+        long start = System.currentTimeMillis();
+        processDownload();
+        long duration = System.currentTimeMillis() - start;
+        node.getGUI().showDownloadStats(example.getHash(), duration);
+        System.out.println( node.getAddressAndPortFormated() + "[taskmanager]" + "Download finished for file " + example.getHash() + " at a rate of " + (example.getFileSize() / duration) + " bytes/s");
+        node.removeDownloadProcess(example.getHash());
+        node.getGUI().reloadListModel();
     }
     
     private void processDownload() {

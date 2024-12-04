@@ -7,6 +7,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -67,6 +68,13 @@ public class GUI {
                 frame.dispose();
             }
         }).start();
+
+
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int x = (screenSize.width - frame.getWidth()) / 2;
+        int y = (screenSize.height - frame.getHeight()) / 2;
+        frame.setLocation(x, y);
+
         frame.setVisible(SHOW);
     }
 
@@ -149,6 +157,7 @@ public class GUI {
                         }
                         filesToDownload.add(searchResultOfDifferentNodes);
                     }
+                    
                     node.downloadFiles(filesToDownload);
                 }
             }

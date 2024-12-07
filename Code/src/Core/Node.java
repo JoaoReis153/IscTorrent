@@ -40,7 +40,7 @@ public class Node {
     private final int numberOfSenders = 5;
 
     private final ExecutorService downloadTaskManagersThreadPool =
-        Executors.newFixedThreadPool(5);
+        Executors.newFixedThreadPool(10);
 
     public Node(int nodeId, GUI gui) {
         this.nodeId = nodeId;

@@ -16,7 +16,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class DownloadTasksManager {
+public class DownloadTasksManager extends Thread {
 
     private Node node;
     private FileSearchResult example;
@@ -29,7 +29,7 @@ public class DownloadTasksManager {
     private ArrayList<SubNode> peersWithFile;
 
 
-    public DownloadTasksManager(Node node, List<FileSearchResult> requests) {
+    public DownloadTasksManager(Node node, List<FileSearchResult> requests)  {
         this.node = node;
         this.requests = requests;
         this.example = requests.getFirst();
@@ -46,8 +46,8 @@ public class DownloadTasksManager {
         System.out.println(node.getAddressAndPortFormated() + "[taskmanager]" + " "+ requestList.size() + " blocks to process");
     }
     
-
-    public void startDownload() {
+    @Override
+    public void run() {
         long start = System.currentTimeMillis();
         processDownload();
         long duration = System.currentTimeMillis() - start;

@@ -251,7 +251,8 @@ public class Node {
                     file
                 );
                 downloadManagers.put(example.getHash(), downloadManager);
-                downloadManager.startDownload();
+                downloadManager.start();
+                
             });
         }
     }

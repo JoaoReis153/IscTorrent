@@ -9,8 +9,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -24,7 +26,7 @@ public class DownloadTasksManager extends Thread {
     private ExecutorService threadPool;
     private CountDownLatch latch;
     private List<FileBlockRequestMessage> requestList; 
-    private List<FileBlockAnswerMessage> answerList;
+    private Set<FileBlockAnswerMessage> answerList;
     private Map<String, Integer> numberOfDownloadsForPeer;
     private ArrayList<SubNode> peersWithFile;
 
@@ -35,7 +37,7 @@ public class DownloadTasksManager extends Thread {
         this.example = requests.get(0);
         
         System.out.println(node.getAddressAndPortFormated() + "[taskmanager]" +  "Download task manager created for file " + example.getHash());
-        this.answerList = new ArrayList<>();
+        this.answerList = new HashSet<FileBlockAnswerMessage>();
         this.numberOfDownloadsForPeer = new HashMap<>();
         this.requestList = FileBlockRequestMessage.createBlockList(
             example.getHash(),
@@ -111,6 +113,11 @@ public class DownloadTasksManager extends Thread {
         return request;
 
     }
+
+    public synchronized void addDownloadRequest(FileBlockRequestMessage request) {
+        requestList.add(request);
+    }
+
     
     public Map<String, Integer> getDownloadProcess() {
         return numberOfDownloadsForPeer;
@@ -158,7 +165,7 @@ public class DownloadTasksManager extends Thread {
         return nodesWithFile;
     }
 
-    public List<FileBlockAnswerMessage> getAnswerList() {
+    public Set<FileBlockAnswerMessage> getAnswerList() {
         return answerList;
     }
 
@@ -170,7 +177,7 @@ public class DownloadTasksManager extends Thread {
     
     private void assembleAndWriteFile(
         String fileName,
-        List<FileBlockAnswerMessage> receivedBlockMap
+        Set<FileBlockAnswerMessage> receivedBlockMap
     )  {
         TreeMap<Long, byte[]> fileParts = collectFileParts(receivedBlockMap);
         if (fileParts.isEmpty()) return;
@@ -180,7 +187,7 @@ public class DownloadTasksManager extends Thread {
     }
 
     private TreeMap<Long, byte[]> collectFileParts(
-        List<FileBlockAnswerMessage> receivedBlockMap
+        Set<FileBlockAnswerMessage> receivedBlockMap
     ) {
         TreeMap<Long, byte[]> fileParts = new TreeMap<>();
 

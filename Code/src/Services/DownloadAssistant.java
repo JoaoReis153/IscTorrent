@@ -39,18 +39,24 @@ public class DownloadAssistant extends Thread {
 
         peerToRequestBlock.sendFileBlockRequest(request);
 
-        waitForAnswer(request);
-
+        if(!waitForAnswer(request, 300))
+            taskManager.addDownloadRequest(request);
     }
 
-    private void waitForAnswer(FileBlockRequestMessage request) {
+    private boolean waitForAnswer(FileBlockRequestMessage request, long timeoutMs) {
+        long start = System.currentTimeMillis();
         while (true) {
             try {
                 FileBlockAnswerMessage answer = taskManager.getRespectiveAnswerMessage(request);
                 if (answer != null) 
-                    break; 
+                    return true;
+                if (System.currentTimeMillis() - start > timeoutMs) {
+                    return false; // Timeout occurred
+                }
+                Thread.sleep(10); // Prevent tight looping
             } catch (InterruptedException e) {
                 e.printStackTrace();
+                return false;
             }
         }
     }

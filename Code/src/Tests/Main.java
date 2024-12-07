@@ -2,12 +2,13 @@ package Tests;
 
 import GUI.GUI;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 public class Main {
 
     public static void main(String[] args) {
-        int test = 3;
+        int test = 0;
         if (test == 0) {
             System.out.println("Test 0");
             if (args.length == 0) {
@@ -195,6 +196,16 @@ public class Main {
             for (GUI gui : guiList) {
                 gui.simulateDownloadButton(gui.getListModel());
             }
+        } else if (test == 4) {
+            System.out.println("Test 4");
+            if (args.length == 0) {
+                System.out.println(
+                    "Usage: Please provide at least one ID as arguments."
+                );
+                return;
+            }
+            int id = Integer.parseInt(args[0]);
+            GUI gui = new GUI(id);
         }
     }
 }

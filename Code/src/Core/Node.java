@@ -21,16 +21,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class Node {
 
     public static final String WORK_FOLDER = "Code/dl";
     private static final int BASE_PORT = 8080;
     private static final int MAX_PORT = 65535;
-    private static final boolean DEBUG = true;
 
     private final int nodeId;
     private final int port;
@@ -354,7 +350,6 @@ public class Node {
     }
 
     public String getAddressAndPortFormated() {
-        if (DEBUG == false) return "";
         return "[" + address.getHostAddress() + ":" + port + "]";
     }
 

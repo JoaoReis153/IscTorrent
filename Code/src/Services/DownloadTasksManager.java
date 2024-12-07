@@ -32,7 +32,7 @@ public class DownloadTasksManager extends Thread {
     public DownloadTasksManager(Node node, List<FileSearchResult> requests)  {
         this.node = node;
         this.requests = requests;
-        this.example = requests.getFirst();
+        this.example = requests.get(0);
         
         System.out.println(node.getAddressAndPortFormated() + "[taskmanager]" +  "Download task manager created for file " + example.getHash());
         this.answerList = new ArrayList<>();
@@ -107,7 +107,7 @@ public class DownloadTasksManager extends Thread {
         
         while(requestList.isEmpty()) wait();
             
-        FileBlockRequestMessage request = requestList.removeFirst();  
+        FileBlockRequestMessage request = requestList.remove(0);  
         return request;
 
     }
@@ -235,7 +235,6 @@ public class DownloadTasksManager extends Thread {
         java.io.File file = new java.io.File(filePath);
         if (!file.exists()) {
             System.err.println("Error: File was not created at: " + filePath);
-            return;
         }
     }
 

@@ -114,6 +114,14 @@ public class DownloadTasksManager extends Thread {
 
     }
 
+    public synchronized SubNode getNewPeer(SubNode peer) {
+        if(peersWithFile.contains(peer)) peersWithFile.remove(peer);
+        if(peersWithFile.isEmpty() && !finished()) {
+            throw new RuntimeException("No more nodes available with the file. Download process cannot continue.");
+        };
+        return peersWithFile.get(0);
+    }
+
     public synchronized void addDownloadRequest(FileBlockRequestMessage request) {
         requestList.add(request);
     }

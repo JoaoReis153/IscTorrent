@@ -208,7 +208,7 @@ public class GUI {
         node.broadcastWordSearchMessageRequest(lastSearchKeyword);
     }
 
-    public void loadListModel(FileSearchResult[] list) {
+    public synchronized void loadListModel(FileSearchResult[] list) {
         if (list == null || list.length == 0) return;
         File[] files = node.getFolder().listFiles();
         if (files != null) {
@@ -249,5 +249,16 @@ public class GUI {
 
     public static boolean getSHOW() {
         return SHOW;
+    }
+
+
+    private int countOccurrencesInAllFiles(FileSearchResult searchResult) {
+        int count = 0;
+        for (FileSearchResult file : allFiles) {
+            if (file.equals(searchResult)) {
+                count++;
+            }
+        }
+        return count;
     }
 }

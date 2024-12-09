@@ -1,7 +1,5 @@
 package Messaging;
 
-import Core.Node;
-import Core.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -19,9 +17,9 @@ public class FileBlockAnswerMessage implements Serializable {
     private String senderAddress;
     private FileBlockRequestMessage request;
     private byte[] data;
+    private File file;
 
-
-    public FileBlockAnswerMessage( String senderAddress, int senderPort, int nodeId, FileBlockRequestMessage request) { 
+    public FileBlockAnswerMessage( String senderAddress, int senderPort, int nodeId, FileBlockRequestMessage request, File file) { 
         this.senderPort = senderPort;
         this.senderAddress = senderAddress;
         this.request = request;
@@ -29,6 +27,7 @@ public class FileBlockAnswerMessage implements Serializable {
         this.hash = request.getHash();
         this.offset = request.getOffset();
         this.length = request.getLength();
+        this.file = file;
         if (length <= 0) {
             throw new IllegalArgumentException(
                 "Invalid length: length must be positive"
@@ -39,7 +38,6 @@ public class FileBlockAnswerMessage implements Serializable {
 
     private void loadDataFromFile() {
         try {
-            File file = findFileByHash();
             byte[] fileContents = Files.readAllBytes(file.toPath());
 
             if (offset < 0 || offset + length > fileContents.length) {
@@ -58,31 +56,6 @@ public class FileBlockAnswerMessage implements Serializable {
             System.err.println("Warning: " + e.getMessage());
             this.data = new byte[0];
         }
-    }
-
-    private File findFileByHash() {
-        File folder = new File(Node.WORK_FOLDER + nodeId + "/");
-        if (!folder.isDirectory()) {
-            throw new IllegalArgumentException(
-                "Invalid directory path: " + folder.getPath()
-            );
-        }
-
-        File[] files = folder.listFiles();
-        if (files == null) {
-            throw new IllegalArgumentException(
-                "Unable to list files in directory"
-            );
-        }
-
-        for (File file : files) {
-            if (file.isFile()) {
-                if (Utils.calculateFileHash(file.getAbsolutePath()) == hash) {
-                    return file;
-                }
-            }
-        }
-        throw new IllegalArgumentException("No file found with hash: " + hash);
     }
 
     public int getHash() {

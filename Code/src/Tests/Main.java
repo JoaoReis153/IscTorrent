@@ -19,7 +19,7 @@ public class Main {
         4 - Create a network of nodes, connect them and download all files in every node
         */
 
-        int test = 3; // Set this to the test you want to run
+        int test = 1; // Set this to the test you want to run
 
         if (test == 0) {
             // Test 0: Create nodes

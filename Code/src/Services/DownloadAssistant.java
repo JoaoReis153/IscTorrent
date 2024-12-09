@@ -8,6 +8,7 @@ public class DownloadAssistant extends Thread {
 
     private final DownloadTasksManager taskManager;
     private SubNode peerToRequestBlock;
+    private boolean timedOut = false;
 
     public DownloadAssistant(
         DownloadTasksManager taskManager,
@@ -20,7 +21,7 @@ public class DownloadAssistant extends Thread {
     }
 
     public void run() {
-        while (!taskManager.finished()) {
+        while (!taskManager.finished() && !timedOut) {
             
             FileBlockRequestMessage request;
             try {
@@ -36,29 +37,30 @@ public class DownloadAssistant extends Thread {
     }
 
     private void handleRequest(FileBlockRequestMessage request) {
-
         peerToRequestBlock.sendFileBlockRequest(request);
 
-        if(!waitForAnswer(request, 300))
+        if(!waitForAnswer(request, 300)) {
             taskManager.addDownloadRequest(request);
+            timedOut = true;
+        }
     }
 
     private boolean waitForAnswer(FileBlockRequestMessage request, long timeoutMs) {
-        long start = System.currentTimeMillis();
-        while (true) {
+
+        long endTime = System.currentTimeMillis() + timeoutMs;
+
+        while (System.currentTimeMillis() < endTime) {
             try {
                 FileBlockAnswerMessage answer = taskManager.getRespectiveAnswerMessage(request);
-                if (answer != null) 
-                    return true;
-                if (System.currentTimeMillis() - start > timeoutMs) {
-                    return false; // Timeout occurred
+                if (answer != null) {
+                    return true; // Answer received
                 }
-                Thread.sleep(10); // Prevent tight looping
             } catch (InterruptedException e) {
-                e.printStackTrace();
-                return false;
+                Thread.currentThread().interrupt(); // Restore interrupted status
+                return false; // Handle interruption as a failure
             }
         }
+        return false; // Timeout occurred
     }
 
     

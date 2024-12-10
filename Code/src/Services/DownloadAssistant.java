@@ -1,9 +1,8 @@
 package Services;
 
-import java.util.concurrent.CountDownLatch;
-
 import Messaging.FileBlockAnswerMessage;
 import Messaging.FileBlockRequestMessage;
+import java.util.concurrent.CountDownLatch;
 
 public class DownloadAssistant extends Thread {
 
@@ -23,7 +22,6 @@ public class DownloadAssistant extends Thread {
 
     public void run() {
         while (!taskManager.finished() && !timedOut) {
-            
             FileBlockRequestMessage request;
             try {
                 request = taskManager.getDownloadRequest();
@@ -40,29 +38,31 @@ public class DownloadAssistant extends Thread {
     private void handleRequest(FileBlockRequestMessage request) {
         peerToRequestBlock.sendFileBlockRequest(request);
 
-        if(!waitForAnswer(request, 300)) {
+        if (!waitForAnswer(request, 300)) {
             taskManager.addDownloadRequest(request);
             timedOut = true;
         }
     }
 
-    private boolean waitForAnswer(FileBlockRequestMessage request, long timeoutMs) {
-
+    private boolean waitForAnswer(
+        FileBlockRequestMessage request,
+        long timeoutMs
+    ) {
         long endTime = System.currentTimeMillis() + timeoutMs;
 
         while (System.currentTimeMillis() < endTime) {
             try {
-                FileBlockAnswerMessage answer = taskManager.getRespectiveAnswerMessage(request);
+                FileBlockAnswerMessage answer =
+                    taskManager.getRespectiveAnswerMessage(request);
                 if (answer != null) {
                     return true; // Answer received
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted status
+                System.out.println("Thread interrupted");
                 return false; // Handle interruption as a failure
             }
         }
         return false; // Timeout occurred
     }
-
-    
 }

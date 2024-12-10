@@ -1,5 +1,12 @@
 package Core;
 
+import FileSearch.FileSearchResult;
+import GUI.GUI;
+import Messaging.FileBlockAnswerMessage;
+import Messaging.FileBlockRequestMessage;
+import Services.DownloadTasksManager;
+import Services.SenderAssistant;
+import Services.SubNode;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -14,14 +21,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import FileSearch.FileSearchResult;
-import GUI.GUI;
-import Messaging.FileBlockAnswerMessage;
-import Messaging.FileBlockRequestMessage;
-import Services.DownloadTasksManager;
-import Services.SenderAssistant;
-import Services.SubNode;
 
 public class Node {
 
@@ -239,22 +238,21 @@ public class Node {
 
     public void downloadFiles(List<List<FileSearchResult>> filesToDownload) {
         for (List<FileSearchResult> file : filesToDownload) {
+            //Check if it's already downloading the file
             if (downloadManagers.containsKey(file.get(0).getHash())) continue;
-            if (hasFileWithHash(file.get(0).getHash())) continue;
-            downloadTaskManagersThreadPool.submit(() -> {
-                FileSearchResult example = file.get(0);
-                System.out.println(
-                    getAddressAndPortFormated() + "Request file: " + example
-                );
 
-                DownloadTasksManager downloadManager = new DownloadTasksManager(
-                    this,
-                    file
-                );
-                downloadManagers.put(example.getHash(), downloadManager);
-                downloadManager.start();
-                
-            });
+            // Check if already has the file in the directory
+            if (hasFileWithHash(file.get(0).getHash())) continue;
+            FileSearchResult example = file.get(0);
+            System.out.println(
+                getAddressAndPortFormated() + "Request file: " + example
+            );
+            DownloadTasksManager downloadManager = new DownloadTasksManager(
+                this,
+                file
+            );
+            downloadTaskManagersThreadPool.execute(downloadManager);
+            downloadManagers.put(example.getHash(), downloadManager);
         }
     }
 

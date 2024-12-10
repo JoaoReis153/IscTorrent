@@ -17,7 +17,7 @@ public class FileSearchResult
     private long fileSize;
     private InetAddress address;
     private int port;
-    private String displayText;
+    private int displayNumber;
 
     public FileSearchResult(
         WordSearchMessage searchMessage,
@@ -68,13 +68,19 @@ public class FileSearchResult
         return port;
     }
 
-    public void setDisplayText(String displayText) {
-        this.displayText = displayText;
+    public int getDisplayNumber() {
+        return displayNumber;
+    }
+
+    public void setDisplayNumber(int displayNumber) {
+        this.displayNumber = displayNumber;
     }
 
     @Override
     public String toString() {
-        return displayText == null ? fileName : displayText;
+        return displayNumber == 0
+            ? fileName
+            : fileName + " (" + displayNumber + ")";
     }
 
     @Override
@@ -97,6 +103,4 @@ public class FileSearchResult
         }
         return this.fileName.compareToIgnoreCase(o.fileName);
     }
-
-    
 }

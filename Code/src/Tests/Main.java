@@ -1,32 +1,33 @@
 package Tests;
 
-import GUI.GUI;
 import Core.Node;
-
+import GUI.GUI;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
 public class Main {
 
     public static void main(String[] args) {
-
         /*
         Test:
         0 - Create nodes
         1 - Create a network of nodes and connect them
         2 - Create a network of nodes, connect them and search in the first node
         3 - Create a network of nodes, connect them and search in all nodes
-        4 - Create a network of nodes, connect them and download all files in every node
+        4 - Create a network of nodes, connect them and download all files in the last node.
+        5 - Create a network of nodes, connect them and download all files in every node
         */
 
-        int test = 1; // Set this to the test you want to run
+        int test = 5; // Set this to the test you want to run
 
         if (test == 0) {
             // Test 0: Create nodes
             System.out.println("Test 0: Create nodes");
 
             if (args.length == 0) {
-                System.out.println("Usage: Please provide at least one ID as arguments.");
+                System.out.println(
+                    "Usage: Please provide at least one ID as arguments."
+                );
                 return;
             }
 
@@ -37,13 +38,24 @@ public class Main {
                     int id = Integer.parseInt(arg);
                     GUI gui = new GUI(id);
                     gui.open();
-                    System.out.println("Node with ID " + id + " created and GUI opened.");
+                    System.out.println(
+                        "Node with ID " + id + " created and GUI opened."
+                    );
                 } catch (NumberFormatException e) {
-                    System.err.println("Invalid ID: " + arg + ". Please provide numeric values.");
+                    System.err.println(
+                        "Invalid ID: " +
+                        arg +
+                        ". Please provide numeric values."
+                    );
                 } catch (IllegalArgumentException e) {
-                    System.err.println("Failed to create node: " + e.getMessage());
+                    System.err.println(
+                        "Failed to create node: " + e.getMessage()
+                    );
                 } catch (Exception e) {
-                    System.err.println("An error occurred while creating the node with ID: " + arg);
+                    System.err.println(
+                        "An error occurred while creating the node with ID: " +
+                        arg
+                    );
                     e.printStackTrace();
                 }
             }
@@ -51,7 +63,9 @@ public class Main {
 
         if (test == 1) {
             // Test 1: Create a network of nodes and connect them
-            System.out.println("Test 1: Create a network of nodes and connect them");
+            System.out.println(
+                "Test 1: Create a network of nodes and connect them"
+            );
 
             ArrayList<GUI> guiList = initializeNodes(args);
 
@@ -66,7 +80,9 @@ public class Main {
 
         if (test == 2) {
             // Test 2: Create a network of nodes, connect them, and search messages
-            System.out.println("Test 2: Create a network of nodes, connect them, and search in the first node");
+            System.out.println(
+                "Test 2: Create a network of nodes, connect them, and search in the first node"
+            );
 
             ArrayList<GUI> guiList = initializeNodes(args);
 
@@ -84,7 +100,27 @@ public class Main {
 
         if (test == 3) {
             // Test 2: Create a network of nodes, connect them, and search messages
-            System.out.println("Test 3: Create a network of nodes, connect them, and search in all nodes");
+            System.out.println(
+                "Test 3: Create a network of nodes, connect them, and search in all nodes"
+            );
+
+            ArrayList<GUI> guiList = initializeNodes(args);
+
+            if (guiList.isEmpty()) {
+                System.out.println("No nodes created. Exiting test.");
+                return;
+            }
+
+            connectNodes(guiList);
+
+            broadcastSearchMessage(guiList, "");
+        }
+
+        if (test == 4) {
+            // Test 4: Create a network of nodes, connect them, and download files in the last node
+            System.out.println(
+                "Test 4: Create a network of nodes, connect them, and download files"
+            );
 
             ArrayList<GUI> guiList = initializeNodes(args);
 
@@ -97,11 +133,27 @@ public class Main {
 
             broadcastSearchMessage(guiList, "");
 
+            // Simulate a download operation
+            if (!guiList.isEmpty()) {
+                try {
+                    GUI lastGui = guiList.getLast();
+                    lastGui.simulateDownloadButton(lastGui.getListModel());
+                    System.out.println(
+                        "Download simulated on Node " +
+                        lastGui.getNode().getId()
+                    );
+                } catch (Exception e) {
+                    System.err.println("Failed to simulate download.");
+                    e.printStackTrace();
+                }
+            }
         }
 
-        if (test == 4) {
+        if (test == 5) {
             // Test 3: Create a network of nodes, connect them, and download files
-            System.out.println("Test 3: Create a network of nodes, connect them, and download files");
+            System.out.println(
+                "Test 5: Create a network of nodes, connect them, and download files"
+            );
 
             ArrayList<GUI> guiList = initializeNodes(args);
 
@@ -118,16 +170,18 @@ public class Main {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            }            
+            }
 
             // Simulate a download operation
             if (!guiList.isEmpty()) {
                 try {
-                    for ( GUI gui : guiList) {
+                    for (GUI gui : guiList) {
                         gui.simulateDownloadButton(gui.getListModel());
-                        System.out.println("Download simulated on Node " + gui.getNode().getId());
+                        System.out.println(
+                            "Download simulated on Node " +
+                            gui.getNode().getId()
+                        );
                     }
-                    
                 } catch (Exception e) {
                     System.err.println("Failed to simulate download.");
                     e.printStackTrace();
@@ -146,7 +200,9 @@ public class Main {
         ArrayList<GUI> guiList = new ArrayList<>();
 
         if (args.length == 0) {
-            System.out.println("Usage: Please provide at least one ID as arguments.");
+            System.out.println(
+                "Usage: Please provide at least one ID as arguments."
+            );
             return guiList;
         }
 
@@ -156,13 +212,20 @@ public class Main {
                 GUI gui = new GUI(id);
                 guiList.add(gui);
                 gui.open();
-                System.out.println("Node with ID " + id + " created and GUI opened.");
+                System.out.println(
+                    "Node with ID " + id + " created and GUI opened."
+                );
             } catch (NumberFormatException e) {
-                System.err.println("Invalid ID: " + arg + ". Please provide numeric values.");
+                System.err.println(
+                    "Invalid ID: " + arg + ". Please provide numeric values."
+                );
             } catch (IllegalArgumentException e) {
                 System.err.println("Failed to create node: " + e.getMessage());
             } catch (Exception e) {
-                System.err.println("An error occurred while initializing the node with ID: " + arg);
+                System.err.println(
+                    "An error occurred while initializing the node with ID: " +
+                    arg
+                );
                 e.printStackTrace();
             }
         }
@@ -185,9 +248,19 @@ public class Main {
                             InetAddress.getLocalHost().getHostAddress(),
                             otherGui.getNode().getPort()
                         );
-                        System.out.println("Node " + currentNode.getId() + " connected to Node " + otherGui.getNode().getId());
+                        System.out.println(
+                            "Node " +
+                            currentNode.getId() +
+                            " connected to Node " +
+                            otherGui.getNode().getId()
+                        );
                     } catch (Exception e) {
-                        System.err.println("Failed to connect Node " + currentNode.getId() + " to Node " + otherGui.getNode().getId());
+                        System.err.println(
+                            "Failed to connect Node " +
+                            currentNode.getId() +
+                            " to Node " +
+                            otherGui.getNode().getId()
+                        );
                         e.printStackTrace();
                     }
                 }
@@ -201,10 +274,15 @@ public class Main {
      * @param guiList List of GUI objects representing the nodes
      */
 
-    private static void broadcastSearchMessage(ArrayList<GUI> guiList, String broadcastString) {
+    private static void broadcastSearchMessage(
+        ArrayList<GUI> guiList,
+        String broadcastString
+    ) {
         for (GUI gui : guiList) {
             gui.getNode().broadcastWordSearchMessageRequest(broadcastString);
-            System.out.println("Search message broadcasted from Node " + gui.getNode().getId());
+            System.out.println(
+                "Search message broadcasted from Node " + gui.getNode().getId()
+            );
         }
     }
 }

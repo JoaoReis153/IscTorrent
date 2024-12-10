@@ -29,6 +29,8 @@ public class DownloadTasksManager extends Thread {
     private Set<FileBlockAnswerMessage> answerList;
     private Map<String, Integer> numberOfDownloadsForPeer;
     private ArrayList<SubNode> peersWithFile;
+    private int runningAssistants;
+    private boolean running = true;
 
     public DownloadTasksManager(Node node, List<FileSearchResult> requests) {
         this.node = node;
@@ -60,21 +62,46 @@ public class DownloadTasksManager extends Thread {
 
     @Override
     public void run() {
-        long start = System.currentTimeMillis();
-        processDownload();
-        long duration = System.currentTimeMillis() - start;
-        node.getGUI().showDownloadStats(example.getHash(), duration);
-        System.out.println(
-            node.getAddressAndPortFormated() +
-            "[taskmanager]" +
-            "Download finished for file " +
-            example.getHash() +
-            " at a rate of " +
-            (example.getFileSize() / duration) +
-            " bytes/s"
-        );
-        node.removeDownloadProcess(example.getHash());
-        node.getGUI().reloadListModel();
+        try {
+            long start = System.currentTimeMillis();
+            processDownload();
+            long duration = System.currentTimeMillis() - start;
+            node.getGUI().showDownloadStats(example.getHash(), duration);
+            System.out.println(
+                node.getAddressAndPortFormated() +
+                "[taskmanager]" +
+                "Download finished for file " +
+                example.getHash() +
+                " at a rate of " +
+                (example.getFileSize() / duration) +
+                " bytes/s"
+            );
+            node.removeDownloadProcess(example.getHash());
+            node.getGUI().reloadListModel();
+        } catch (RuntimeException e) {
+            System.out.println(
+                node.getAddressAndPortFormated() +
+                "[taskmanager]" +
+                "Download process was interrupted"
+            );
+        }
+
+        System.out.println(finished());
+        if (!running && !finished()) {
+            System.out.println(
+                node.getAddressAndPortFormated() +
+                "[taskmanager]" +
+                "Download process was interrupted"
+            );
+        }
+    }
+
+    public synchronized void stopRunning() throws RuntimeException {
+        runningAssistants--;
+        System.out.println(runningAssistants);
+        if (runningAssistants == 0) {
+            throw new RuntimeException("Download process was interrupted");
+        }
     }
 
     private void processDownload() {
@@ -86,7 +113,9 @@ public class DownloadTasksManager extends Thread {
                 peersWithFile.get(i),
                 i
             );
-            threadPool.submit(assistant);
+
+            runningAssistants++;
+            threadPool.execute(assistant);
             System.out.println(
                 node.getAddressAndPortFormated() +
                 "[taskmanager]" +
@@ -212,6 +241,7 @@ public class DownloadTasksManager extends Thread {
         String filePath = buildFilePath(fileName);
         writeFileToDisc(filePath, fileParts);
         verifyFileCreation(filePath);
+        node.loadHashes();
     }
 
     private TreeMap<Long, byte[]> collectFileParts(

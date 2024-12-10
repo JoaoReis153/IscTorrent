@@ -38,7 +38,7 @@ public class FileSearchResult
     public FileSearchResult(File file, Node node) {
         this.searchMessage = null;
         this.fileName = file.getName();
-        this.hash = Utils.calculateFileHash(file.getAbsolutePath());
+        this.hash = node.getHash(file.getAbsolutePath());
         this.fileSize = file.length();
         this.address = node.getAddress();
         this.port = node.getPort();

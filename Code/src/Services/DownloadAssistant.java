@@ -38,8 +38,9 @@ public class DownloadAssistant extends Thread {
     private void handleRequest(FileBlockRequestMessage request) {
         peerToRequestBlock.sendFileBlockRequest(request);
 
-        if (!waitForAnswer(request, 300)) {
+        if (!waitForAnswer(request, 100000)) {
             taskManager.addDownloadRequest(request);
+            taskManager.stopRunning();
             timedOut = true;
         }
     }

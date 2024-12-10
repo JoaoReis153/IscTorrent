@@ -16,11 +16,12 @@ public class Utils {
             );
 
             return new BigInteger(1, hash).intValue();
+        } catch (OutOfMemoryError e) {
+            System.out.println("Is too big (that's what she said) ");
+            return 0;
         } catch (Exception e) {
-            System.err.println(
-                "Error reading file for hashing: " + e.getMessage()
-            );
-            return -1;
+            System.out.println("Error calculating file hash");
+            return 0;
         }
     }
 

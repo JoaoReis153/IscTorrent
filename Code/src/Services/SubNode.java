@@ -1,5 +1,12 @@
 package Services;
 
+import Core.Node;
+import Core.Utils;
+import FileSearch.FileSearchResult;
+import FileSearch.WordSearchMessage;
+import Messaging.FileBlockAnswerMessage;
+import Messaging.FileBlockRequestMessage;
+import Messaging.NewConnectionRequest;
 import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
@@ -15,14 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
-
-import Core.Node;
-import Core.Utils;
-import FileSearch.FileSearchResult;
-import FileSearch.WordSearchMessage;
-import Messaging.FileBlockAnswerMessage;
-import Messaging.FileBlockRequestMessage;
-import Messaging.NewConnectionRequest;
 
 public class SubNode extends Thread {
 
@@ -191,7 +190,8 @@ public class SubNode extends Thread {
         logNewConnection();
     }
 
-    public synchronized void sendObject(Object message) throws RuntimeException {
+    public synchronized void sendObject(Object message)
+        throws RuntimeException {
         System.out.println(
             node.getAddressAndPortFormated() + "Sending  " + message.toString()
         );
@@ -431,7 +431,7 @@ public class SubNode extends Thread {
 
         for (File file : files) {
             if (isFileMatch(file, keyword, filesToIgnore)) {
-                int hash = Utils.calculateFileHash(file.getAbsolutePath());
+                int hash = node.getHash(file.getAbsolutePath());
                 results[counter++] = new FileSearchResult(
                     searchMessage,
                     file.getName(),
@@ -446,16 +446,13 @@ public class SubNode extends Thread {
     }
 
     public void sendFileBlockAnswer(FileBlockAnswerMessage answer) {
-        
-
-
         sendObject(answer);
     }
 
     public String getDestinationAddress() {
         return socket.getInetAddress().getHostAddress();
     }
-    
+
     public int getDestinationPort() {
         int port = Utils.isValidPort(socket.getPort())
             ? socket.getPort()

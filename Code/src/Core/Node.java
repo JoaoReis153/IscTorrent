@@ -38,11 +38,13 @@ public class Node {
     private ArrayList<FileBlockRequestMessage> blocksToProcess;
     private ExecutorService senders;
     private final int numberOfSenders = 5;
+    private HashMap<String, Integer> hashes;
 
     private final ExecutorService downloadTaskManagersThreadPool =
         Executors.newFixedThreadPool(10);
 
     public Node(int nodeId, GUI gui) {
+        this.hashes = new HashMap<>();
         this.nodeId = nodeId;
         this.port = BASE_PORT + nodeId;
         this.gui = gui;
@@ -53,6 +55,7 @@ public class Node {
         initializeSenders(numberOfSenders);
         this.folder = createWorkingDirectory();
         this.address = initializeAddress();
+        loadHashes();
     }
 
     public SubNode getPeerToSend(String address, int port) {
@@ -256,6 +259,23 @@ public class Node {
         }
     }
 
+    public void loadHashes() {
+        if (folder == null || !folder.exists() || !folder.isDirectory()) return;
+
+        File[] files = folder.listFiles();
+
+        for (File file : files) {
+            hashes.put(
+                file.getAbsolutePath(),
+                Utils.calculateFileHash(file.getAbsolutePath())
+            );
+        }
+    }
+
+    public int getHash(String filePath) {
+        return hashes.get(filePath);
+    }
+
     public boolean hasFileWithHash(int hash) {
         if (folder == null || !folder.exists() || !folder.isDirectory()) {
             return false;
@@ -264,7 +284,7 @@ public class Node {
         File[] files = folder.listFiles();
 
         for (File file : files) {
-            if (Utils.calculateFileHash(file.getAbsolutePath()) == hash) {
+            if (hashes.get(file.getAbsolutePath()) == hash) {
                 return true;
             }
         }

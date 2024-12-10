@@ -1,8 +1,9 @@
 package Services;
 
+import java.util.concurrent.CountDownLatch;
+
 import Messaging.FileBlockAnswerMessage;
 import Messaging.FileBlockRequestMessage;
-import java.util.concurrent.CountDownLatch;
 
 public class DownloadAssistant extends Thread {
 

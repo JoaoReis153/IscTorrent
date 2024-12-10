@@ -1,15 +1,28 @@
 package Services;
 
+import java.io.BufferedReader;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InvalidClassException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.StreamCorruptedException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+
 import Core.Node;
 import Core.Utils;
 import FileSearch.FileSearchResult;
 import FileSearch.WordSearchMessage;
-import Messaging.*;
-import java.io.*;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
+import Messaging.FileBlockAnswerMessage;
+import Messaging.FileBlockRequestMessage;
+import Messaging.NewConnectionRequest;
 
 public class SubNode extends Thread {
 

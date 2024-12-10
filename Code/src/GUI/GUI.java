@@ -1,7 +1,5 @@
 package GUI;
 
-import Core.Node;
-import FileSearch.FileSearchResult;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -13,6 +11,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -25,6 +24,9 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
+
+import Core.Node;
+import FileSearch.FileSearchResult;
 
 public class GUI {
 

@@ -1,9 +1,5 @@
 package Services;
 
-import Core.Node;
-import FileSearch.FileSearchResult;
-import Messaging.FileBlockAnswerMessage;
-import Messaging.FileBlockRequestMessage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,6 +13,11 @@ import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import Core.Node;
+import FileSearch.FileSearchResult;
+import Messaging.FileBlockAnswerMessage;
+import Messaging.FileBlockRequestMessage;
 
 public class DownloadTasksManager extends Thread {
 

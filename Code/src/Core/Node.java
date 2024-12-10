@@ -1,12 +1,5 @@
 package Core;
 
-import FileSearch.FileSearchResult;
-import GUI.GUI;
-import Messaging.FileBlockAnswerMessage;
-import Messaging.FileBlockRequestMessage;
-import Services.DownloadTasksManager;
-import Services.SenderAssistant;
-import Services.SubNode;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -21,6 +14,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import FileSearch.FileSearchResult;
+import GUI.GUI;
+import Messaging.FileBlockAnswerMessage;
+import Messaging.FileBlockRequestMessage;
+import Services.DownloadTasksManager;
+import Services.SenderAssistant;
+import Services.SubNode;
 
 public class Node {
 

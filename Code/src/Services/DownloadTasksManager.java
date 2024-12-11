@@ -50,6 +50,9 @@ public class DownloadTasksManager extends Thread {
             example.getFileSize()
         );
         this.peersWithFile = getNodesWithFile();
+
+        //In case there are no nodes with the file, return
+        if(peersWithFile.isEmpty()) return;
         this.threadPool = Executors.newFixedThreadPool(peersWithFile.size());
         System.out.println(
             node.getAddressAndPortFormated() +
@@ -98,7 +101,6 @@ public class DownloadTasksManager extends Thread {
 
     public synchronized void stopRunning() throws RuntimeException {
         runningAssistants--;
-        System.out.println(runningAssistants);
         if (runningAssistants == 0) {
             throw new RuntimeException("Download process was interrupted");
         }

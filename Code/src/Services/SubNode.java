@@ -190,8 +190,7 @@ public class SubNode extends Thread {
         logNewConnection();
     }
 
-    public synchronized void sendObject(Object message)
-        throws RuntimeException {
+    public synchronized void sendObject(Object message) {
         System.out.println(
             node.getAddressAndPortFormated() + "Sending  " + message.toString()
         );
@@ -210,7 +209,8 @@ public class SubNode extends Thread {
                 "Cannot send message because socket is closed"
             );
             close();
-            throw new RuntimeException("Socket is closed");
+            System.out.println( node.getAddressAndPortFormated() + "Socket is closed");
+            return;
         }
     }
 

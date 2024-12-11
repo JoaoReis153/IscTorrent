@@ -90,7 +90,7 @@ public class Node {
     private File createWorkingDirectory() {
         File folder = new File(WORK_FOLDER + nodeId);
         if (!folder.exists() && !folder.mkdirs()) {
-            throw new RuntimeException(
+            throw new RuntimeException( getAddressAndPortFormated() +
                 "Failed to create directory: dl" + nodeId
             );
         }
@@ -101,7 +101,7 @@ public class Node {
         try {
             return InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
-            throw new RuntimeException("Unable to get the device's address", e);
+            throw new RuntimeException( getAddressAndPortFormated() +" Unable to get the device's address", e);
         }
     }
 
@@ -117,7 +117,7 @@ public class Node {
                 peers.add(clientHandler);
             }
         } catch (IOException e) {
-            throw new RuntimeException(
+            throw new RuntimeException(  getAddressAndPortFormated() +
                 "Failed to start server: " + e.getMessage()
             );
         }
@@ -273,7 +273,11 @@ public class Node {
     }
 
     public int getHash(String filePath) {
-        return hashes.get(filePath);
+        if (hashes.containsKey(filePath)) {
+            return hashes.get(filePath);
+        } else {
+            return Utils.calculateFileHash(filePath);
+        }
     }
 
     public boolean hasFileWithHash(int hash) {

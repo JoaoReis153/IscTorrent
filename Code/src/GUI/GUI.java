@@ -45,6 +45,14 @@ public class GUI {
         createGUI();
     }
 
+
+    public GUI(int nodeId, boolean show) {
+        this.node = new Node(nodeId, this);
+
+        createGUI();
+        this.SHOW = show;
+    }
+
     private void createGUI() {
         frame = new JFrame(
             "Port NodeAddress [ address " +

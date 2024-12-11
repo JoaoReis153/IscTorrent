@@ -18,7 +18,7 @@ public class Main {
         5 - Create a network of nodes, connect them and download all files in every node
         */
 
-        int test = 0; // Set this to the test you want to run
+        int test = 5; // Set this to the test you want to run
 
         if (test == 0) {
             // Test 0: Create nodes
@@ -67,7 +67,7 @@ public class Main {
                 "Test 1: Create a network of nodes and connect them"
             );
 
-            ArrayList<GUI> guiList = initializeNodes(args);
+            ArrayList<GUI> guiList = initializeNodes(args, true);
 
             if (guiList.isEmpty()) {
                 System.out.println("No nodes created. Exiting test.");
@@ -84,7 +84,7 @@ public class Main {
                 "Test 2: Create a network of nodes, connect them, and search in the first node"
             );
 
-            ArrayList<GUI> guiList = initializeNodes(args);
+            ArrayList<GUI> guiList = initializeNodes(args, true);
 
             if (guiList.isEmpty()) {
                 System.out.println("No nodes created. Exiting test.");
@@ -104,7 +104,7 @@ public class Main {
                 "Test 3: Create a network of nodes, connect them, and search in all nodes"
             );
 
-            ArrayList<GUI> guiList = initializeNodes(args);
+            ArrayList<GUI> guiList = initializeNodes(args, true);
 
             if (guiList.isEmpty()) {
                 System.out.println("No nodes created. Exiting test.");
@@ -122,7 +122,7 @@ public class Main {
                 "Test 4: Create a network of nodes, connect them, and download files"
             );
 
-            ArrayList<GUI> guiList = initializeNodes(args);
+            ArrayList<GUI> guiList = initializeNodes(args, true);
 
             if (guiList.isEmpty()) {
                 System.out.println("No nodes created. Exiting test.");
@@ -155,7 +155,7 @@ public class Main {
                 "Test 5: Create a network of nodes, connect them, and download files"
             );
 
-            ArrayList<GUI> guiList = initializeNodes(args);
+            ArrayList<GUI> guiList = initializeNodes(args, true);
 
             if (guiList.isEmpty()) {
                 System.out.println("No nodes created. Exiting test.");
@@ -196,7 +196,7 @@ public class Main {
      * @param args Command-line arguments containing node IDs
      * @return List of GUI objects for the created nodes
      */
-    private static ArrayList<GUI> initializeNodes(String[] args) {
+    private static ArrayList<GUI> initializeNodes(String[] args, boolean show) {
         ArrayList<GUI> guiList = new ArrayList<>();
 
         if (args.length == 0) {
@@ -209,12 +209,9 @@ public class Main {
         for (String arg : args) {
             try {
                 int id = Integer.parseInt(arg);
-                GUI gui = new GUI(id);
+                GUI gui = new GUI(id, show);
                 guiList.add(gui);
                 gui.open();
-                System.out.println(
-                    "Node with ID " + id + " created and GUI opened."
-                );
             } catch (NumberFormatException e) {
                 System.err.println(
                     "Invalid ID: " + arg + ". Please provide numeric values."
@@ -248,19 +245,7 @@ public class Main {
                             InetAddress.getLocalHost().getHostAddress(),
                             otherGui.getNode().getPort()
                         );
-                        System.out.println(
-                            "Node " +
-                            currentNode.getId() +
-                            " connected to Node " +
-                            otherGui.getNode().getId()
-                        );
                     } catch (Exception e) {
-                        System.err.println(
-                            "Failed to connect Node " +
-                            currentNode.getId() +
-                            " to Node " +
-                            otherGui.getNode().getId()
-                        );
                         e.printStackTrace();
                     }
                 }
@@ -280,9 +265,6 @@ public class Main {
     ) {
         for (GUI gui : guiList) {
             gui.getNode().broadcastWordSearchMessageRequest(broadcastString);
-            System.out.println(
-                "Search message broadcasted from Node " + gui.getNode().getId()
-            );
         }
     }
 }

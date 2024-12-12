@@ -340,7 +340,7 @@ public class SubNode extends Thread {
             ? socket.getPort()
             : originalBeforeOSchangePort;
         System.out.println("INSIDE-______");
-        System.out.println(this.socket.getLocalAddress().getHostAddress());
+        System.out.println(this.socket.getLocalAddress().getLoopbackAddress());
         System.out.println(address.getHostAddress());
         return (
             this.socket.getLocalAddress()

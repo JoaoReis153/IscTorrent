@@ -90,8 +90,10 @@ public class Node {
     private File createWorkingDirectory() {
         File folder = new File(WORK_FOLDER + nodeId);
         if (!folder.exists() && !folder.mkdirs()) {
-            throw new RuntimeException( getAddressAndPortFormated() +
-                "Failed to create directory: dl" + nodeId
+            throw new RuntimeException(
+                getAddressAndPortFormated() +
+                "Failed to create directory: dl" +
+                nodeId
             );
         }
         return folder;
@@ -99,12 +101,16 @@ public class Node {
 
     private InetAddress initializeAddress() {
         try {
-            if(InetAddress.getLocalHost().isLoopbackAddress()) {
+            /*if(InetAddress.getLocalHost().isLoopbackAddress()) {
                 throw new RuntimeException(getAddressAndPortFormated() + " Unable to get the device's address (getting the loopback)");
-            }
+            } */
             return InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
-            throw new RuntimeException( getAddressAndPortFormated() +" Unable to get the device's address", e);
+            throw new RuntimeException(
+                getAddressAndPortFormated() +
+                " Unable to get the device's address",
+                e
+            );
         }
     }
 
@@ -120,8 +126,10 @@ public class Node {
                 peers.add(clientHandler);
             }
         } catch (IOException e) {
-            throw new RuntimeException(  getAddressAndPortFormated() +
-                "Failed to start server: " + e.getMessage()
+            throw new RuntimeException(
+                getAddressAndPortFormated() +
+                "Failed to start server: " +
+                e.getMessage()
             );
         }
     }
@@ -304,8 +312,7 @@ public class Node {
         if (blocksToProcess.isEmpty()) wait();
         try {
             return blocksToProcess.remove(0);
-        } catch (Exception e) {
-        }
+        } catch (Exception e) {}
         return null;
     }
 

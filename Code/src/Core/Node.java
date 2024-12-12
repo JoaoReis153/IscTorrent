@@ -99,6 +99,9 @@ public class Node {
 
     private InetAddress initializeAddress() {
         try {
+            if(InetAddress.getLocalHost().isLoopbackAddress()) {
+                throw new RuntimeException(getAddressAndPortFormated() + " Unable to get the device's address");
+            }
             return InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
             throw new RuntimeException( getAddressAndPortFormated() +" Unable to get the device's address", e);

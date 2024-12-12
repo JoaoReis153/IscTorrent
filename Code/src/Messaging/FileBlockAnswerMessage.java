@@ -74,7 +74,7 @@ public class FileBlockAnswerMessage implements Serializable {
         return data;
     }
 
-    public FileBlockRequestMessage getBlockRequest() {
+    public FileBlockRequestMessage getRequest() {
         return request;
     }
 

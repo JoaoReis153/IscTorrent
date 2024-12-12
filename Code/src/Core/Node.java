@@ -299,7 +299,11 @@ public class Node {
     public synchronized FileBlockRequestMessage getBlockRequest()
         throws InterruptedException {
         if (blocksToProcess.isEmpty()) wait();
-        return blocksToProcess.remove(0);
+        try {
+            return blocksToProcess.remove(0);
+        } catch (Exception e) {
+        }
+        return null;
     }
 
     public synchronized void addBlockRequest(FileBlockRequestMessage request) {

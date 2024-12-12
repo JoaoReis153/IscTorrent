@@ -203,9 +203,9 @@ public class DownloadTasksManager extends Thread {
     public synchronized FileBlockAnswerMessage getRespectiveAnswerMessage(
         FileBlockRequestMessage request
     ) throws InterruptedException {
-        if (answerList.isEmpty()) wait(5000);
+        if (answerList.isEmpty()) wait(300);
         for (FileBlockAnswerMessage answer : answerList) {
-            if (answer.getBlockRequest().equals(request)) {
+            if (answer.getRequest().equals(request)) {
                 return answer;
             }
         }

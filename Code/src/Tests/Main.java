@@ -136,7 +136,7 @@ public class Main {
             // Simulate a download operation
             if (!guiList.isEmpty()) {
                 try {
-                    GUI lastGui = guiList.getLast();
+                    GUI lastGui = guiList.get(guiList.size() - 1);
                     lastGui.simulateDownloadButton(lastGui.getListModel());
                     System.out.println(
                         "Download simulated on Node " +

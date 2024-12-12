@@ -33,6 +33,7 @@ public class GUI {
     private JFrame frame;
     private JList<FileSearchResult> fileList;
     private DefaultListModel<FileSearchResult> listModel;
+    private ArrayList<FileSearchResult> localFiles = new ArrayList<>();
     private ArrayList<FileSearchResult> allFiles;
     private Node node;
     private static boolean SHOW = true;
@@ -223,15 +224,26 @@ public class GUI {
         File[] files = node.getFolder().listFiles();
         if (files != null) {
             for (File file : files) {
-                allFiles.add(new FileSearchResult(file, node));
+                FileSearchResult fileSearchResult = new FileSearchResult(file, node);
+                localFiles.add(fileSearchResult);
+                allFiles.add(fileSearchResult);
             }
         }
+        
+        ArrayList<FileSearchResult> aux = new ArrayList<>();
+
+        for (FileSearchResult searchResult : list) {
+            if (!allFiles.contains(searchResult)) {
+                aux.add(searchResult);
+            }
+            allFiles.add(searchResult);
+        }
+
+
         SwingUtilities.invokeLater(() -> {
-            for (FileSearchResult searchResult : list) {
-                if (!allFiles.contains(searchResult)) {
-                    listModel.addElement(searchResult);
-                }
-                allFiles.add(searchResult);
+            for (FileSearchResult searchResult : aux) {
+                searchResult.setDisplayNumber(countOccurrencesInAllFiles(searchResult));
+                listModel.addElement(searchResult);
             }
         });
     }

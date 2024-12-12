@@ -4,6 +4,7 @@ import Core.Node;
 import FileSearch.FileSearchResult;
 import Messaging.FileBlockAnswerMessage;
 import Messaging.FileBlockRequestMessage;
+import java.awt.desktop.SystemEventListener;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -52,7 +53,11 @@ public class DownloadTasksManager extends Thread {
         this.peersWithFile = getNodesWithFile();
 
         //In case there are no nodes with the file, return
-        if(peersWithFile.isEmpty()) return;
+        if(peersWithFile.isEmpty()) {
+            System.out.println(node.getAddressAndPort() + "Couldn't find peers with the file");
+            return;
+        }
+        System.out.println("here");
         this.threadPool = Executors.newFixedThreadPool(peersWithFile.size());
         System.out.println(
             node.getAddressAndPortFormated() +
@@ -81,12 +86,10 @@ public class DownloadTasksManager extends Thread {
             );
             node.removeDownloadProcess(example.getHash());
             node.getGUI().reloadListModel();
-        } catch (RuntimeException e) {
-            System.out.println(
-                node.getAddressAndPortFormated() +
-                "[taskmanager]" +
-                "Download process was interrupted"
-            );
+        } catch (Exception e) {
+            System.out.println("Error in DownloadTasksManager");
+            e.printStackTrace();
+            System.exit(1);
         }
 
         System.out.println(finished());
@@ -213,6 +216,10 @@ public class DownloadTasksManager extends Thread {
         ArrayList<SubNode> nodesWithFile = new ArrayList<>();
         for (FileSearchResult request : requests) {
             for (SubNode peer : node.getPeers()) {
+                System.out.println(peer);
+                System.out.println(request.getAddress());
+                System.out.println(request.getPort());
+                System.out.println(peer.hasConnectionWith(  request.getAddress(), request.getPort()));
                 if (
                     peer.hasConnectionWith(
                         request.getAddress(),

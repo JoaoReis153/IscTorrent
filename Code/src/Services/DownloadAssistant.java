@@ -20,6 +20,7 @@ public class DownloadAssistant extends Thread {
         this.peerToRequestBlock = peerToRequestBlock;
     }
 
+    @Override
     public void run() {
         while (!taskManager.finished() && !timedOut) {
             FileBlockRequestMessage request;

@@ -2,7 +2,6 @@ package Tests;
 
 import Core.Node;
 import GUI.GUI;
-import java.net.InetAddress;
 import java.util.ArrayList;
 
 public class Main {
@@ -242,7 +241,7 @@ public class Main {
                 if (currentNode != otherGui.getNode()) {
                     try {
                         currentNode.connectToNode(
-                            InetAddress.getLocalHost().getHostAddress(),
+                            otherGui.getNode().getAddress().getHostAddress(),
                             otherGui.getNode().getPort()
                         );
                     } catch (Exception e) {

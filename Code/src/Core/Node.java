@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -100,18 +99,13 @@ public class Node {
     }
 
     private InetAddress initializeAddress() {
-        try {
+   
+        
             /*if(InetAddress.getLocalHost().isLoopbackAddress()) {
                 throw new RuntimeException(getAddressAndPortFormated() + " Unable to get the device's address (getting the loopback)");
             } */
-            return InetAddress.getLocalHost();
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(
-                getAddressAndPortFormated() +
-                " Unable to get the device's address",
-                e
-            );
-        }
+            return Core.Utils.getLocalIPAddress() ;
+        
     }
 
     public void startServing() {

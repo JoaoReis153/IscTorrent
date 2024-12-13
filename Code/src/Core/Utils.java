@@ -1,7 +1,12 @@
 package Core;
 
 import java.math.BigInteger;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.security.MessageDigest;
+import java.util.Enumeration;
 
 public class Utils {
 
@@ -31,5 +36,26 @@ public class Utils {
 
     public static Boolean isValidID(int id) {
         return id > 0 && id <= 41070;
+    }
+
+    public static InetAddress getLocalIPAddress() {
+        try {
+            Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
+            while (networkInterfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = networkInterfaces.nextElement();
+                if (networkInterface.isUp() && !networkInterface.isLoopback()) {
+                    Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
+                    while (inetAddresses.hasMoreElements()) {
+                        InetAddress inetAddress = inetAddresses.nextElement();
+                        if (inetAddress instanceof Inet4Address) { // Get IPv4 address
+                            return inetAddress;
+                        }
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        return null; // Return null if no address is found
     }
 }

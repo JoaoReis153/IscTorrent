@@ -230,11 +230,11 @@ public class Node {
             Thread.sleep(100);
             handler.sendNewConnectionRequest(address, port);
         } catch (IOException e) {
-            System.err.println(
+            System.err.println( getAddressAndPortFormated() +
                 "Failed to establish connection: " + e.getMessage()
             );
         } catch (InterruptedException e) {
-            System.err.println(
+            System.err.println( getAddressAndPortFormated() + 
                 "Failed to establish connection: " + e.getMessage()
             );
         }

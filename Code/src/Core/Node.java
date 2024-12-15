@@ -50,13 +50,16 @@ public class Node {
         this.peers = new HashSet<>();
         this.downloadManagers = new HashMap<>();
         this.blocksToProcess = new ArrayList<>();
-        validatePort();
+        validateId();
         initializeSenders(numberOfSenders);
         this.folder = createWorkingDirectory();
         this.address = initializeAddress();
         loadHashes();
     }
 
+    /*
+     * Returns the peer, given a destination address and port, if it exists
+     */
     public SubNode getPeerToSend(String address, int port) {
         for (SubNode peer : peers) {
             if (
@@ -69,6 +72,11 @@ public class Node {
         return null;
     }
 
+    /*
+     * Initializes the senders for the node
+     * The senders are responsible for answering the requests
+     * from other nodes with a reply that contains the requested part of the file
+     */ 
     private void initializeSenders(int n) {
         if (n <= 0) return;
 
@@ -78,7 +86,12 @@ public class Node {
         }
     }
 
-    private void validatePort() {
+
+    /*
+     *  Use the already created method to check the ID
+     *  And throw an exception if it's not valid
+     */
+    private void validateId() { 
         if (!Utils.isValidID(this.nodeId)) {
             throw new IllegalArgumentException(
                 "Invalid node ID. Input a valid number (1-41070)"
@@ -86,6 +99,10 @@ public class Node {
         }
     }
 
+    /*
+     * Creates the working directory for the node
+     * The working directory is the directory where the node will store the files
+     */
     private File createWorkingDirectory() {
         File folder = new File(WORK_FOLDER + nodeId);
         if (!folder.exists() && !folder.mkdirs()) {
@@ -98,16 +115,23 @@ public class Node {
         return folder;
     }
 
+    /*
+     * Initializes the address of the node
+     * The address is the IP address of the node
+     */
     private InetAddress initializeAddress() {
-   
-        
-            /*if(InetAddress.getLocalHost().isLoopbackAddress()) {
-                throw new RuntimeException(getAddressAndPortFormated() + " Unable to get the device's address (getting the loopback)");
-            } */
+        try {
             return Core.Utils.getLocalIPAddress() ;
-        
+        } catch (Exception e) {
+            throw new RuntimeException(  getAddressAndPortFormated() + " Unable to get the device's address", e);
+        }
     }
 
+    /*
+     * Starts the server of the node
+     * The server is responsible for accepting connections from other nodes
+     * and creating a new handler for each connection
+     */
     public void startServing() {
         System.out.println(
             getAddressAndPortFormated() + "Awaiting connection..."
@@ -128,6 +152,7 @@ public class Node {
         }
     }
 
+    // Add a new request to the list of requests to process
     public synchronized void addElementToBlocksToProcess(
         FileBlockRequestMessage request
     ) {
@@ -135,6 +160,7 @@ public class Node {
         notify();
     }
 
+    // Remove a request from the list of requests to process
     public synchronized void removeElementFromBlocksToProcess(
         FileBlockRequestMessage request
     ) throws InterruptedException {
@@ -142,9 +168,18 @@ public class Node {
         blocksToProcess.remove(request);
     }
 
+    /*
+     * Connects to a node
+     * The connection is made by sending a new connection request to the node
+     * and waiting for a response
+     */
     public void connectToNode(String targetAddress, int targetPort) {
         try {
             InetAddress targetInetAddress = resolveAddress(targetAddress);
+
+             
+            // Check if the connection is valid
+            // The valid connection method alreadys throws exceptions accordingly to the type of error
             if (!isValidConnection(targetInetAddress, targetPort)) {
                 return;
             }
@@ -156,6 +191,13 @@ public class Node {
         }
     }
 
+    /*
+     * Resolves the address of a node
+     * The address is resolved by using the InetAddress.getByName method
+     * and checking if the resolved address is null
+     * 
+     * This method will be called when trying to connect to a node
+     */
     private InetAddress resolveAddress(String address) {
         try {
             InetAddress resolved = InetAddress.getByName(address);
@@ -170,6 +212,15 @@ public class Node {
         }
     }
 
+    /*
+     * Checks if a connection with a node is valid
+     * There are three types of errors that can be thrown:
+     * 1. Invalid port range
+     * 2. Connection already exists
+     * 3. Unable to resolve the address
+     * 
+     * Otherwise, the connection is valid
+     */
     private boolean isValidConnection(
         InetAddress targetAddress,
         int targetPort
@@ -201,6 +252,10 @@ public class Node {
         return true;
     }
 
+    /*
+     * Checks if a connection with a node already exists
+     * The connection is checked by comparing the address and port of the connection
+     */
     private boolean isAlreadyConnected(
         InetAddress targetAddress,
         int targetPort
@@ -217,6 +272,11 @@ public class Node {
         return false;
     }
 
+    /*
+     * Establishes a connection with a node
+     * The connection is made by creating a new handler for the connection
+     * and adding it to the list of peers
+     */
     private void establishConnection(
         InetAddress targetAddress,
         int targetPort
@@ -240,6 +300,12 @@ public class Node {
         }
     }
 
+    /*
+     * Broadcasts a word search message request to all peers
+     * The message is sent to all peers in the list of peers
+     * 
+     * That each wil eventually send a FileSearchResult list with the files they have locally that contain the keyword
+     */
     public void broadcastWordSearchMessageRequest(String keyword) {
         for (SubNode peer : peers) peer.sendWordSearchMessageRequest(keyword);
     }
@@ -264,6 +330,11 @@ public class Node {
         }
     }
 
+    /*
+     * Loads the hashes of the files in the working directory
+     * So that there's no need to always be calculating the hashes when a file's hash is needed
+     * In this project, the hashes are used to identify the files
+     */
     public void loadHashes() {
         if (folder == null || !folder.exists() || !folder.isDirectory()) return;
 
@@ -277,7 +348,38 @@ public class Node {
         }
     }
 
+
+    /*
+     * Checks if there are any missing files in the working directory
+     * If there are, it removes them from the hash map
+     */
+    public void checkMissingFiles() {
+        File[] files = folder.listFiles();
+        Set<String> filesPaths = hashes.keySet();
+        Set<String> missingPaths = new HashSet<>();
+
+        // Create a set of existing file paths
+        Set<String> existingFilePaths = new HashSet<>();
+        if (files != null) {
+            for (File file : files) {
+                existingFilePaths.add(file.getAbsolutePath());
+            }
+        }
+
+        // Check for missing paths
+        for (String path : filesPaths) {
+            if (!existingFilePaths.contains(path)) {
+                hashes.remove(path);
+            }
+        }
+    }
+
+    /*
+     * Returns the hash of a file
+     * If the hash is not in the hash map, it calculates the hash and adds it to the map
+     */
     public int getHash(String filePath) {
+        checkMissingFiles();
         if (hashes.containsKey(filePath)) {
             return hashes.get(filePath);
         } else {
@@ -285,6 +387,9 @@ public class Node {
         }
     }
 
+    /*
+     * Checks if a file with a given hash exists in the working directory
+     */
     public boolean hasFileWithHash(int hash) {
         if (folder == null || !folder.exists() || !folder.isDirectory()) {
             return false;
@@ -301,6 +406,7 @@ public class Node {
         return false;
     }
 
+    // Returns the first request in the list of requests to process
     public synchronized FileBlockRequestMessage getBlockRequest()
         throws InterruptedException {
         if (blocksToProcess.isEmpty()) wait();
@@ -310,19 +416,27 @@ public class Node {
         return null;
     }
 
+    // Add a new request to the list of requests to process
     public synchronized void addBlockRequest(FileBlockRequestMessage request) {
         blocksToProcess.add(request);
         notify();
     }
 
+    // Remove a request from the list of requests to process
     public void removeDownloadProcess(int hash) {
         downloadManagers.remove(hash);
     }
 
+    // Returns the download process of a file
     public Map<String, Integer> getDownloadProcess(int hash) {
         return downloadManagers.get(hash).getDownloadProcess();
     }
 
+    /*
+     *  Add an answer to a download request
+     * It uses the address and port of who sent the answer,
+     * to know how many answers has each peer sent
+     */
     public void addDownloadAnswer(
         int hash,
         InetAddress address,
@@ -339,6 +453,7 @@ public class Node {
             );
     }
 
+    // Remove a peer from the list of peers
     public void removePeer(SubNode peer) {
         peers.remove(peer);
         int port = Utils.isValidPort(peer.getSocket().getPort())

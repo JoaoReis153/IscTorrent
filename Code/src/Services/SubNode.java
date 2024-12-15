@@ -100,11 +100,23 @@ public class SubNode extends Thread {
         }
     }
 
+
+    /*
+     * Handles a new connection request
+     * The new connection request is used to send the port of the node to the new node
+     * To override the one created by the Operative System
+     */
     private void handleNewConnectionRequest(NewConnectionRequest request) {
         this.originalBeforeOSchangePort = request.getClientPort();
         logNewConnection();
     }
 
+
+    /*
+     * Handles a word search message
+     * The word search message is used to send the keyword to the node
+     * and to send the files that contain the keyword
+     */ 
     private void handleWordSearchMessage(WordSearchMessage message) {
         System.out.println(
             node.getAddressAndPortFormated() +
@@ -113,10 +125,15 @@ public class SubNode extends Thread {
             "]"
         );
         if (node.getFolder().exists() && node.getFolder().isDirectory()) {
-            sendFileSearchResultList(message);
+            sendFileSearchResultList(message); 
         }
     }
 
+
+    /*
+     * Handles the file search results
+     * The file search results are used to send the files that contain the keyword  
+     */
     private void handleFileSearchResults(FileSearchResult[] results) {
         if (node.getGUI() == null) {
             System.out.println(
@@ -134,6 +151,10 @@ public class SubNode extends Thread {
         node.getGUI().loadListModel(results);
     }
 
+    /*
+     * Handles a file block request
+     * When receives one, adds it to the list of requests to process in the node
+     */
     private void handleFileBlockRequest(FileBlockRequestMessage request) {
         System.out.println(
             node.getAddressAndPortFormated() +
@@ -144,6 +165,11 @@ public class SubNode extends Thread {
         node.addBlockRequest(request);
     }
 
+    /*
+     * Handles a file block answer
+     * When receives one, adds it to the list of answers to process in the node
+     * And counts down the latch
+     */
     private void handleFileBlockAnswer(FileBlockAnswerMessage answer) {
         System.out.println(
             node.getAddressAndPortFormated() + "Received " + answer
@@ -161,17 +187,31 @@ public class SubNode extends Thread {
         if (blockAnswerLatch != null) blockAnswerLatch.countDown();
     }
 
+    /*
+     * Sends a file block request
+     * The file block request is used to request a part of a file
+     */
     public void sendFileBlockRequest(FileBlockRequestMessage block) {
         block.setSenderAddress(node.getAddress().getHostAddress());
         block.setSenderPort(node.getPort());
         sendObject(block);
     }
 
+    /*
+     * Sends a word search message request
+     * The word search message request is used to send the keyword to the node
+     * and to basically ask for the files that contain the keyword
+     */
     public void sendWordSearchMessageRequest(String keyword) {
         WordSearchMessage searchPackage = new WordSearchMessage(keyword);
         sendObject(searchPackage);
     }
 
+    /*
+     * Sends a new connection request
+     * The new connection request is used to send the port of the node to the new node
+     * To override the one created by the Operative System
+     */
     public void sendNewConnectionRequest(InetAddress endereco, int thisPort) {
         if (out == null) {
             System.out.println(
@@ -190,6 +230,9 @@ public class SubNode extends Thread {
         logNewConnection();
     }
 
+    /*
+     * Sends an object through the socket
+     */
     public synchronized void sendObject(Object message) {
         System.out.println(
             node.getAddressAndPortFormated() + "Sending  " + message.toString()
@@ -210,10 +253,13 @@ public class SubNode extends Thread {
             );
             close();
             System.out.println( node.getAddressAndPortFormated() + "Socket is closed");
-            return;
         }
     }
 
+    /*
+     * Closes the socket, ends the thread 
+     * and removes the node from the list of peers
+     */  
     public void close() {
         if (!running) return;
 
@@ -233,6 +279,7 @@ public class SubNode extends Thread {
         node.removePeer(this);
     }
 
+    // Closes the socket
     private void closeResources() {
         try {
             if (in != null) in.close();
@@ -247,6 +294,10 @@ public class SubNode extends Thread {
         }
     }
 
+    /*
+     * Gets the list of files to ignore
+     * The list of files to ignore is used to ignore files that are in the .gitignore file
+     */
     private List<String> getIgnoredFileNames() {
         List<String> ignoredFiles = new ArrayList<>();
         File gitignore = new File(
@@ -359,6 +410,11 @@ public class SubNode extends Thread {
         return super.hashCode();
     }
 
+    /*
+     * Sends a file search result list
+     * The file search result list is used to send the files 
+     * that contain the keyword in the WordSearchMessage message 
+     */
     private void sendFileSearchResultList(WordSearchMessage searchMessage) {
         File[] files = node.getFolder().listFiles();
         if (files == null) return;
@@ -396,6 +452,10 @@ public class SubNode extends Thread {
         sendObject(results);
     }
 
+    /*
+     * Counts the number of files that match the keyword
+     * and the files to ignore
+     */
     private int countMatchingFiles(
         File[] files,
         String keyword,
@@ -421,6 +481,10 @@ public class SubNode extends Thread {
         );
     }
 
+    /*
+     * Creates the list of file search results that match the given keyword
+     * The file search results are used to send the files that contain the keyword
+     */ 
     private FileSearchResult[] createFileSearchResults(
         File[] files,
         String keyword,

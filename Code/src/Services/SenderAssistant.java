@@ -1,7 +1,6 @@
 package Services;
 
 import Core.Node;
-import Core.Utils;
 import Messaging.FileBlockAnswerMessage;
 import Messaging.FileBlockRequestMessage;
 import java.io.File;
@@ -25,6 +24,13 @@ public class SenderAssistant extends Thread {
         }
     }
 
+
+    /*
+     * Processes a block request message.
+     * 
+     * It takes a block request message from the blocksToProcess list in  the node
+     * and sends a block answer message to the peer that sent the request.
+     */
     public void processBlockRequest() throws InterruptedException {
         FileBlockRequestMessage request;
 
@@ -32,10 +38,10 @@ public class SenderAssistant extends Thread {
         FileBlockAnswerMessage answer = fillRequest(request);
         if (answer == null) return;
         if (request.getSenderAddress() == null) {
-            System.out.println("SenderAssistant: Null address");
+            System.out.println(node.getAddressAndPortFormated() + " SenderAssistant: Null address");
             return;
         } else if (request.getSenderPort() == 0) {
-            System.out.println("SenderAssistant: Null port");
+            System.out.println(node.getAddressAndPortFormated() + " SenderAssistant: Null port");
             return;
         }
 
@@ -44,6 +50,17 @@ public class SenderAssistant extends Thread {
             .sendFileBlockAnswer(answer);
     }
 
+
+    /*
+     * Fills a block request message with the file block requested
+     * 
+     * It takes a block request message and searches for the file with the same hash as the request
+     * 
+     * If the file block is found, it returns a block answer message with the
+     * file block requested.
+     * 
+     * If the file block is not found, it returns null.
+     */ 
     public FileBlockAnswerMessage fillRequest(FileBlockRequestMessage request) {
         File file = findFileByHash(request.getHash());
         if (file == null) return null;
@@ -56,6 +73,15 @@ public class SenderAssistant extends Thread {
         );
     }
 
+    /*
+     * Finds a file with the same hash as the one requested
+     * 
+     * It takes a hash and searches for the file with the same hash as the hash
+     * 
+     * If the file is found, it returns the file
+     * 
+     * If the file is not found, it returns null.
+     */ 
     private File findFileByHash(int hash) {
         File folder = new File(Node.WORK_FOLDER + node.getId() + "/");
         if (!folder.isDirectory()) {

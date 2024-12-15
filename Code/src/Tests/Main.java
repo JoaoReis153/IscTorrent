@@ -233,7 +233,7 @@ public class Main {
      * Connects all nodes in the provided list to each other.
      *
      * @param guiList List of GUI objects representing the nodes
-     */
+     */ 
     private static void connectNodes(ArrayList<GUI> guiList) {
         for (GUI gui : guiList) {
             Node currentNode = gui.getNode();

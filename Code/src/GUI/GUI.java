@@ -36,7 +36,7 @@ public class GUI {
     private ArrayList<FileSearchResult> localFiles = new ArrayList<>();
     private ArrayList<FileSearchResult> allFiles;
     private Node node;
-    private static boolean SHOW = true;
+    private boolean SHOW = true;
     private boolean isOpen = false;
     private String lastSearchKeyword = "";
 
@@ -67,6 +67,12 @@ public class GUI {
         frame.pack();
     }
 
+    /*
+     * Opens the GUI
+     * If the GUI is already open, it does nothing
+     * Otherwise, it starts the server and opens the GUI
+     * The GUI is opened only if the SHOW variable is true
+     */
     public void open() {
         if (this.isOpen) return;
         this.isOpen = true;
@@ -194,6 +200,11 @@ public class GUI {
         );
     }
 
+    /*
+     * Simulates a download button click
+     * The download button is simulated by sending a download request to all the nodes
+     * Its used to test the GUI without actually downloading files
+     */
     public void simulateDownloadButton(List<FileSearchResult> options) {
         List<List<FileSearchResult>> filesToDownload = new ArrayList<>();
         for (FileSearchResult option : options) {
@@ -210,6 +221,11 @@ public class GUI {
         node.downloadFiles(filesToDownload);
     }
 
+    /*
+     * Reloads the list model
+     * The list model is reloaded by sending a new word search message request 
+     * with the previous searched word to all the nodes
+     */
     public void reloadListModel() {
         System.out.println(
             node.getAddressAndPortFormated() + "Reloading GUI list"
@@ -219,6 +235,10 @@ public class GUI {
         node.broadcastWordSearchMessageRequest(lastSearchKeyword);
     }
 
+    /*
+     * Loads the list model with the given list of files
+     * The list model is used to display the files in the GUI
+     */
     public synchronized void loadListModel(FileSearchResult[] list) {
         if (list == null || list.length == 0) return;
         File[] files = node.getFolder().listFiles();
@@ -269,11 +289,14 @@ public class GUI {
         return node;
     }
 
-    public static boolean getSHOW() {
+    public boolean getSHOW() {
         return SHOW;
     }
 
-
+    /*
+     * Counts the number of occurrences of a file in the list of all files
+     * The count is used to display the number of neighboor nodes that contain the file
+     */
     private int countOccurrencesInAllFiles(FileSearchResult searchResult) {
         int count = 0;
         for (FileSearchResult file : allFiles) {

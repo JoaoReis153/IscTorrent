@@ -386,13 +386,15 @@ public class SubNode extends Thread {
         );
     }
 
+    /*
+     * Checks if the socket is connected to the given address and port.
+     * If the socket is not connected to the given address and port, it will
+     * return false.
+     */
     public boolean hasConnectionWith(InetAddress address, int port) {
         int thisSocketPort = Utils.isValidPort(socket.getPort())
             ? socket.getPort()
             : originalBeforeOSchangePort;
-        System.out.println("INSIDE-______");
-        System.out.println(this.socket);
-        System.out.println(address.getHostAddress());
         return (
             this.socket.getLocalAddress()
                 .getHostAddress()
@@ -470,6 +472,11 @@ public class SubNode extends Thread {
         return count;
     }
 
+    /*
+     * Check if the file matches the keyword.
+     * The file matches the keyword if the file name contains the keyword
+     * and the file is not in the list of files to ignore.
+     */
     private boolean isFileMatch(
         File file,
         String keyword,

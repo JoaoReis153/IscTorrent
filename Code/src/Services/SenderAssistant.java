@@ -18,7 +18,7 @@ public class SenderAssistant extends Thread {
             try {
                 processBlockRequest();
             } catch (InterruptedException e) {
-                System.out.println("Error in SenderAssistant");
+                System.out.println(node.getAddressAndPortFormated() + " Error in SenderAssistant");
                 e.printStackTrace();
             }
         }
@@ -35,6 +35,7 @@ public class SenderAssistant extends Thread {
         FileBlockRequestMessage request;
 
         request = this.node.getBlockRequest();
+        if(request == null) return;
         FileBlockAnswerMessage answer = fillRequest(request);
         if (answer == null) return;
         if (request.getSenderAddress() == null) {
@@ -61,8 +62,9 @@ public class SenderAssistant extends Thread {
      * 
      * If the file block is not found, it returns null.
      */ 
-    public FileBlockAnswerMessage fillRequest(FileBlockRequestMessage request) {
-        File file = findFileByHash(request.getHash());
+    public FileBlockAnswerMessage fillRequest(FileBlockRequestMessage request) {            
+        int hash = request.getHash();
+        File file = findFileByHash(hash);
         if (file == null) return null;
         return new FileBlockAnswerMessage(
             node.getAddress().getHostAddress(),

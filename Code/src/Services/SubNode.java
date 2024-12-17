@@ -118,12 +118,14 @@ public class SubNode extends Thread {
      * and to send the files that contain the keyword
      */ 
     private void handleWordSearchMessage(WordSearchMessage message) {
+        /*
         System.out.println(
             node.getAddressAndPortFormated() +
             "Received WordSearchMessage with content: [" +
             message.getKeyword() +
             "]"
         );
+         */
         if (node.getFolder().exists() && node.getFolder().isDirectory()) {
             sendFileSearchResultList(message); 
         }
@@ -142,6 +144,7 @@ public class SubNode extends Thread {
             );
             System.exit(1);
         }
+        
         System.out.println(
             node.getAddressAndPortFormated() +
             "Received " +
@@ -156,11 +159,13 @@ public class SubNode extends Thread {
      * When receives one, adds it to the list of requests to process in the node
      */
     private void handleFileBlockRequest(FileBlockRequestMessage request) {
+        /*
         System.out.println(
             node.getAddressAndPortFormated() +
             "Received FileBlockRequestMessage: " +
             request
         );
+         */
 
         node.addBlockRequest(request);
     }
@@ -171,9 +176,11 @@ public class SubNode extends Thread {
      * And counts down the latch
      */
     private void handleFileBlockAnswer(FileBlockAnswerMessage answer) {
+        /*
         System.out.println(
             node.getAddressAndPortFormated() + "Received " + answer
         );
+         */
         int port = Utils.isValidPort(socket.getPort())
             ? socket.getPort()
             : originalBeforeOSchangePort;
@@ -234,9 +241,11 @@ public class SubNode extends Thread {
      * Sends an object through the socket
      */
     public synchronized void sendObject(Object message) {
+        /*
         System.out.println(
             node.getAddressAndPortFormated() + "Sending  " + message.toString()
         );
+         */
         if (out != null && !socket.isClosed()) {
             try {
                 out.reset();

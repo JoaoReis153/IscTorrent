@@ -226,7 +226,7 @@ public class GUI {
      * The list model is reloaded by sending a new word search message request 
      * with the previous searched word to all the nodes
      */
-    public void reloadListModel() {
+    public synchronized void reloadListModel() {
         System.out.println(
             node.getAddressAndPortFormated() + "Reloading GUI list"
         );
@@ -245,8 +245,10 @@ public class GUI {
         if (files != null) {
             for (File file : files) {
                 FileSearchResult fileSearchResult = new FileSearchResult(file, node);
-                localFiles.add(fileSearchResult);
                 allFiles.add(fileSearchResult);
+                if(!localFiles.contains(fileSearchResult)) {
+                    localFiles.add(fileSearchResult);
+                };
             }
         }
         
@@ -297,7 +299,7 @@ public class GUI {
      * Counts the number of occurrences of a file in the list of all files
      * The count is used to display the number of neighboor nodes that contain the file
      */
-    private int countOccurrencesInAllFiles(FileSearchResult searchResult) {
+    private synchronized int countOccurrencesInAllFiles(FileSearchResult searchResult) {
         int count = 0;
         for (FileSearchResult file : allFiles) {
             if (file.equals(searchResult)) {

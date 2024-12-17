@@ -20,14 +20,7 @@ public class FileBlockRequestMessage implements Serializable {
         this.offset = offset;
         this.length = length;
     }
-    
-    public FileBlockRequestMessage(String senderAddress, int senderPort, int hash, long offset, int length) {
-        this.hash = hash;
-        this.offset = offset;
-        this.length = length;
-        this.senderAddress = senderAddress;
-        this.senderPort = senderPort;
-    }
+  
 
     public void setSenderAddress(String senderAddress) {
         this.senderAddress = senderAddress;

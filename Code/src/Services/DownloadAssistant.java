@@ -41,7 +41,7 @@ public class DownloadAssistant extends Thread {
                     handleRequest(request);
                 }
             } catch (InterruptedException e) {
-                System.out.println("Error in DownloadAssistant");
+                System.out.println(taskManager.getNode().getAddressAndPortFormated() + " [taskmanager] [downloadassistant] Error in DownloadAssistant");
                 e.printStackTrace();
             }
         }
@@ -95,7 +95,7 @@ public class DownloadAssistant extends Thread {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted status
-                System.out.println("Thread interrupted");
+                System.out.println( taskManager.getNode().getAddressAndPortFormated() + " [taskmanager] [downloadassistant] Interrupted while waiting for answer");
                 return false; // Handle interruption as a failure
             }
         }

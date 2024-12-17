@@ -57,7 +57,6 @@ public class DownloadTasksManager extends Thread {
             System.out.println(node.getAddressAndPort() + "Couldn't find peers with the file");
             return;
         }
-        System.out.println("here");
         this.threadPool = Executors.newFixedThreadPool(peersWithFile.size());
         System.out.println(
             node.getAddressAndPortFormated() +
@@ -87,12 +86,11 @@ public class DownloadTasksManager extends Thread {
             node.removeDownloadProcess(example.getHash());
             node.getGUI().reloadListModel();
         } catch (Exception e) {
-            System.out.println("Error in DownloadTasksManager");
+            System.out.println(node.getAddressAndPortFormated() + "Error in DownloadTasksManager");
             e.printStackTrace();
             System.exit(1);
         }
 
-        System.out.println(finished());
         if (!running && !finished()) {
             System.out.println(
                 node.getAddressAndPortFormated() +
@@ -216,10 +214,6 @@ public class DownloadTasksManager extends Thread {
         ArrayList<SubNode> nodesWithFile = new ArrayList<>();
         for (FileSearchResult request : requests) {
             for (SubNode peer : node.getPeers()) {
-                System.out.println(peer);
-                System.out.println(request.getAddress());
-                System.out.println(request.getPort());
-                System.out.println(peer.hasConnectionWith(  request.getAddress(), request.getPort()));
                 if (
                     peer.hasConnectionWith(
                         request.getAddress(),

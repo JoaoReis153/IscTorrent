@@ -350,13 +350,12 @@ public class Node {
 
 
     /*
-     * Checks if there are any missing files in the working directory
+     * Checks if there are any hashes that are not in the working directory
      * If there are, it removes them from the hash map
      */
-    public void checkMissingFiles() {
+    public synchronized void checkMissingFiles() {
         File[] files = folder.listFiles();
         Set<String> filesPaths = hashes.keySet();
-        Set<String> missingPaths = new HashSet<>();
 
         // Create a set of existing file paths
         Set<String> existingFilePaths = new HashSet<>();

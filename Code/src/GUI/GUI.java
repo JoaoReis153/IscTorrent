@@ -227,9 +227,11 @@ public class GUI {
      * with the previous searched word to all the nodes
      */
     public synchronized void reloadListModel() {
+        /*
         System.out.println(
             node.getAddressAndPortFormated() + "Reloading GUI list"
         );
+         */
         listModel.clear();
         allFiles.clear();
         node.broadcastWordSearchMessageRequest(lastSearchKeyword);

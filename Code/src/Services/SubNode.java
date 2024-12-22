@@ -144,13 +144,14 @@ public class SubNode extends Thread {
             );
             System.exit(1);
         }
-        
+        /*
         System.out.println(
             node.getAddressAndPortFormated() +
             "Received " +
             results.length +
             " search results"
         );
+         */
         node.getGUI().loadListModel(results);
     }
 
@@ -445,6 +446,7 @@ public class SubNode extends Thread {
         );
 
         if (results.length == 0) return;
+        /*
         else if (results.length == 1) System.out.println(
             node.getAddressAndPortFormated() +
             "Sent 1 file search result [" +
@@ -459,7 +461,7 @@ public class SubNode extends Thread {
             searchMessage.getKeyword() +
             "]"
         );
-
+        */
         sendObject(results);
     }
 

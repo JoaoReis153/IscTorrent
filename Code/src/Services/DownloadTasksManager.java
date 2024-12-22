@@ -78,8 +78,8 @@ public class DownloadTasksManager extends Thread {
                 node.getAddressAndPortFormated() +
                 "[taskmanager]" +
                 "Download finished for file " +
-                example.getHash() +
-                " at a rate of " +
+                example.getFileName() + 
+                " [" + example.getFileSize() + "] at a rate of " +
                 (example.getFileSize() / duration) +
                 " bytes/s"
             );
@@ -119,6 +119,7 @@ public class DownloadTasksManager extends Thread {
 
             runningAssistants++;
             threadPool.execute(assistant);
+            /*
             System.out.println(
                 node.getAddressAndPortFormated() +
                 "[taskmanager]" +
@@ -126,6 +127,7 @@ public class DownloadTasksManager extends Thread {
                 (i + 1) +
                 "º assistant"
             );
+            */
         }
 
         try {
@@ -134,11 +136,13 @@ public class DownloadTasksManager extends Thread {
             e.printStackTrace();
         }
 
+        /*
         System.out.println(
             node.getAddressAndPortFormated() +
             "[taskmanager]" +
             "All assistants finished"
         );
+        */
 
         assembleAndWriteFile(example.getFileName(), answerList);
     }

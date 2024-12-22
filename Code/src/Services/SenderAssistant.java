@@ -84,7 +84,7 @@ public class SenderAssistant extends Thread {
      * 
      * If the file is not found, it returns null.
      */ 
-    private File findFileByHash(int hash) {
+    private synchronized File findFileByHash(int hash) {
         File folder = new File(Node.WORK_FOLDER + node.getId() + "/");
         if (!folder.isDirectory()) {
             throw new IllegalArgumentException(

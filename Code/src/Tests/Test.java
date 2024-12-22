@@ -1,17 +1,18 @@
 package Tests;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import Core.Node;
 import GUI.GUI;
 
-public class TestModes {
+public class Test {
 
     ArrayList<Integer> inputs;
     ArrayList<GUI> guiList;
     int mode;
 
-    public TestModes(String[] args, int mode) {
+    public Test(HashSet<String> args, int mode) {
       //Take the inputs and trasnform them into ints
         this.inputs = new ArrayList<>();
         for (String arg : args) {
@@ -49,8 +50,6 @@ public class TestModes {
         }
 
         switch (mode) {
-            case 0:
-                break;
             case 1:
                 test1();
                 break;
@@ -121,10 +120,6 @@ public class TestModes {
             try {
                 GUI lastGui = guiList.get(guiList.size() - 1);
                 lastGui.simulateDownloadButton(lastGui.getListModel());
-                System.out.println(
-                    "Download simulated on Node " +
-                    lastGui.getNode().getId()
-                );
             } catch (Exception e) {
                 System.err.println("Failed to simulate download.");
                 e.printStackTrace();
@@ -153,10 +148,6 @@ public class TestModes {
             try {
                 for (GUI gui : guiList) {
                     gui.simulateDownloadButton(gui.getListModel());
-                    System.out.println(
-                        "Download simulated on Node " +
-                        gui.getNode().getId()
-                    );
                 }
             } catch (Exception e) {
                 System.err.println("Failed to simulate download.");

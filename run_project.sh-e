@@ -14,12 +14,20 @@ if [ ! -d "$DEFAULT_FILE_STRUCTURE" ]; then
   exit 1
 fi
 
-# Remove existing directories starting with 'dl'
-find "$PROJECT_DIR" -type d -name "dl*" -exec rm -rf {} +
-if [ $? -ne 0 ]; then
-  echo "Failed to remove directories starting with 'dl'!"
-  exit 1
-fi
+# Remove the directories based on the arguments
+for arg in "$@"; do
+  if [ -d "$PROJECT_DIR/dl$arg" ]; then
+    rm -rf "$PROJECT_DIR/dl$arg"
+    if [ $? -ne 0 ]; then
+      echo "Failed to remove the directory for argument: $arg"
+      exit 1
+    fi
+  else
+    # You can choose to ignore the error instead of exiting:
+    # continue
+    continue
+  fi
+done
 
 # Create necessary folders based on arguments
 for arg in "$@"; do

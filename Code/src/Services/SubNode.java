@@ -1,5 +1,12 @@
 package Services;
 
+import Core.Node;
+import Core.Utils;
+import FileSearch.FileSearchResult;
+import FileSearch.WordSearchMessage;
+import Messaging.FileBlockAnswerMessage;
+import Messaging.FileBlockRequestMessage;
+import Messaging.NewConnectionRequest;
 import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
@@ -15,14 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
-
-import Core.Node;
-import Core.Utils;
-import FileSearch.FileSearchResult;
-import FileSearch.WordSearchMessage;
-import Messaging.FileBlockAnswerMessage;
-import Messaging.FileBlockRequestMessage;
-import Messaging.NewConnectionRequest;
 
 public class SubNode extends Thread {
 
@@ -101,23 +100,42 @@ public class SubNode extends Thread {
         }
     }
 
+
+    /*
+     * Handles a new connection request
+     * The new connection request is used to send the port of the node to the new node
+     * To override the one created by the Operative System
+     */
     private void handleNewConnectionRequest(NewConnectionRequest request) {
         this.originalBeforeOSchangePort = request.getClientPort();
         logNewConnection();
     }
 
+
+    /*
+     * Handles a word search message
+     * The word search message is used to send the keyword to the node
+     * and to send the files that contain the keyword
+     */ 
     private void handleWordSearchMessage(WordSearchMessage message) {
+        /*
         System.out.println(
             node.getAddressAndPortFormated() +
             "Received WordSearchMessage with content: [" +
             message.getKeyword() +
             "]"
         );
+         */
         if (node.getFolder().exists() && node.getFolder().isDirectory()) {
-            sendFileSearchResultList(message);
+            sendFileSearchResultList(message); 
         }
     }
 
+
+    /*
+     * Handles the file search results
+     * The file search results are used to send the files that contain the keyword  
+     */
     private void handleFileSearchResults(FileSearchResult[] results) {
         if (node.getGUI() == null) {
             System.out.println(
@@ -126,29 +144,44 @@ public class SubNode extends Thread {
             );
             System.exit(1);
         }
+        /*
         System.out.println(
             node.getAddressAndPortFormated() +
             "Received " +
             results.length +
             " search results"
         );
+         */
         node.getGUI().loadListModel(results);
     }
 
+    /*
+     * Handles a file block request
+     * When receives one, adds it to the list of requests to process in the node
+     */
     private void handleFileBlockRequest(FileBlockRequestMessage request) {
+        /*
         System.out.println(
             node.getAddressAndPortFormated() +
             "Received FileBlockRequestMessage: " +
             request
         );
+         */
 
         node.addBlockRequest(request);
     }
 
+    /*
+     * Handles a file block answer
+     * When receives one, adds it to the list of answers to process in the node
+     * And counts down the latch
+     */
     private void handleFileBlockAnswer(FileBlockAnswerMessage answer) {
+        /*
         System.out.println(
             node.getAddressAndPortFormated() + "Received " + answer
         );
+         */
         int port = Utils.isValidPort(socket.getPort())
             ? socket.getPort()
             : originalBeforeOSchangePort;
@@ -162,17 +195,31 @@ public class SubNode extends Thread {
         if (blockAnswerLatch != null) blockAnswerLatch.countDown();
     }
 
+    /*
+     * Sends a file block request
+     * The file block request is used to request a part of a file
+     */
     public void sendFileBlockRequest(FileBlockRequestMessage block) {
         block.setSenderAddress(node.getAddress().getHostAddress());
         block.setSenderPort(node.getPort());
         sendObject(block);
     }
 
+    /*
+     * Sends a word search message request
+     * The word search message request is used to send the keyword to the node
+     * and to basically ask for the files that contain the keyword
+     */
     public void sendWordSearchMessageRequest(String keyword) {
         WordSearchMessage searchPackage = new WordSearchMessage(keyword);
         sendObject(searchPackage);
     }
 
+    /*
+     * Sends a new connection request
+     * The new connection request is used to send the port of the node to the new node
+     * To override the one created by the Operative System
+     */
     public void sendNewConnectionRequest(InetAddress endereco, int thisPort) {
         if (out == null) {
             System.out.println(
@@ -191,10 +238,15 @@ public class SubNode extends Thread {
         logNewConnection();
     }
 
-    public synchronized void sendObject(Object message) throws RuntimeException {
+    /*
+     * Sends an object through the socket
+     */
+    public synchronized void sendObject(Object message) {
+        /*
         System.out.println(
             node.getAddressAndPortFormated() + "Sending  " + message.toString()
         );
+         */
         if (out != null && !socket.isClosed()) {
             try {
                 out.reset();
@@ -210,10 +262,14 @@ public class SubNode extends Thread {
                 "Cannot send message because socket is closed"
             );
             close();
-            throw new RuntimeException("Socket is closed");
+            System.out.println( node.getAddressAndPortFormated() + "Socket is closed");
         }
     }
 
+    /*
+     * Closes the socket, ends the thread 
+     * and removes the node from the list of peers
+     */  
     public void close() {
         if (!running) return;
 
@@ -233,6 +289,7 @@ public class SubNode extends Thread {
         node.removePeer(this);
     }
 
+    // Closes the socket
     private void closeResources() {
         try {
             if (in != null) in.close();
@@ -247,6 +304,10 @@ public class SubNode extends Thread {
         }
     }
 
+    /*
+     * Gets the list of files to ignore
+     * The list of files to ignore is used to ignore files that are in the .gitignore file
+     */
     private List<String> getIgnoredFileNames() {
         List<String> ignoredFiles = new ArrayList<>();
         File gitignore = new File(
@@ -335,15 +396,19 @@ public class SubNode extends Thread {
         );
     }
 
+    /*
+     * Checks if the socket is connected to the given address and port.
+     * If the socket is not connected to the given address and port, it will
+     * return false.
+     */
     public boolean hasConnectionWith(InetAddress address, int port) {
         int thisSocketPort = Utils.isValidPort(socket.getPort())
             ? socket.getPort()
             : originalBeforeOSchangePort;
-
         return (
             this.socket.getLocalAddress()
                 .getHostAddress()
-                .equals(address.getHostAddress()) &&
+                .equals(address.getHostAddress())  &&
             thisSocketPort == port
         );
     }
@@ -357,6 +422,11 @@ public class SubNode extends Thread {
         return super.hashCode();
     }
 
+    /*
+     * Sends a file search result list
+     * The file search result list is used to send the files 
+     * that contain the keyword in the WordSearchMessage message 
+     */
     private void sendFileSearchResultList(WordSearchMessage searchMessage) {
         File[] files = node.getFolder().listFiles();
         if (files == null) return;
@@ -376,6 +446,7 @@ public class SubNode extends Thread {
         );
 
         if (results.length == 0) return;
+        /*
         else if (results.length == 1) System.out.println(
             node.getAddressAndPortFormated() +
             "Sent 1 file search result [" +
@@ -390,10 +461,14 @@ public class SubNode extends Thread {
             searchMessage.getKeyword() +
             "]"
         );
-
+        */
         sendObject(results);
     }
 
+    /*
+     * Counts the number of files that match the keyword
+     * and the files to ignore
+     */
     private int countMatchingFiles(
         File[] files,
         String keyword,
@@ -408,6 +483,11 @@ public class SubNode extends Thread {
         return count;
     }
 
+    /*
+     * Check if the file matches the keyword.
+     * The file matches the keyword if the file name contains the keyword
+     * and the file is not in the list of files to ignore.
+     */
     private boolean isFileMatch(
         File file,
         String keyword,
@@ -419,6 +499,10 @@ public class SubNode extends Thread {
         );
     }
 
+    /*
+     * Creates the list of file search results that match the given keyword
+     * The file search results are used to send the files that contain the keyword
+     */ 
     private FileSearchResult[] createFileSearchResults(
         File[] files,
         String keyword,
@@ -431,7 +515,7 @@ public class SubNode extends Thread {
 
         for (File file : files) {
             if (isFileMatch(file, keyword, filesToIgnore)) {
-                int hash = Utils.calculateFileHash(file.getAbsolutePath());
+                int hash = node.getHash(file.getAbsolutePath());
                 results[counter++] = new FileSearchResult(
                     searchMessage,
                     file.getName(),
@@ -446,16 +530,13 @@ public class SubNode extends Thread {
     }
 
     public void sendFileBlockAnswer(FileBlockAnswerMessage answer) {
-        
-
-
         sendObject(answer);
     }
 
     public String getDestinationAddress() {
         return socket.getInetAddress().getHostAddress();
     }
-    
+
     public int getDestinationPort() {
         int port = Utils.isValidPort(socket.getPort())
             ? socket.getPort()

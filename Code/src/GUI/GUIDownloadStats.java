@@ -74,6 +74,6 @@ public class GUIDownloadStats {
         timeLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         frame.add(timeLabel);
 
-        frame.setVisible(GUI.getSHOW());
+        frame.setVisible(gui.getSHOW());
     }
 }

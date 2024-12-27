@@ -20,14 +20,7 @@ public class FileBlockRequestMessage implements Serializable {
         this.offset = offset;
         this.length = length;
     }
-    
-    public FileBlockRequestMessage(String senderAddress, int senderPort, int hash, long offset, int length) {
-        this.hash = hash;
-        this.offset = offset;
-        this.length = length;
-        this.senderAddress = senderAddress;
-        this.senderPort = senderPort;
-    }
+  
 
     public void setSenderAddress(String senderAddress) {
         this.senderAddress = senderAddress;
@@ -89,7 +82,8 @@ public class FileBlockRequestMessage implements Serializable {
             "]"
         );
     }
-
+ 
+    // A method that has already the blockSize defined
     public static List<FileBlockRequestMessage> createBlockList(
         int hash,
         long fileSize
@@ -97,6 +91,20 @@ public class FileBlockRequestMessage implements Serializable {
         return createBlockList(hash, fileSize, 10240);
     }
 
+    /*
+     * Creates a list of file block request messages
+     * 
+     * It takes a hash, the size of the file and the block size
+     * 
+     * It creates a list of file block request messages with the size of the file
+     * divided by the block size.
+     * 
+     * If the file size is not divisible by the block size, it creates a list of
+     * file block request messages with the size of the file plus one
+     * 
+     * If the file size is divisible by the block size, it creates a list of
+     * file block request messages with the size of the file     
+     */ 
     public static List<FileBlockRequestMessage> createBlockList(
         int hash,
         long fileSize,

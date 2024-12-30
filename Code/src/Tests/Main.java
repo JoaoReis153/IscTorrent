@@ -1,75 +1,155 @@
 package Tests;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import GUI.GUI;
+import java.io.File;
+import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
 
+    private static final String PROJECT_DIR = "./Code"; // Replace with actual path
+    private static final String DEFAULT_FILE_STRUCTURE = "files"; // Replace with actual path
+    private static int id = -1;
+
     public static void main(String[] args) {
         
+
         Scanner scanner = new Scanner(System.in);
-        HashSet<String> nodeIds = new HashSet<>();
 
         // Read the node IDs from user input
-        System.out.println("Enter the node IDs (separated by spaces): ");
-        
-        
+        System.out.println("Enter the node id");
+        System.out.print("ID: ");
+        Boolean validInput = false;
+        GUI gui = null;
 
+        while (!validInput) {
+            // Read the node ID from user input
+            String line = scanner.nextLine().trim();
+            
+            // Split the line by spaces and add the IDs to the list
+            String[] ids = line.split("\\s+");
 
-        String line = scanner.nextLine().trim();
-        
-        // Split the line by spaces and add the IDs to the list
-        String[] ids = line.split("\\s+");
-        for (String id : ids) {
-            if (!id.isEmpty()) {
-                nodeIds.add(id);
+            if (ids.length == 0) {
+                System.err.println("Invalid ID. Please provide a valid ID.");
+            } else if (ids.length > 1) {
+                System.err.println("Invalid ID. Please provide only one ID.");
+            } else {
+                try {
+                    id = Integer.parseInt(ids[0]);        
+              
+                    gui = new GUI(id, true);
+                    validInput = true;
+                } catch (Exception e) {
+                    System.err.println("Invalid ID. Please provide a valid ID.");
+                    System.out.print("ID: ");
+                    validInput = false;
+                }
             }
         }
-    
-        
-        System.out.println("Node IDs entered: " + nodeIds);
-        
-        /*
-        Test:
-        0 - Create nodes
-        1 - Create a network of nodes and connect them
-        2 - Create a network of nodes, connect them and search in the first node
-        3 - Create a network of nodes, connect them and search in all nodes
-        4 - Create a network of nodes, connect them and download all files in the last node.
-        5 - Create a network of nodes, connect them and download all files in every node
-        */
 
-        System.out.println("Choose the test mode:");
-        System.out.println("1 - Create a network of nodes and connect them");
-        System.out.println("2 - Create a network, connect nodes, and search in the first node");
-        System.out.println("3 - Create a network, connect nodes, and search in all nodes");
-        System.out.println("4 - Create a network, connect nodes, and download files in the last node");
-        System.out.println("5 - Create a network, connect nodes, and download files in every node");
-        System.out.print("Enter the test number: ");
+        createDefaultFileStructure(id);   
         
-        // Read the test mode interactively from user input
-        int mode = -1; // Default mode
-        try {
-            mode = Integer.parseInt(scanner.nextLine()); // Read and parse input
-        } catch (NumberFormatException e) {
-            System.err.println("Invalid input. Please enter a number between 0 and 5.");
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                // This block will run before the JVM shuts down
+
+                String dirToRemove = PROJECT_DIR + "/dl" + id;
+                File dirToRemoveFile = new File(dirToRemove);
+              
+                try {
+                    deleteDirectory(dirToRemoveFile);
+                } catch (IOException ex) {
+                    System.err.println("Failed to remove the directory: " + dirToRemoveFile);
+                }
+              
+            }
+        });
+
+
+        if (gui == null) {
+            System.err.println("Failed to create node.");
             System.exit(1);
+        } else {
+            System.out.println("Node created: " + gui.getNode().getAddressAndPortFormated());
+            gui.open();
         }
-
-        // Validate the chosen mode
-        if (mode < 0 || mode > 5) {
-            System.err.println("Invalid mode! Please choose a number between 0 and 5.");
-            System.exit(1);
-        }
-
-        // Create the TestModes object with the chosen mode
-        Test test = new Test(nodeIds, mode);
-
-        // Run the selected test
-        test.run();
 
         // Close the scanner
         scanner.close();
     }
+
+    // Method to delete a directory recursively
+    private static void deleteDirectory(File directory) throws IOException {
+        if (directory.exists()) {
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        deleteDirectory(file);
+                    } else {
+                        if (!file.delete()) {
+                            throw new IOException("Failed to delete file: " + file.getAbsolutePath());
+                        }
+                    }
+                }
+            }
+            if (!directory.delete()) {
+                throw new IOException("Failed to delete directory: " + directory.getAbsolutePath());
+            }
+        }
+    }
+
+    // Method to copy a directory recursively
+    private static void copyDirectory(File source, File destination) throws IOException {
+        if (source.isDirectory()) {
+            if (!destination.exists()) {
+                destination.mkdirs();
+            }
+            String[] files = source.list();
+            if (files != null) {
+                for (String file : files) {
+                    copyDirectory(new File(source, file), new File(destination, file));
+                }
+            }
+        } else {
+            java.nio.file.Files.copy(source.toPath(), destination.toPath());
+        }
+    }
+
+    private static void createDefaultFileStructure(int arg)  {
+        String dirToRemove = PROJECT_DIR + "/dl" + arg;
+        File removeDir = new File(dirToRemove);
+        if (removeDir.exists() && removeDir.isDirectory()) {
+            try {
+                deleteDirectory(removeDir);
+            } catch (IOException e) {
+                System.err.println("Failed to remove the directory: " + dirToRemove);
+                System.exit(1);
+            }
+        }
+    
+        String dirToCreate = DEFAULT_FILE_STRUCTURE + "/dl" + arg;
+        File createDir = new File(dirToCreate);
+        if (createDir.exists() && createDir.isDirectory()) {
+            try {
+                copyDirectory(createDir, new File(PROJECT_DIR + "/dl" + arg));
+            } catch (IOException e) {
+                System.err.println("Failed to copy files for argument: " + arg);
+                System.exit(1);
+            }
+        } else {
+            System.out.println("Argument folder not found in default structure: " + arg);
+            
+            // Create the directory in the PROJECT_DIR if it doesn't exist
+            File newDir = new File(PROJECT_DIR + "/dl" + arg);
+            if (!newDir.exists()) {
+                boolean created = newDir.mkdirs(); // Create the directory
+                if (!created) {
+                    System.err.println("Failed to create the directory: " + newDir.getAbsolutePath());
+                    System.exit(1);
+                } 
+            }
+        }
+    }    
 }

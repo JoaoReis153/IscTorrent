@@ -1,60 +1,128 @@
 # IscTorrent
 
-IscTorrent é um sistema distribuído de partilha de ficheiros desenvolvido como projeto para a disciplina de Programação Concorrente e Distribuída (PCD) no ano letivo de 2024/25. Este sistema permite que vários utilizadores numa rede P2P (Peer-to-Peer) compartilhem e descarreguem ficheiros binários (ex.: ficheiros de áudio) diretamente entre si, sem a necessidade de um servidor central.
+**A local project for testing a distributed file-sharing system using P2P architecture.**
 
-## Objetivos
+## Table of Contents
+- [Overview](#overview)
+- [Features](#features)
+  - [Best Features](#best-features)
+  - [Basic Features](#basic-features)
+- [Prerequisites](#prerequisites)
+- [Execution Instructions](#execution-instructions)
+- [Usage Example](#usage-example)
+- [File Structure](#file-structure)
+- [Contributing](#contributing)
+- [License](#license)
 
-Este projeto visa desenvolver competências em programação concorrente e distribuída, aplicando conceitos essenciais de sincronização e gestão de threads, com foco na troca de mensagens entre nós de uma rede P2P.
+## Overview
+IscTorrent is a project designed to test the functionality of a distributed file-sharing system locally. It consists of multiple nodes that can request files from connected nodes, implementing a peer-to-peer (P2P) architecture. Each node connects directly to others without the need for a central server, allowing for efficient file sharing and testing of ideas.
 
-## Funcionalidades
+## Features
 
-- **Arquitetura P2P:** Cada nó comunica diretamente com os nós que conhece, sem recorrer a um servidor central.
-- **Conexão entre nós:** Os utilizadores podem conectar-se a outros nós inserindo o endereço de cada nó através da GUI.
-- **Pesquisa e descarregamento de ficheiros:**
-  - Realizar buscas por palavras-chave e listar ficheiros disponíveis nos nós conectados.
-  - Pedir o descarregamento de um ficheiro disponível em outros nós.
-- **Descarregamento por blocos:** O descarregamento é feito em blocos de tamanho padrão (ex.: 10 KB), e os blocos podem ser obtidos simultaneamente de vários nós.
-- **Multi-threading e sincronização:** Cada nó pode iniciar múltiplas threads para download de ficheiros e responder a pedidos de outros nós.
+### Best Features
+- **Simultaneous Download**: Connect to multiple nodes that have the desired file, allowing for parts of the file to be downloaded concurrently.
+- **Multi-threading and Synchronization**: Nodes can download files from multiple neighbors while simultaneously responding to requests from other nodes.
+- **Safe Download**: Downloads continue until completion, even if one of the nodes goes down during the process.
+- **Anti-download Spam**: Prevents duplicate downloads and ensures that files are downloaded only once.
 
-## Interface Gráfica (GUI)
+### Basic Features
+- **Architecture**: P2P, where each node communicates directly with known nodes without a central server.
+- **Connection**: Users can manually connect nodes through the GUI by entering the corresponding port.
+- **Search and Download Files**: Search for files in connected nodes and request their download.
 
-A GUI permite ao utilizador:
-- Estabelecer conexão com outros nós.
-- Pesquisar ficheiros por palavras-chave.
-- Visualizar resultados da pesquisa com o número de nós que disponibilizam cada ficheiro.
-- Solicitar o download de ficheiros disponíveis em outros nós.
+## Prerequisites
+Before running the project, ensure your system meets the following requirements:
 
-## Estrutura do Projeto
+### Software Requirements
+- **Java Development Kit (JDK)**
+  - **Version**: OpenJDK 11 or higher (tested with OpenJDK 21).
+  - **Use**: Required to compile and run Java programs.
+  - **How to check**: Run the following command:
+    ```bash
+    java -version
+    ```
+  - **Installation**:
+    - **Linux (Debian/Ubuntu)**:
+      ```bash
+      sudo apt update
+      sudo apt install openjdk-11-jdk
+      java -version
+      ```
+    - **Mac (Homebrew)**:
+      ```bash
+      brew install openjdk@11
+      brew link --force openjdk@11
+      java -version
+      ```
+    - **Windows**: Download and install the JDK from [Oracle](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html) or [OpenJDK](https://openjdk.java.net/).
 
-- **Conexão com Nós:** Implementada via `NewConnectionRequest`, permitindo a conexão ativa ou passiva com outros nós.
-- **Mensagens de Comunicação:** O projeto usa objetos de comunicação para trocas de mensagens entre nós, como:
-  - `WordSearchMessage`: Para realizar uma pesquisa por palavras-chave.
-  - `FileSearchResult`: Contém o nome do ficheiro, o endereço, e porta do nó, hash e tamanho.
-  - `FileBlockRequestMessage`: Solicita blocos específicos de um ficheiro.
-  - `FileBlockAnswerMessage`: Encapsula os dados binários do bloco.
-- **Sincronização e Gestão de Threads:** Um número máximo de threads (ex.: 5) é usado para limitar a carga sobre cada nó, utilizando uma `ThreadPool` para gerenciar os pedidos de descarregamento de ficheiros.
-- **Gestão de Downloads:** Classe `DownloadTasksManager` para coordenar o download de blocos e garantir que a escrita do ficheiro para disco ocorre apenas após o download completo.
+- **Git**
+  - **Version**: Git 2.30 or higher (tested with Git 2.43).
+  - **Use**: To clone the repository and manage version control.
+  - **How to check**: Run the following command:
+    ```bash
+    git --version
+    ```
+  - **Installation**:
+    - **Linux (Debian/Ubuntu)**:
+      ```bash
+      sudo apt update
+      sudo apt install git
+      git --version
+      ```
+    - **Mac (Homebrew)**:
+      ```bash
+      brew install git
+      git --version
+      ```
+    - **Windows**: Download and install Git from [git-scm.com](https://git-scm.com/).
 
-## Requisitos do Projeto
+- **Bash Shell**
+  - **Version**: Bash 5.0 or higher (tested with Bash 5.2).
+  - **Use**: The project uses a `run_project.sh` script that requires a Unix-like shell.
+  - **How to check**: Run the following command:
+    ```bash
+    bash --version
+    ```
+  - **Installation (Windows only)**: Install Windows Subsystem for Linux (WSL):
+    ```powershell
+    wsl --install
+    ```
 
-- **Sincronização:** Devem ser identificadas e protegidas as seções críticas para garantir a exclusão mútua de acessos.
-- **Leitura da Pasta de Trabalho:** Ao iniciar, o programa deve ler a pasta de trabalho para listar os ficheiros disponíveis.
-- **ThreadPool:** Os downloads devem ser geridos por uma `ThreadPool`, com um número máximo de threads definido.
-- **Função de Hash:** Cada ficheiro tem um valor de hash SHA-256 associado, calculado com a classe `MessageDigest`.
+## Execution Instructions
 
-## Execução
+### Windows
+- The recommended solution is to use Windows Subsystem for Linux (WSL). 
 
-Execute a aplicação com o comando:
+### Linux, Mac, WSL
+1. Navigate to the repository folder.
+2. Execute the application using the command:
+   ```bash
+   ./run_project.sh
+3. If you encounter an error due to whitespace, run the following command and repeat the process:
+   ```bash
+   sed -i -e 's/\s*$//' run_project.sh
+   ```
 
+## Usage example
+1. Start the application in multiple terminals and connect the nodes between each other.
+2. Insert a keyword and search for the files of the connected nodes that match it.
+3. Select a file and initiate the download.
+
+If you are curious, you can also check the difference between download a file from one node and from multiple to see how faster it can get. 
+
+## Test Project
+To make it easier for users to test the program, a test_project.sh script is provided. This script simplifies the process of setting up and running tests on the application. You can execute it by running:
 ```bash
-java IscTorrent <porta> <diretório_de_trabalho>
+./test_project.sh
 ```
-- `<porta>`: Porta que o nó usará para receber pedidos
-- `<diretório_de_trabalho>`: Diretório onde se encontram os ficheiros partilhaods
+This script will make it easier to connect nodes, search for files, download and overall test the application.
 
-## Exemplo de Utilização
+## File structure
+The project follows a specific file structure. Ensure that the default file structure exists in the `files` directory before running the project.
 
-1. Inicie a aplicação e conecte-se a outros nós da rede através da GUI.
-2. Realize uma pesquisa por palavras-chave e visualize os resultados.
-3. Selecione um ficheiro e inicie o descarregamento, que será feito por blocos de forma concorrente.
-4. Após completar o download, o programa exibe o número de blocos recebidos de cada nó e o tempo total do descarregamento.
+## Contributing 
+Contributions are welcome! Please fork the repository and submit a pull request for any improvements or features.
+
+## License
+This project is licensed under the MIT License.

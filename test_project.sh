@@ -6,7 +6,7 @@ SRC_DIR="$PROJECT_DIR/src"
 BIN_DIR="$PROJECT_DIR/bin"
 DEFAULT_FILE_STRUCTURE="files"
 
-MAIN_CLASS="Tests.Main"
+MAIN_CLASS="Tests.Test"
 
 # Verify default file structure exists
 if [ ! -d "$DEFAULT_FILE_STRUCTURE" ]; then
